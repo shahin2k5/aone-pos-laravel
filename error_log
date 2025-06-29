@@ -1,0 +1,53 @@
+[17-May-2025 06:30:37 UTC] PHP Warning:  require(/home/qoyelbd/posmaster.qoyelxyz.com/../vendor/autoload.php): Failed to open stream: No such file or directory in /home/qoyelbd/posmaster.qoyelxyz.com/index.php on line 34
+[17-May-2025 06:30:37 UTC] PHP Fatal error:  Uncaught Error: Failed opening required '/home/qoyelbd/posmaster.qoyelxyz.com/../vendor/autoload.php' (include_path='.:/opt/cpanel/ea-php82/root/usr/share/pear') in /home/qoyelbd/posmaster.qoyelxyz.com/index.php:34
+Stack trace:
+#0 {main}
+  thrown in /home/qoyelbd/posmaster.qoyelxyz.com/index.php on line 34
+[20-May-2025 04:39:41 UTC] PHP Warning:  require(/home/qoyelbd/aone.qoyelxyz.com/vendor/autoload.php): Failed to open stream: No such file or directory in /home/qoyelbd/aone.qoyelxyz.com/index.php on line 34
+[20-May-2025 04:39:41 UTC] PHP Fatal error:  Uncaught Error: Failed opening required '/home/qoyelbd/aone.qoyelxyz.com/vendor/autoload.php' (include_path='.:/opt/cpanel/ea-php82/root/usr/share/pear') in /home/qoyelbd/aone.qoyelxyz.com/index.php:34
+Stack trace:
+#0 {main}
+  thrown in /home/qoyelbd/aone.qoyelxyz.com/index.php on line 34
+[20-May-2025 04:39:46 UTC] PHP Warning:  require(/home/qoyelbd/aone.qoyelxyz.com/vendor/autoload.php): Failed to open stream: No such file or directory in /home/qoyelbd/aone.qoyelxyz.com/index.php on line 34
+[20-May-2025 04:39:46 UTC] PHP Fatal error:  Uncaught Error: Failed opening required '/home/qoyelbd/aone.qoyelxyz.com/vendor/autoload.php' (include_path='.:/opt/cpanel/ea-php82/root/usr/share/pear') in /home/qoyelbd/aone.qoyelxyz.com/index.php:34
+Stack trace:
+#0 {main}
+  thrown in /home/qoyelbd/aone.qoyelxyz.com/index.php on line 34
+[20-May-2025 04:39:52 UTC] PHP Warning:  require(/home/qoyelbd/aone.qoyelxyz.com/vendor/autoload.php): Failed to open stream: No such file or directory in /home/qoyelbd/aone.qoyelxyz.com/index.php on line 34
+[20-May-2025 04:39:52 UTC] PHP Fatal error:  Uncaught Error: Failed opening required '/home/qoyelbd/aone.qoyelxyz.com/vendor/autoload.php' (include_path='.:/opt/cpanel/ea-php82/root/usr/share/pear') in /home/qoyelbd/aone.qoyelxyz.com/index.php:34
+Stack trace:
+#0 {main}
+  thrown in /home/qoyelbd/aone.qoyelxyz.com/index.php on line 34
+[20-May-2025 04:39:53 UTC] PHP Warning:  require(/home/qoyelbd/aone.qoyelxyz.com/vendor/autoload.php): Failed to open stream: No such file or directory in /home/qoyelbd/aone.qoyelxyz.com/index.php on line 34
+[20-May-2025 04:39:53 UTC] PHP Fatal error:  Uncaught Error: Failed opening required '/home/qoyelbd/aone.qoyelxyz.com/vendor/autoload.php' (include_path='.:/opt/cpanel/ea-php82/root/usr/share/pear') in /home/qoyelbd/aone.qoyelxyz.com/index.php:34
+Stack trace:
+#0 {main}
+  thrown in /home/qoyelbd/aone.qoyelxyz.com/index.php on line 34
+[20-May-2025 04:40:03 UTC] PHP Warning:  require(/home/qoyelbd/aone.qoyelxyz.com/vendor/autoload.php): Failed to open stream: No such file or directory in /home/qoyelbd/aone.qoyelxyz.com/index.php on line 34
+[20-May-2025 04:40:03 UTC] PHP Fatal error:  Uncaught Error: Failed opening required '/home/qoyelbd/aone.qoyelxyz.com/vendor/autoload.php' (include_path='.:/opt/cpanel/ea-php82/root/usr/share/pear') in /home/qoyelbd/aone.qoyelxyz.com/index.php:34
+Stack trace:
+#0 {main}
+  thrown in /home/qoyelbd/aone.qoyelxyz.com/index.php on line 34
+[20-May-2025 04:40:05 UTC] PHP Warning:  require(/home/qoyelbd/aone.qoyelxyz.com/vendor/autoload.php): Failed to open stream: No such file or directory in /home/qoyelbd/aone.qoyelxyz.com/index.php on line 34
+[20-May-2025 04:40:05 UTC] PHP Fatal error:  Uncaught Error: Failed opening required '/home/qoyelbd/aone.qoyelxyz.com/vendor/autoload.php' (include_path='.:/opt/cpanel/ea-php82/root/usr/share/pear') in /home/qoyelbd/aone.qoyelxyz.com/index.php:34
+Stack trace:
+#0 {main}
+  thrown in /home/qoyelbd/aone.qoyelxyz.com/index.php on line 34
+[20-May-2025 04:40:06 UTC] PHP Warning:  require(/home/qoyelbd/aone.qoyelxyz.com/vendor/autoload.php): Failed to open stream: No such file or directory in /home/qoyelbd/aone.qoyelxyz.com/index.php on line 34
+[20-May-2025 04:40:06 UTC] PHP Fatal error:  Uncaught Error: Failed opening required '/home/qoyelbd/aone.qoyelxyz.com/vendor/autoload.php' (include_path='.:/opt/cpanel/ea-php82/root/usr/share/pear') in /home/qoyelbd/aone.qoyelxyz.com/index.php:34
+Stack trace:
+#0 {main}
+  thrown in /home/qoyelbd/aone.qoyelxyz.com/index.php on line 34
+[20-May-2025 04:40:07 UTC] PHP Warning:  require(/home/qoyelbd/aone.qoyelxyz.com/vendor/autoload.php): Failed to open stream: No such file or directory in /home/qoyelbd/aone.qoyelxyz.com/index.php on line 34
+[20-May-2025 04:40:07 UTC] PHP Fatal error:  Uncaught Error: Failed opening required '/home/qoyelbd/aone.qoyelxyz.com/vendor/autoload.php' (include_path='.:/opt/cpanel/ea-php82/root/usr/share/pear') in /home/qoyelbd/aone.qoyelxyz.com/index.php:34
+Stack trace:
+#0 {main}
+  thrown in /home/qoyelbd/aone.qoyelxyz.com/index.php on line 34
+[20-May-2025 04:40:08 UTC] PHP Warning:  require(/home/qoyelbd/aone.qoyelxyz.com/vendor/composer/../symfony/polyfill-mbstring/bootstrap.php): Failed to open stream: No such file or directory in /home/qoyelbd/aone.qoyelxyz.com/vendor/composer/autoload_real.php on line 41
+[20-May-2025 04:40:08 UTC] PHP Fatal error:  Uncaught Error: Failed opening required '/home/qoyelbd/aone.qoyelxyz.com/vendor/composer/../symfony/polyfill-mbstring/bootstrap.php' (include_path='.:/opt/cpanel/ea-php82/root/usr/share/pear') in /home/qoyelbd/aone.qoyelxyz.com/vendor/composer/autoload_real.php:41
+Stack trace:
+#0 /home/qoyelbd/aone.qoyelxyz.com/vendor/composer/autoload_real.php(45): {closure}('0e6d7bf4a5811bf...', '/home/qoyelbd/a...')
+#1 /home/qoyelbd/aone.qoyelxyz.com/vendor/autoload.php(25): ComposerAutoloaderInitfc4130bfcdc92921399b9626043c1c70::getLoader()
+#2 /home/qoyelbd/aone.qoyelxyz.com/index.php(34): require('/home/qoyelbd/a...')
+#3 {main}
+  thrown in /home/qoyelbd/aone.qoyelxyz.com/vendor/composer/autoload_real.php on line 41
