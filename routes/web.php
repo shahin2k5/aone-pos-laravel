@@ -1,32 +1,39 @@
 <?php
 
 use App\Http\Controllers\PurchaseCartController;
-use App\Http\Controllers\CartController;
+use App\Http\Controllers\Admin\CartController;
 use App\Http\Controllers\CustomerController;
-use App\Http\Controllers\HomeController;
-use App\Http\Controllers\OrderController;
+use App\Http\Controllers\AdminController;
+use App\Http\Controllers\SaleController;
 use App\Http\Controllers\ProductController;
-use App\Http\Controllers\PurchaseController;
+use App\Http\Controllers\Admin\PurchaseController;
 use App\Http\Controllers\SalesreturnCartController;
 use App\Http\Controllers\SalesreturnController;
 use App\Http\Controllers\PurchasereturnController;
 use App\Http\Controllers\PurchasereturnCartController;
 use App\Http\Controllers\DamageController;
 use App\Http\Controllers\DamageCartController;
-use App\Http\Controllers\SettingController;
+use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\ExpenseController;
+use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 
 Route::get('/', function () {
-    return redirect('/admin');
+    return redirect()->route('login');
 });
 
 Auth::routes();
 
-Route::prefix('admin')->middleware('auth')->group(function () {
-    Route::get('/', [HomeController::class, 'index'])->name('home');
+
+// For User Routes
+Route::prefix('user')->middleware(['auth'])->group(function () {
+    Route::get('/dashboards', [UserController::class, 'index'])->name('user-dashboard');
+});
+
+Route::middleware(['auth' ])->prefix('admin')->group(function () {
+    Route::get('/dashboard', [AdminController::class, 'index'])->name('admin-dashboard');
     Route::get('/settings', [SettingController::class, 'index'])->name('settings.index');
     Route::post('/settings', [SettingController::class, 'store'])->name('settings.store');
     Route::resource('products', ProductController::class);
@@ -52,9 +59,9 @@ Route::prefix('admin')->middleware('auth')->group(function () {
 
     
 
-    Route::resource('orders', OrderController::class);
+    Route::resource('sales', SaleController::class);
     Route::resource('/purchase', PurchaseController::class);
-    Route::post('/orders/partial-payment', [OrderController::class, 'partialPayment'])->name('orders.partial-payment');
+    Route::post('/sales/partial-payment', [SaleController::class, 'partialPayment'])->name('sales.partial-payment');
     
     
     Route::resource('/salesreturn', SalesreturnController::class);
@@ -88,9 +95,7 @@ Route::prefix('admin')->middleware('auth')->group(function () {
     Route::resource('/damage', DamageController::class);
     Route::get('/damage-create', [DamageController::class, 'create'])->name('damages.create');
     Route::post('/damage-cart', [DamageController::class, 'store'])->name('damages.store');
-    Route::post('/damage/change-qty', [DamageCartController::class, 'changeQty']);
-    Route::delete('/damage/delete', [DamageCartController::class, 'delete']);
-    Route::delete('/damage/empty', [DamageCartController::class, 'empty']);
+ 
     Route::get('/damage/findorderid/{order_id}', [DamageController::class,'findOrderID']);
     Route::post('/damage/cart', [DamageController::class,'addProductToCart']);
     Route::post('/damage/changeqnty', [DamageController::class,'changeQnty']);
@@ -110,6 +115,9 @@ Route::prefix('admin')->middleware('auth')->group(function () {
         return response()->json($translations);
     });
 
-    Route::get('/orders/print/{id}', [OrderController::class, 'print'])->name('orders.print');
+    Route::get('/sales/print/{id}', [SaleController::class, 'print'])->name('sales.print');
     Route::get('/purchase/print/{id}', [PurchaseController::class, 'print'])->name('purchase.print');
+    Route::get('/branch/list', [SettingController::class, 'branchList'])->name('branch.list');
+    Route::post('/branch/store', [SettingController::class, 'branchStore'])->name('branch.store');
+    Route::post('/user/store', [SettingController::class, 'userStore'])->name('user.store');
 });

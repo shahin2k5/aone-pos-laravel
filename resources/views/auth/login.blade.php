@@ -1,4 +1,4 @@
-@extends('layouts.auth')
+@extends('auth.layouts.auth')
 
 @section('css')
 
@@ -12,7 +12,7 @@
 @section('content')
 <p class="login-box-msg">Signin to start your session</p>
 
-<form action="{{ route('login') }}" method="post">
+<form action="{{ route('login') }}" method="post" class="login-form">
     @csrf
     <div class="form-group">
 

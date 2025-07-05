@@ -38,7 +38,7 @@ class SalesreturnController extends Controller
     }
 
     public function findOrderID($order_id){
-        $order = Order::where('id',$order_id)->with(['items','customer','items.product'])->first();
+        $order = Sale::where('id',$order_id)->with(['items','customer','items.product'])->first();
         if($order){
             $items = $order->items;
             SalesreturnItemCart::truncate();
@@ -97,7 +97,7 @@ class SalesreturnController extends Controller
     public function finalSave(Request $request)
     {
         try{
-            $order = Order::where('id', $request->order_id)->first();
+            $order = Sale::where('id', $request->order_id)->first();
             $return_items = SalesreturnItemCart::where('order_id', $request->order_id)->get();
         
             if(!!$order){
@@ -163,7 +163,7 @@ class SalesreturnController extends Controller
 
     public function store(OrderStoreRequest $request)
     {
-        $order = Order::create([
+        $order = Sale::create([
             'customer_id' => $request->customer_id,
             'user_id' => $request->user()->id,
         ]);

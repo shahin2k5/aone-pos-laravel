@@ -21,6 +21,9 @@ class User extends Authenticatable
         'last_name',
         'email',
         'password',
+        'role',
+        'branch_id',
+        'company_id',
     ];
 
     /**
@@ -59,6 +62,22 @@ class User extends Authenticatable
         return $this->first_name . ' ' . $this->last_name;
     }
 
+    public function company_id()
+    {
+        return $this->company_id;
+    }
+
+    public function branch()
+    {
+        return $this->belongsTo(Branch::class,'branch_id');
+    }
+
+    public function branch_name()
+    {
+        return Branch::where('id', $this->id)->first()->branch_name;
+    }
+
+ 
     public function getAvatar()
     {
         return 'https://www.gravatar.com/avatar/' . md5($this->email);

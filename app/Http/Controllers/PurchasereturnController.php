@@ -179,7 +179,7 @@ class PurchasereturnController extends Controller
 
     public function store(OrderStoreRequest $request)
     {
-        $order = Order::create([
+        $order = Sale::create([
             'customer_id' => $request->customer_id,
             'user_id' => $request->user()->id,
         ]);

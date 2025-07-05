@@ -46,7 +46,7 @@ class DamageController extends Controller
     }
 
     public function findOrderID($order_id){
-        $order = Order::where('id',$order_id)->with(['items','customer','items.product'])->first();
+        $order = Sale::where('id',$order_id)->with(['items','customer','items.product'])->first();
         if($order){
             $items = $order->items;
             SalesreturnItemCart::truncate();
@@ -105,7 +105,7 @@ class DamageController extends Controller
     public function finalSave(Request $request)
     {
         try{
-            $order = Order::where('id', $request->order_id)->first();
+            $order = Sale::where('id', $request->order_id)->first();
             $return_items = SalesreturnItemCart::where('order_id', $request->order_id)->get();
         
             if(!!$order){
