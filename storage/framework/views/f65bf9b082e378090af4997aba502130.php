@@ -3,7 +3,7 @@
 <?php $__env->startSection('content'); ?>
 <div class="container-fluid">
    <div class="row">
- 
+
        <div class="col-lg-3 col-6">
          <!-- small box -->
          <div class="small-box bg-danger">
@@ -22,7 +22,7 @@
          <!-- small box -->
          <div class="small-box bg-info">
             <div class="inner">
-               <h3><?php echo e($today_sales); ?></h3>
+               <h3><?php echo e(config('settings.currency_symbol')); ?> <?php echo e(number_format($today_sales, 2)); ?></h3>
                <p><?php echo e(__('Today Sales')); ?></p>
             </div>
             <div class="icon">
@@ -42,23 +42,23 @@
             <div class="icon">
                <i class="ion ion-stats-bars"></i>
             </div>
-            <a href="<?php echo e(route('sales.index')); ?>" class="small-box-footer"><?php echo e(__('common.More_info')); ?> <i class="fas fa-arrow-circle-right"></i></a>
+            <a href="<?php echo e(route('purchases.index')); ?>" class="small-box-footer"><?php echo e(__('common.More_info')); ?> <i class="fas fa-arrow-circle-right"></i></a>
          </div>
       </div>
       <!-- ./col -->
-     
+
       <!-- ./col -->
       <div class="col-lg-3 col-6">
          <!-- small box -->
-         <div class="small-box bg-warning">
+         <div class="small-box bg-pink" style="background-color: #e83e8c !important; color: #fff;">
             <div class="inner">
-               <h3><?php echo e($today_profit); ?></h3>
-               <p><?php echo e(__('Today Profit')); ?></p>
+               <h3><?php echo e(config('settings.currency_symbol')); ?> <?php echo e(number_format($today_purchase_due, 2)); ?></h3>
+               <p>Today Purchase Due</p>
             </div>
             <div class="icon">
-               <i class="ion ion-person-add"></i>
+               <i class="fa fa-exclamation-circle"></i>
             </div>
-            <a href="<?php echo e(route('customers.index')); ?>" class="small-box-footer"><?php echo e(__('common.More_info')); ?> <i class="fas fa-arrow-circle-right"></i></a>
+            <a href="<?php echo e(route('purchases.index')); ?>" class="small-box-footer">More info <i class="fas fa-arrow-circle-right"></i></a>
          </div>
       </div>
       <!-- ./col -->
@@ -78,10 +78,10 @@
                            <th>ID</th>
                            <th>Name</th>
                            <th>Image</th>
-                 
+
                            <th>Price</th>
                            <th>Quantity</th>
-                           
+
                            <th>Updated At</th>
                            <!-- <th>Actions</th> -->
                         </tr>
@@ -92,10 +92,10 @@
                            <td><?php echo e($product->id); ?></td>
                            <td><?php echo e($product->name); ?></td>
                            <td><img class="product-img" src="<?php echo e(Storage::url($product->image)); ?>" alt=""></td>
-                  
+
                            <td><?php echo e($product->sell_price); ?></td>
                            <td><?php echo e($product->quantity); ?></td>
-                           
+
                            <td><?php echo e($product->updated_at); ?></td>
                         </tr>
                         <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
@@ -146,9 +146,9 @@
             </div>
          </section>
       </div>
- 
-     
-    
+
+
+
    </div>
 </div>
 <?php $__env->stopSection(); ?>

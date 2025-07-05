@@ -11,4 +11,9 @@ class Payment extends Model
         'order_id',
         'user_id',
     ];
+
+    public function order()
+    {
+        return $this->belongsTo(\App\Models\Order::class, 'order_id');
+    }
 }

@@ -1,5 +1,5 @@
 <!-- Main Sidebar Container -->
-<aside class="main-sidebar sidebar-dark-primary elevation-4">
+<aside class="main-sidebar sidebar-light-primary elevation-4">
     <!-- Brand Logo -->
   
 
@@ -44,48 +44,48 @@
                         <i class="nav-icon fas fa-cart-plus"></i>
                         <p><?php echo e(__('Purchase')); ?></p>
                     </a>
-                </li> 
+                </li>
 
-                
+
                 <li class="nav-item item-separator">
                      <hr style="border-top:1px solid #666">
-                </li> 
-                
+                </li>
+
                 <li class="nav-item has-treeview">
                     <a href="<?php echo e(route('salesreturn.index')); ?>" class="nav-link <?php echo e(activeSegment('sales-return')); ?>">
                         <i class="nav-icon fas fa-cart-plus"></i>
                         <p><?php echo e(__('Sales Return')); ?></p>
                     </a>
-                </li> 
+                </li>
 
                 <li class="nav-item has-treeview">
                     <a href="<?php echo e(route('purchasereturn.index')); ?>" class="nav-link <?php echo e(activeSegment('purchase-return')); ?>">
                         <i class="nav-icon fas fa-cart-plus"></i>
                         <p><?php echo e(__('Purchase Return')); ?></p>
                     </a>
-                </li> 
+                </li>
 
                 <li class="nav-item has-treeview">
                     <a href="<?php echo e(route('damage.index')); ?>" class="nav-link <?php echo e(activeSegment('damage')); ?>">
                         <i class="nav-icon fas fa-cart-plus"></i>
                         <p><?php echo e(__('Damage')); ?></p>
                     </a>
-                </li> 
+                </li>
 
                  <li class="nav-item item-separator">
                      <hr style="border-top:1px solid #666">
-                </li> 
+                </li>
 
                  <li class="nav-item has-treeview">
                     <a href="<?php echo e(route('expense.index')); ?>" class="nav-link <?php echo e(activeSegment('expense')); ?>">
                         <i class="nav-icon fas fa-cart-plus"></i>
-                        <p><?php echo e(__('Expense')); ?></p>
+                        <p>Expenses & Report</p>
                     </a>
-                </li> 
+                </li>
 
                 <li class="nav-item item-separator">
                      <hr style="border-top:1px solid #666">
-                </li> 
+                </li>
 
 
                 <li class="nav-item has-treeview">

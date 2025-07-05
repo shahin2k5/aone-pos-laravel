@@ -8,82 +8,206 @@
 @section('content')
 
 <div class="card">
-    
     <div class="card-body">
-        <div class="row">
-            <div class="col-md-5"></div>
-            <div class="col-md-7">
-                <form action="{{route('expense.index')}}">
-                    <div class="row">
-                        <div class="col-md-3">
-                            <input type="date" name="start_date" class="form-control" value="{{request('start_date')}}" />
-                        </div>
-                        <div class="col-md-3">
-                            <input type="date" name="end_date" class="form-control" value="{{request('end_date')}}" />
-                        </div>
-                        <div class="col-md-3">
-                            <div class="form-group">
-                                <select class="form-control" name="expense_head" id="expense_head" required>
-                                    <option>:: Select expense head ::</option>
-                                    @foreach ($expense_heads as $exp )
-                                        <option value='{{$exp->expense_head}}'>{{$exp->expense_head}}</option>
-                                    @endforeach
-                                    
-                                </select>
-                                
-                                @error('product_id')
-                                <span class="invalid-feedback" role="alert">
-                                    <strong>{{ $message }}</strong>
-                                </span>
-                                @enderror
-                            </div>
-                        </div>
-                       
-                        <div class="col-md-3">
-                            <button class="btn btn-outline-primary" type="submit">{{ __('Show') }}</button>
+        <!-- Tab navigation -->
+        <ul class="nav nav-tabs" id="expenseTab" role="tablist">
+            <li class="nav-item" role="presentation">
+                <a class="nav-link active" id="report-tab" data-toggle="tab" href="#report" role="tab" aria-controls="report" aria-selected="true">Report</a>
+            </li>
+            <li class="nav-item" role="presentation">
+                <a class="nav-link" id="expense-tab" data-toggle="tab" href="#expense" role="tab" aria-controls="expense" aria-selected="false">Expense</a>
+            </li>
+        </ul>
+        <div class="tab-content mt-3" id="expenseTabContent">
+            <!-- Report Tab -->
+            <div class="tab-pane fade show active" id="report" role="tabpanel" aria-labelledby="report-tab">
+                <div class="report-summary-area p-3" style="background: #f8f9fa; border-radius: 8px;">
+                    <h4 class="mb-4 font-weight-bold">Financial Summary Report</h4>
+
+                    <!-- Period Display -->
+                    <div class="text-right mb-3">
+                        <div class="text-muted">
+                            <small>Period: {{ \Carbon\Carbon::now()->startOfMonth()->format('M d, Y') }} - {{ \Carbon\Carbon::now()->endOfMonth()->format('M d, Y') }}</small>
                         </div>
                     </div>
-                </form>
+
+                    <div class="report-cards-row">
+                        <div class="report-card mb-3">
+                            <a href="{{ route('expense.sales-details') }}" class="text-decoration-none">
+                                <div class="card shadow-sm border-0 text-center h-100">
+                                    <div class="card-body d-flex flex-column justify-content-center" style="min-height: 150px;">
+                                        <div class="mb-2" style="font-size:2rem; color:#007bff;"><i class="fa fa-shopping-cart"></i></div>
+                                        <div class="font-weight-bold">Total Sales</div>
+                                        <div class="h5 text-success mt-1">{{ config('settings.currency_symbol') }} {{ number_format($netSales, 2) }}
+                                            <small class="text-muted d-block" style="font-size: 0.8em;">Net (after returns, purchase returns)</small>
+                                            <small class="text-muted d-block" style="font-size: 0.8em;">Gross: {{ config('settings.currency_symbol') }} {{ number_format($totalSales, 2) }}, Sales Returns: -{{ config('settings.currency_symbol') }} {{ number_format($returnsTotal, 2) }}, Purchase Returns: -{{ config('settings.currency_symbol') }} {{ number_format($purchaseReturnsTotal, 2) }}</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                        <div class="report-card mb-3">
+                            <a href="{{ route('expense.purchase-details') }}" class="text-decoration-none">
+                                <div class="card shadow-sm border-0 text-center h-100">
+                                    <div class="card-body d-flex flex-column justify-content-center" style="min-height: 150px;">
+                                        <div class="mb-2" style="font-size:2rem; color:#6f42c1;"><i class="fa fa-truck"></i></div>
+                                        <div class="font-weight-bold">Total Purchase</div>
+                                        <div class="h5 text-primary mt-1">{{ config('settings.currency_symbol') }} {{ number_format($totalPurchase, 2) }}</div>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                        <div class="report-card mb-3">
+                            <a href="{{ route('purchasereturn.index') }}" class="text-decoration-none">
+                                <div class="card shadow-sm border-0 text-center h-100">
+                                    <div class="card-body d-flex flex-column justify-content-center" style="min-height: 150px;">
+                                        <div class="mb-2" style="font-size:2rem; color:#fd7e14;"><i class="fa fa-undo-alt"></i></div>
+                                        <div class="font-weight-bold">Purchase Returns</div>
+                                        <div class="h5 text-warning mt-1">-{{ config('settings.currency_symbol') }} {{ number_format($purchaseReturnsTotal, 2) }}
+                                            <small class="text-muted d-block" style="font-size: 0.8em;">Profit Loss: -{{ config('settings.currency_symbol') }} {{ number_format($purchaseReturnsProfit, 2) }}</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                        <div class="report-card mb-3">
+                            <a href="{{ route('expense.expense-details') }}" class="text-decoration-none">
+                                <div class="card shadow-sm border-0 text-center h-100">
+                                    <div class="card-body d-flex flex-column justify-content-center" style="min-height: 150px;">
+                                        <div class="mb-2" style="font-size:2rem; color:#dc3545;"><i class="fa fa-credit-card"></i></div>
+                                        <div class="font-weight-bold">Total Expenses</div>
+                                        <div class="h5 text-danger mt-1">{{ config('settings.currency_symbol') }} {{ number_format($totalExpenses, 2) }}</div>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                        <div class="report-card mb-3">
+                            <a href="{{ route('damage.index') }}" class="text-decoration-none">
+                                <div class="card shadow-sm border-0 text-center h-100">
+                                    <div class="card-body d-flex flex-column justify-content-center" style="min-height: 150px;">
+                                        <div class="mb-2" style="font-size:2rem; color:#343a40;"><i class="fa fa-exclamation-triangle"></i></div>
+                                        <div class="font-weight-bold">Damaged Products</div>
+                                        <div class="h5 text-dark mt-1">-{{ config('settings.currency_symbol') }} {{ number_format($damagesTotal, 2) }}</div>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                        <div class="report-card mb-3">
+                            <a href="{{ route('expense.profit-details') }}" class="text-decoration-none">
+                                <div class="card shadow-sm border-0 text-center h-100">
+                                    <div class="card-body d-flex flex-column justify-content-center" style="min-height: 150px;">
+                                        <div class="mb-2" style="font-size:2rem; color:#28a745;"><i class="fa fa-chart-line"></i></div>
+                                        <div class="font-weight-bold">Total Profit</div>
+                                        <div class="h5 text-success mt-1">{{ config('settings.currency_symbol') }} {{ number_format($netProfit, 2) }}
+                                            <small class="text-muted d-block" style="font-size: 0.8em;">Net (after all returns & damages)</small>
+                                            <small class="text-muted d-block" style="font-size: 0.8em;">Gross: {{ config('settings.currency_symbol') }} {{ number_format($totalProfit, 2) }}, Sales Returns: -{{ config('settings.currency_symbol') }} {{ number_format($returnsProfit, 2) }}, Purchase Returns: -{{ config('settings.currency_symbol') }} {{ number_format($purchaseReturnsProfit, 2) }}, Damages: -{{ config('settings.currency_symbol') }} {{ number_format($damagesTotal, 2) }}</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                        <div class="report-card mb-3">
+                            <a href="{{ route('expense.cash-details') }}" class="text-decoration-none">
+                                <div class="card shadow-sm border-0 text-center h-100">
+                                    <div class="card-body d-flex flex-column justify-content-center" style="min-height: 150px;">
+                                        <div class="mb-2" style="font-size:2rem; color:#ffc107;"><i class="fa fa-wallet"></i></div>
+                                        <div class="font-weight-bold">Cash in Hand</div>
+                                        <div class="h5 text-warning mt-1">{{ config('settings.currency_symbol') }} {{ number_format($cashInHand, 2) }}
+                                            <small class="text-muted d-block" style="font-size: 0.8em;">Net (after all returns & damages)</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                        <div class="report-card mb-3">
+                            <a href="{{ route('expense.purchase-details') }}" class="text-decoration-none">
+                                <div class="card shadow-sm border-0 text-center h-100">
+                                    <div class="card-body d-flex flex-column justify-content-center" style="min-height: 150px;">
+                                        <div class="mb-2" style="font-size:2rem; color:#e83e8c;"><i class="fa fa-exclamation-circle"></i></div>
+                                        <div class="font-weight-bold">Purchase Due</div>
+                                        <div class="h5 text-danger mt-1">{{ config('settings.currency_symbol') }} {{ number_format($totalPurchaseDue, 2) }}</div>
+                                        <small class="text-muted d-block" style="font-size: 0.8em;">Unpaid/Partially Paid Purchases</small>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Expense Tab -->
+            <div class="tab-pane fade" id="expense" role="tabpanel" aria-labelledby="expense-tab">
+                <!-- Existing expense filter and table -->
+                <div class="row">
+                    <div class="col-md-5"></div>
+                    <div class="col-md-7">
+                        <form action="{{route('expense.index')}}">
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <input type="date" name="start_date" class="form-control" value="{{request('start_date')}}" />
+                                </div>
+                                <div class="col-md-3">
+                                    <input type="date" name="end_date" class="form-control" value="{{request('end_date')}}" />
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <select class="form-control" name="expense_head" id="expense_head" required>
+                                            <option>:: Select expense head ::</option>
+                                            @foreach ($expense_heads as $exp )
+                                                <option value='{{$exp->expense_head}}'>{{$exp->expense_head}}</option>
+                                            @endforeach
+                                        </select>
+                                        @error('product_id')
+                                        <span class="invalid-feedback" role="alert">
+                                            <strong>{{ $message }}</strong>
+                                        </span>
+                                        @enderror
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <button class="btn btn-outline-primary" type="submit">{{ __('Show') }}</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>{{ 'ID' }}</th>
+                            <th>{{ 'Expense' }}</th>
+                            <th>{{ 'Expense Amount.' }}</th>
+                            <th>{{ 'Description' }}</th>
+                            <th>{{ 'Created' }}</th>
+
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach ($expenses as $expense)
+                        <tr>
+                            <td> {{$expense->id}}</td>
+                            <td>{{$expense->expense_head}}</td>
+                            <td>{{number_format($expense->expense_amount,0)}}</td>
+                            <td>{{$expense->expense_description}}</td>
+                            <td>{{$expense->created_at}}</td>
+                            <td><form action="/admin/expense/{{$expense->id}}" method="POST" onsubmit="return confirm('Are you sure you want to delete this?');"> @method('DELETE') @csrf <button type="submit"><i class="fa fa-trash"></i></button></form></td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <th></th>
+                            <th></th>
+                            <th>{{ config('settings.currency_symbol') }} {{ number_format($total, 2) }}</th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                        </tr>
+                    </tfoot>
+                </table>
+                <div class="text-center">{{ $expenses->render() }}</div>
             </div>
         </div>
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>{{ 'ID' }}</th>
-                    <th>{{ 'Expense' }}</th>
-                    <th>{{ 'Expense Amount.' }}</th>
-                    <th>{{ 'Description' }}</th>
-                    <th>{{ 'Created' }}</th>
-           
-                </tr>
-            </thead>
-            <tbody>
-                @foreach ($expenses as $expense)
-                <tr>
-                    <td> {{$expense->id}}</td>
-                    <td>{{$expense->expense_head}}</td>
-                    <td>{{number_format($expense->expense_amount,0)}}</td>
-                    <td>{{$expense->expense_description}}</td>
-                    <td>{{$expense->created_at}}</td>
-                    <td><form action="/admin/expense/{{$expense->id}}" method="POST" onsubmit="return confirm('Are you sure you want to delete this?');"> @method('DELETE') @csrf <button type="submit"><i class="fa fa-trash"></i></button></form></td>
-                     
-                </tr>
-                @endforeach
-            </tbody>
-            <tfoot>
-                <tr>
-                    <th></th>
-                    <th></th>
-                    <th>{{ config('settings.currency_symbol') }} {{ number_format($total, 2) }}</th>
-                    <th></th>
-                    <th></th>
-                    <th></th>
-                    <th></th>
-                </tr>
-            </tfoot>
-        </table>
-    
-        <div class="text-center">{{ $expenses->render() }}</div>
     </div>
 </div>
 @endsection
@@ -207,7 +331,7 @@
                           Total
                         </th>
                         <th class="right">
-                          <strong>{{config('settings.currency_symbol')}} ${totalAmount}</strong>
+                          <strong>${{config('settings.currency_symbol')}} ${totalAmount}</strong>
                         </th>
                       </tr>
 
@@ -216,7 +340,7 @@
                           Paid
                         </th>
                         <th class="right">
-                          <strong>{{config('settings.currency_symbol')}} ${receivedAmount}</strong>
+                          <strong>${{config('settings.currency_symbol')}} ${receivedAmount}</strong>
                         </th>
                       </tr>
                     </tfood>
@@ -246,3 +370,55 @@
 
 </script>
 @endsection
+
+<style>
+.report-cards-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  justify-content: flex-start;
+}
+.report-card {
+  flex: 0 0 220px;
+  max-width: 220px;
+  min-width: 220px;
+  margin-bottom: 1.5rem;
+}
+.report-card a {
+  display: block;
+  border-radius: 12px;
+  transition: box-shadow 0.2s, background 0.2s, transform 0.15s;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  cursor: pointer;
+  background: #fff;
+}
+.report-card a:hover, .report-card a:focus {
+  box-shadow: 0 6px 24px rgba(0,0,0,0.12);
+  background: #f5f7fa;
+  text-decoration: none;
+  transform: translateY(-2px) scale(1.03);
+}
+.report-card a:active {
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  background: #f0f0f0;
+  transform: scale(0.98);
+}
+@media (max-width: 991.98px) {
+  .report-cards-row {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .report-card {
+    flex: 1 1 45%;
+    max-width: 100%;
+    min-width: 180px;
+  }
+}
+@media (max-width: 767.98px) {
+  .report-card {
+    flex: 1 1 100%;
+    max-width: 100%;
+    min-width: 0;
+  }
+}
+</style>

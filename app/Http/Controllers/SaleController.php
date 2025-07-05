@@ -43,29 +43,54 @@ class SaleController extends Controller
         $sale = Sale::create([
             'customer_id' => $request->customer_id,
             'user_id' => $request->user()->id,
+            'sub_total' => 0,
+            'discount_amount' => 0,
+            'gr_total' => 0,
+            'paid_amount' => 0,
+            'profit_amount' => 0,
         ]);
 
         $cart = $request->user()->cart()->get();
         $sum_cart = $cart->sum('sell_price');
-        
+
+        $totalProfit = 0; // Initialize profit calculation
+        $subTotal = 0; // Initialize subtotal calculation
+
         foreach ($cart as $item) {
             $sale->items()->create([
+                'purchase_price' => $item->purchase_price,
                 'sell_price' => $item->sell_price * $item->pivot->quantity,
                 'quantity' => $item->pivot->quantity,
                 'product_id' => $item->id,
             ]);
+
+            // Calculate profit for this item: (sell_price - purchase_price) * quantity
+            $itemProfit = ($item->sell_price - $item->purchase_price) * $item->pivot->quantity;
+            $totalProfit += $itemProfit;
+
+            // Calculate subtotal
+            $subTotal += $item->sell_price * $item->pivot->quantity;
+
             $item->quantity = $item->quantity - $item->pivot->quantity;
             $item->save();
         }
+
+        // Update the order with calculated values
+        $order->sub_total = $subTotal;
+        $order->gr_total = $subTotal; // Assuming no discount for now
+        $order->paid_amount = $request->amount;
+        $order->profit_amount = $totalProfit;
+        $order->save();
+
         $request->user()->cart()->detach();
         $sale->payments()->create([
             'amount' => $request->amount,
             'user_id' => $request->user()->id,
         ]);
 
-        if($request->customer_id){
+        if ($request->customer_id) {
             $customer = Customer::where('id', $request->customer_id)->first();
-            $customer->balance = $customer->balance + ($sum_cart-$request->amount);
+            $customer->balance = $customer->balance + ($sum_cart - $request->amount);
             $customer->save();
         }
         return $sale;
@@ -79,7 +104,7 @@ class SaleController extends Controller
         // Find the order
         $order = Sale::findOrFail($orderId);
 
-        if($order->customer_id){
+        if ($order->customer_id) {
             $customer = Customer::where('id', $order->customer_id)->first();
             $customer->balance = $customer->balance - $request->amount;
             $customer->save();

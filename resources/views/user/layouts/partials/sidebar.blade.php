@@ -44,48 +44,48 @@
                         <i class="nav-icon fas fa-cart-plus"></i>
                         <p>{{ __('Purchase') }}</p>
                     </a>
-                </li> 
+                </li>
 
-                
+
                 <li class="nav-item item-separator">
                      <hr style="border-top:1px solid #666">
-                </li> 
-                
+                </li>
+
                 <li class="nav-item has-treeview">
                     <a href="{{ route('salesreturn.index') }}" class="nav-link {{ activeSegment('sales-return') }}">
                         <i class="nav-icon fas fa-cart-plus"></i>
                         <p>{{ __('Sales Return') }}</p>
                     </a>
-                </li> 
+                </li>
 
                 <li class="nav-item has-treeview">
                     <a href="{{ route('purchasereturn.index') }}" class="nav-link {{ activeSegment('purchase-return') }}">
                         <i class="nav-icon fas fa-cart-plus"></i>
                         <p>{{ __('Purchase Return') }}</p>
                     </a>
-                </li> 
+                </li>
 
                 <li class="nav-item has-treeview">
                     <a href="{{ route('damage.index') }}" class="nav-link {{ activeSegment('damage') }}">
                         <i class="nav-icon fas fa-cart-plus"></i>
                         <p>{{ __('Damage') }}</p>
                     </a>
-                </li> 
+                </li>
 
                  <li class="nav-item item-separator">
                      <hr style="border-top:1px solid #666">
-                </li> 
+                </li>
 
                  <li class="nav-item has-treeview">
                     <a href="{{ route('expense.index') }}" class="nav-link {{ activeSegment('expense') }}">
                         <i class="nav-icon fas fa-cart-plus"></i>
-                        <p>{{ __('Expense') }}</p>
+                        <p>Expenses & Report</p>
                     </a>
-                </li> 
+                </li>
 
                 <li class="nav-item item-separator">
                      <hr style="border-top:1px solid #666">
-                </li> 
+                </li>
 
 
                 <li class="nav-item has-treeview">
