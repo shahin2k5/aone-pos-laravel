@@ -52,7 +52,7 @@ class Salesreturn extends Component {
         this.loadCart();
         this.loadProducts();
         this.loadCustomers();
-        
+
     }
 
     // load the transaltions for the react component
@@ -95,7 +95,7 @@ class Salesreturn extends Component {
             const order = res.data.order;
             if(cart.length){
                 const sub_total = this.getTotal(cart)
-                const gr_total = sub_total - this.state.discount_amount 
+                const gr_total = sub_total - this.state.discount_amount
                 const customer_id = order.customer_id
                 const prev_balance = order.customer.balance
                 const new_balance = order.customer.balance+gr_total
@@ -110,7 +110,7 @@ class Salesreturn extends Component {
                 const last_balance = 0
                 this.setState({ cart, sub_total, gr_total,customer_id, prev_balance, new_balance,last_balance });
             }
-          
+
         });
     }
 
@@ -139,7 +139,7 @@ class Salesreturn extends Component {
             }
             return c;
         });
-       
+
         if (!qty) return;
 
         axios
@@ -174,9 +174,9 @@ class Salesreturn extends Component {
                 const new_balance = this.state.prev_balance + gr_total
                 const last_balance = new_balance - this.state.discount_amount
 
-                this.setState({ 
-                    cart, 
-                    sub_total, 
+                this.setState({
+                    cart,
+                    sub_total,
                     gr_total,
                     new_balance,
                     last_balance
@@ -214,7 +214,7 @@ class Salesreturn extends Component {
         const customer_id = this.state.customer_id
         let product = this.state.products.find((p) => p.id === barcode);
         const elements = document.querySelectorAll('[class*="product-"]');
-    
+
         elements.forEach(el => {
             el.style.border = '0px';
         });
@@ -227,7 +227,7 @@ class Salesreturn extends Component {
         if(prodInput){
             prodInput.style.border = "2px solid #fcc";
         }
-        
+
         if (!!product) {
             // if product is already in cart
             let cart = this.state.cart.find((c) => c.product_id === product.id);
@@ -235,7 +235,7 @@ class Salesreturn extends Component {
                 // update quantity
                 const carts = this.state.cart.map((c) => {
                         if (
-                            c.product_id === product.id  
+                            c.product_id === product.id
                         ) {
                             c.qnty = parseInt(c.qnty) + 1;
                         }
@@ -247,7 +247,7 @@ class Salesreturn extends Component {
                 const last_balance = new_balance - this.state.discount_amount
 
                 this.setState({
-                    cart: carts, 
+                    cart: carts,
                     sub_total,
                     gr_total,
                     new_balance,
@@ -266,14 +266,14 @@ class Salesreturn extends Component {
                             user_id: 1,
                         },
                     };
-                    const productList = [...this.state.cart, product] 
+                    const productList = [...this.state.cart, product]
                     const sub_totals = this.getTotal(productList)
                     const gr_total = sub_totals - this.state.discount_amount
                     const new_balance = this.state.prev_balance + gr_total
                     const last_balance = new_balance - this.state.discount_amount
-                    this.setState({ 
-                        cart: productList, 
-                        sub_total: sub_totals, 
+                    this.setState({
+                        cart: productList,
+                        sub_total: sub_totals,
                         gr_total,
                         new_balance,
                         last_balance
@@ -281,7 +281,7 @@ class Salesreturn extends Component {
                 }
             }
 
-            
+
 
             axios
                 .post("/admin/salesreturn/cart", { product_id:product.id, barcode, customer_id })
@@ -295,15 +295,15 @@ class Salesreturn extends Component {
                 });
         }
 
-        
+
     }
 
     findOrderID(event) {
         const order_id = event.target.value
         const key_code = event.keyCode
-      
+
         if(order_id && key_code == 13){
-            
+
             axios.get(`/admin/salesreturn/findorderid/${order_id}`).then((res) => {
                 const order = res.data.order;
                 const salesreturn_items = res.data.salesreturn_item;
@@ -313,9 +313,9 @@ class Salesreturn extends Component {
 
 
                 if(order){
-                    
+
                     const sub_total = this.getTotal(salesreturn_items)
-                    const gr_total = sub_total - this.state.discount_amount 
+                    const gr_total = sub_total - this.state.discount_amount
                     const customer_id = order.customer_id
                     const user_balance = order.customer.balance
                     const prev_balance = user_balance
@@ -340,14 +340,14 @@ class Salesreturn extends Component {
                     const last_balance = 0
                     this.setState({ order_id,  cart:[], sub_total, gr_total,customer_id, prev_balance, new_balance,last_balance });
                 }
-                
 
-                
+
+
         });
-          
+
         }
 
-        
+
     }
 
     printInvoice = () => {
@@ -403,7 +403,7 @@ class Salesreturn extends Component {
 
     changeDiscount = (e) =>{
         const discount_amount = e.target.value
-        const gr_total = this.state.sub_total - discount_amount 
+        const gr_total = this.state.sub_total - discount_amount
         this.setState({
             discount_amount,
             gr_total
@@ -414,7 +414,7 @@ class Salesreturn extends Component {
 
         const new_balance = this.state.prev_balance
         const return_amount = e.target.value
-        const last_balance = parseFloat(new_balance) + parseFloat(return_amount) 
+        const last_balance = parseFloat(new_balance) + parseFloat(return_amount)
 
         this.setState({
             return_amount,
@@ -437,18 +437,31 @@ class Salesreturn extends Component {
         console.log('cart:::', cart)
         return (
             <div className="row">
-               
+
                 <div className="col-md-6 col-lg-6">
                     <div className="row mb-2">
+                        <div className="col-12 mb-2">
+                            <div className="alert alert-info p-2" style={{fontSize: '0.95em'}}>
+                                <strong>Tip:</strong> Enter the <b>original order ID</b> in the field below and press <b>Enter</b> to load the order for sales return.
+                            </div>
+                        </div>
                         <div className="col-md-2">
-                            <input type="text" onKeyUp={this.findOrderID} value={this.state.order_id} name="order-input" id="order-input" className="form-control border"></input>
+                            <input
+                                type="text"
+                                onKeyUp={this.findOrderID}
+                                value={this.state.order_id}
+                                name="order-input"
+                                id="order-input"
+                                className="form-control border"
+                                placeholder="Enter order ID and press Enter..."
+                            />
                         </div>
                         <div className="col-md-4"><span className="text-danger"><b>{this.state.selCustomerFName } {this.state.selCustomerLName}</b></span></div>
                         <div className="col-md-2"><span className="text-danger"><b>{this.state.selCustomerAddress}</b></span></div>
                         <div className="col-md-2"><span className="text-danger"><b>{this.state.selCustomerPhone}</b></span></div>
                         <div className="col-md-2"><span className="text-danger"><b>{this.state.selCustomerBalance} BDT</b></span></div>
                     </div>
-                    
+
                     <div className="user-cart mt-1">
                         <div className="card">
                             <table className="table table-striped">
@@ -505,18 +518,18 @@ class Salesreturn extends Component {
                     <div className="row">
                         <div className="col">
                             <div className="font-weight-bold">Sub. Total</div>
-                  
+
                             <div>{window.APP.currency_symbol} {this.numberFormat(this.state.gr_total)}</div>
                         </div>
                         <div className="col">
                             {/* <div className="font-weight-bold">Discount (0.00)</div>
                             <input type="text" readOnly={true} onChange={this.changeDiscount} placeholder="Discount amount" name="discount" id="discount" className="form-control form-sm text-right"/> */}
-                        
+
                             <div className="font-weight-bold">Return Amount</div>
                             <input type="text"  onChange={this.changeReturnAmount}  value={this.state.return_amount} name="discount" id="discount" placeholder="Paid amount" className="form-control form-sm text-right"/>
                         </div>
                         <div className="col text-right">
-                        
+
                             <div className="font-weight-bold">Last Balance </div>
                             <input type="text" value={this.numberFormat(this.state.last_balance)} readOnly name="discount" id="discount" className="form-control form-sm text-right"/>
                         </div>
@@ -527,15 +540,15 @@ class Salesreturn extends Component {
                             <input type="text" value={this.numberFormat(this.state.new_balance)} readOnly name="discount" id="discount" className="form-control form-sm text-right"/> */}
                         </div>
                         <div className="col">
-                            
+
                         </div>
                         <div className="col text-right">
-                            
+
                         </div>
                     </div>
                     <div className="row mt-3">
                         <div className="col">
-                             
+
                         </div>
                         <div className="col">
                             <button
@@ -557,7 +570,7 @@ class Salesreturn extends Component {
                                 {"Confirm Salesreturn"}
                             </button>
                         </div>
-                        
+
                     </div>
                 </div>
 
@@ -587,7 +600,7 @@ class Salesreturn extends Component {
                         </div>
 
                     </div>
-                    
+
                     <div className="order-product">
                         {products.map((p) => (
                             <div
@@ -613,7 +626,7 @@ class Salesreturn extends Component {
                     </div>
                 </div>
 
-                
+
 
             </div>
         );

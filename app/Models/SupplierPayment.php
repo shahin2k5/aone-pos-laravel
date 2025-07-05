@@ -11,4 +11,9 @@ class SupplierPayment extends Model
         'purchase_id',
         'user_id',
     ];
+
+    public function purchase()
+    {
+        return $this->belongsTo(\App\Models\Purchase::class, 'purchase_id');
+    }
 }

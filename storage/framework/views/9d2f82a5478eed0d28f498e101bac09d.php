@@ -1,10 +1,10 @@
 <!-- Main Sidebar Container -->
 <aside class="main-sidebar sidebar-dark-primary elevation-4">
     <!-- Brand Logo -->
-    <!-- <a href="{{route('home')}}" class="brand-link">
-        <img src="{{ asset('images/logo.png') }}" alt="AdminLTE Logo" class="brand-image img-circle elevation-3"
+    <!-- <a href="<?php echo e(route('home')); ?>" class="brand-link">
+        <img src="<?php echo e(asset('images/logo.png')); ?>" alt="AdminLTE Logo" class="brand-image img-circle elevation-3"
              style="opacity: .8">
-        <span class="brand-text font-weight-light">{{ config('app.name') }}</span>
+        <span class="brand-text font-weight-light"><?php echo e(config('app.name')); ?></span>
     </a> -->
 
     <!-- Sidebar -->
@@ -12,10 +12,10 @@
         <!-- Sidebar user (optional) -->
         <div class="user-panel mt-3 pb-3 mb-3 d-flex">
             <div class="image">
-                <img src="{{ auth()->user()->getAvatar() }}" class="img-circle elevation-2" alt="User Image">
+                <img src="<?php echo e(auth()->user()->getAvatar()); ?>" class="img-circle elevation-2" alt="User Image">
             </div>
             <div class="info">
-                <a href="#" class="d-block">{{ auth()->user()->getFullname() }}</a>
+                <a href="#" class="d-block"><?php echo e(auth()->user()->getFullname()); ?></a>
             </div>
         </div>
 
@@ -23,30 +23,30 @@
         <nav class="mt-2">
             <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
                 <li class="nav-item has-treeview">
-                    <a href="{{route('home')}}" class="nav-link">
+                    <a href="<?php echo e(route('home')); ?>" class="nav-link">
                         <i class="nav-icon fas fa-tachometer-alt"></i>
-                        <p>{{ __('dashboard.title') }}</p>
+                        <p><?php echo e(__('dashboard.title')); ?></p>
                     </a>
                 </li>
 
                 <li class="nav-item has-treeview">
-                    <a href="{{ route('cart.index') }}" class="nav-link {{ activeSegment('cart') }}">
+                    <a href="<?php echo e(route('cart.index')); ?>" class="nav-link <?php echo e(activeSegment('cart')); ?>">
                         <i class="nav-icon fas fa-cart-plus"></i>
-                        <p>{{ __('POS') }}</p>
+                        <p><?php echo e(__('POS')); ?></p>
                     </a>
                 </li>
 
                 <li class="nav-item has-treeview">
-                    <a href="{{ route('orders.index') }}" class="nav-link {{ activeSegment('orders') }}">
+                    <a href="<?php echo e(route('orders.index')); ?>" class="nav-link <?php echo e(activeSegment('orders')); ?>">
                         <i class="nav-icon fas fa-cart-plus"></i>
-                        <p>{{ __('order.sale-list') }}</p>
+                        <p><?php echo e(__('order.sale-list')); ?></p>
                     </a>
                 </li>
 
                 <li class="nav-item has-treeview">
-                    <a href="{{ route('purchase.index') }}" class="nav-link {{ activeSegment('purchase') }}">
+                    <a href="<?php echo e(route('purchase.index')); ?>" class="nav-link <?php echo e(activeSegment('purchase')); ?>">
                         <i class="nav-icon fas fa-cart-plus"></i>
-                        <p>{{ __('Purchase') }}</p>
+                        <p><?php echo e(__('Purchase')); ?></p>
                     </a>
                 </li>
 
@@ -56,23 +56,23 @@
                 </li>
 
                 <li class="nav-item has-treeview">
-                    <a href="{{ route('salesreturn.index') }}" class="nav-link {{ activeSegment('sales-return') }}">
+                    <a href="<?php echo e(route('salesreturn.index')); ?>" class="nav-link <?php echo e(activeSegment('sales-return')); ?>">
                         <i class="nav-icon fas fa-cart-plus"></i>
-                        <p>{{ __('Sales Return') }}</p>
+                        <p><?php echo e(__('Sales Return')); ?></p>
                     </a>
                 </li>
 
                 <li class="nav-item has-treeview">
-                    <a href="{{ route('purchasereturn.index') }}" class="nav-link {{ activeSegment('purchase-return') }}">
+                    <a href="<?php echo e(route('purchasereturn.index')); ?>" class="nav-link <?php echo e(activeSegment('purchase-return')); ?>">
                         <i class="nav-icon fas fa-cart-plus"></i>
-                        <p>{{ __('Purchase Return') }}</p>
+                        <p><?php echo e(__('Purchase Return')); ?></p>
                     </a>
                 </li>
 
                 <li class="nav-item has-treeview">
-                    <a href="{{ route('damage.index') }}" class="nav-link {{ activeSegment('damage') }}">
+                    <a href="<?php echo e(route('damage.index')); ?>" class="nav-link <?php echo e(activeSegment('damage')); ?>">
                         <i class="nav-icon fas fa-cart-plus"></i>
-                        <p>{{ __('Damage') }}</p>
+                        <p><?php echo e(__('Damage')); ?></p>
                     </a>
                 </li>
 
@@ -81,7 +81,7 @@
                 </li>
 
                  <li class="nav-item has-treeview">
-                    <a href="{{ route('expense.index') }}" class="nav-link {{ activeSegment('expense') }}">
+                    <a href="<?php echo e(route('expense.index')); ?>" class="nav-link <?php echo e(activeSegment('expense')); ?>">
                         <i class="nav-icon fas fa-cart-plus"></i>
                         <p>Expenses & Report</p>
                     </a>
@@ -93,36 +93,36 @@
 
 
                 <li class="nav-item has-treeview">
-                    <a href="{{ route('products.index') }}" class="nav-link {{ activeSegment('products') }}">
+                    <a href="<?php echo e(route('products.index')); ?>" class="nav-link <?php echo e(activeSegment('products')); ?>">
                         <i class="nav-icon fas fa-th-large"></i>
-                        <p>{{ __('product.title') }}</p>
+                        <p><?php echo e(__('product.title')); ?></p>
                     </a>
                 </li>
 
                 <li class="nav-item has-treeview">
-                    <a href="{{ route('customers.index') }}" class="nav-link {{ activeSegment('customers') }}">
+                    <a href="<?php echo e(route('customers.index')); ?>" class="nav-link <?php echo e(activeSegment('customers')); ?>">
                         <i class="nav-icon fas fa-users"></i>
-                        <p>{{ __('customer.title') }}</p>
+                        <p><?php echo e(__('customer.title')); ?></p>
                     </a>
                 </li>
                 <li class="nav-item has-treeview">
-                    <a href="{{ route('suppliers.index') }}" class="nav-link {{ activeSegment('supplier') }}">
+                    <a href="<?php echo e(route('suppliers.index')); ?>" class="nav-link <?php echo e(activeSegment('supplier')); ?>">
                         <i class="nav-icon fas fa-users"></i>
-                        <p>{{ __('Supplier') }}</p>
+                        <p><?php echo e(__('Supplier')); ?></p>
                     </a>
                 </li>
                 <li class="nav-item has-treeview">
-                    <a href="{{ route('settings.index') }}" class="nav-link {{ activeSegment('settings') }}">
+                    <a href="<?php echo e(route('settings.index')); ?>" class="nav-link <?php echo e(activeSegment('settings')); ?>">
                         <i class="nav-icon fas fa-cogs"></i>
-                        <p>{{ __('settings.title') }}</p>
+                        <p><?php echo e(__('settings.title')); ?></p>
                     </a>
                 </li>
                 <li class="nav-item">
                     <a href="#" class="nav-link" onclick="document.getElementById('logout-form').submit()">
                         <i class="nav-icon fas fa-sign-out-alt"></i>
-                        <p>{{ __('common.Logout') }}</p>
-                        <form action="{{route('logout')}}" method="POST" id="logout-form">
-                            @csrf
+                        <p><?php echo e(__('common.Logout')); ?></p>
+                        <form action="<?php echo e(route('logout')); ?>" method="POST" id="logout-form">
+                            <?php echo csrf_field(); ?>
                         </form>
                     </a>
                 </li>
@@ -132,3 +132,4 @@
     </div>
     <!-- /.sidebar -->
 </aside>
+<?php /**PATH /home/senpai/Work/laravel/aone-pos-laravel/resources/views/layouts/partials/sidebar.blade.php ENDPATH**/ ?>

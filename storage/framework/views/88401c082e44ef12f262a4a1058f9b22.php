@@ -1,9 +1,7 @@
-@extends('layouts.admin')
+<?php $__env->startSection('title', __('Sales Return')); ?>
+<?php $__env->startSection('content-header', __('Sales Return')); ?>
 
-@section('title', __('Sales Return'))
-@section('content-header', __('Sales Return'))
-
-@section('content')
+<?php $__env->startSection('content'); ?>
 
     <div id="salesreturn-cart">
         <!-- Loading placeholder while React component initializes -->
@@ -134,9 +132,9 @@
         </div>
     </div>
 
-@endsection
+<?php $__env->stopSection(); ?>
 
-@section('css')
+<?php $__env->startSection('css'); ?>
 <style>
     .card {
         border: 1px solid #dee2e6;
@@ -180,4 +178,6 @@
         margin-top: 1.5rem !important;
     }
 </style>
-@endsection
+<?php $__env->stopSection(); ?>
+
+<?php echo $__env->make('layouts.admin', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH /home/senpai/Work/laravel/aone-pos-laravel/resources/views/salesreturn/salesreturn-cart.blade.php ENDPATH**/ ?>
