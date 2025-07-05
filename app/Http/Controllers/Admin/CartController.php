@@ -33,9 +33,12 @@ class CartController extends Controller
         ]);
         $barcode = $request->barcode;
         $customer_id = $request->customer_id;
+        $user = auth()->user();
+        $company_id = $user->company_id;
 
-        $product = Product::where('barcode', $barcode)->first();
+        $product = Product::where('barcode', $barcode)->where('products.company_id',$company_id)->first();
         $cart = $request->user()->cart()->where('barcode', $barcode)->first();
+       
         if ($cart) {
             // check product quantity
             if ($product->quantity <= $cart->pivot->quantity) {
@@ -52,7 +55,26 @@ class CartController extends Controller
                     'message' => __('cart.outstock'),
                 ], 400);
             }
-            $request->user()->cart()->attach($product->id, ['quantity' => 1,'customer_id'=>$customer_id]);
+            
+            $role = $user->role;
+            if($role=="admin"){
+                $branch_id = $request->branch_id;
+                $request->user()->cart()->attach($product->id, [
+                    'quantity' => 1,
+                    'customer_id'=>$customer_id,
+                    'branch_id'=>$branch_id,
+                    'company_id'=>$company_id,
+                ]);
+            }else{
+                $request->user()->cart()->attach($product->id, [
+                    'quantity' => 1,
+                    'customer_id'=>$customer_id,
+                    'branch_id'=>$user->branch_id,
+                    'company_id'=>$company_id,
+                ]);
+            }
+
+            
         }
 
         return response('', 204);

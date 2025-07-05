@@ -26,7 +26,7 @@ class ProductController extends Controller
         if (request()->wantsJson()) {
             return ProductResource::collection($products);
         }
-        return view('products.index')->with('products', $products);
+        return view('admin.products.index')->with('products', $products);
     }
 
     /**
@@ -36,7 +36,7 @@ class ProductController extends Controller
      */
     public function create()
     {
-        return view('products.create');
+        return view('admin.products.create');
     }
 
     /**
@@ -61,7 +61,10 @@ class ProductController extends Controller
             'purchase_price' => $request->purchase_price,
             'sell_price' => $request->sell_price,
             'quantity' => $request->quantity,
-            'status' => $request->status
+            'status' => $request->status,
+            'user_id' => auth()->user()->id,
+            'branch_id' => auth()->user()->branch_id,
+            'company_id' => auth()->user()->company_id,
         ]);
 
         if (!$product) {

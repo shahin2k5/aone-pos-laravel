@@ -4,19 +4,19 @@
 <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <title>@yield('title', config('app.name'))</title>
+    <title><?php echo $__env->yieldContent('title', config('app.name')); ?></title>
     <!-- Tell the browser to be responsive to screen width -->
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <!-- Ionicons -->
     <!-- <link rel="stylesheet" href="https://code.ionicframework.com/ionicons/2.0.1/css/ionicons.min.css"> -->
     <!-- overlayScrollbars -->
-    <!-- <link rel="stylesheet" href="{{ asset('css/app.css') }}"> -->
+    <!-- <link rel="stylesheet" href="<?php echo e(asset('css/app.css')); ?>"> -->
     <!-- Google Font: Source Sans Pro -->
     <link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700" rel="stylesheet">
 
 
-    @vite(['resources/sass/app.scss', 'resources/js/app.js'])
-    @yield('css')
+    <?php echo app('Illuminate\Foundation\Vite')(['resources/sass/app.scss', 'resources/js/app.js']); ?>
+    <?php echo $__env->yieldContent('css'); ?>
     <script>
         window.APP = <?php echo json_encode([
                             'currency_symbol' => config('settings.currency_symbol'),
@@ -29,8 +29,8 @@
     <!-- Site wrapper -->
     <div class="wrapper">
 
-        @include('user.layouts.partials.navbar')
-        @include('user.layouts.partials.sidebar')
+        <?php echo $__env->make('user.layouts.partials.navbar', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
+        <?php echo $__env->make('user.layouts.partials.sidebar', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
         <!-- Content Wrapper. Contains page content -->
         <div class="content-wrapper">
             <!-- Content Header (Page header) -->
@@ -38,11 +38,11 @@
                 <div class="container-fluid">
                     <div class="row mb-2">
                         <div class="col-sm-8">
-                            <h1>@yield('content-header')</h1>
+                            <h1><?php echo $__env->yieldContent('content-header'); ?></h1>
                         </div>
                         <div class="col-sm-4 text-right">
-                            <h1>Branch: {{auth()->user()->branch->branch_name}}</h1>
-                            @yield('content-actions')
+                            <h1>Branch: <?php echo e(auth()->user()->branch->branch_name); ?></h1>
+                            <?php echo $__env->yieldContent('content-actions'); ?>
                         </div><!-- /.col -->
                     </div>
                 </div><!-- /.container-fluid -->
@@ -50,15 +50,15 @@
 
             <!-- Main content -->
             <section class="content">
-                @include('user.layouts.partials.alert.success')
-                @include('user.layouts.partials.alert.error')
-                @yield('content')
+                <?php echo $__env->make('user.layouts.partials.alert.success', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
+                <?php echo $__env->make('user.layouts.partials.alert.error', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
+                <?php echo $__env->yieldContent('content'); ?>
             </section>
 
         </div>
         <!-- /.content-wrapper -->
 
-        @include('user.layouts.partials.footer')
+        <?php echo $__env->make('user.layouts.partials.footer', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
 
         <!-- Control Sidebar -->
         <aside class="control-sidebar control-sidebar-dark">
@@ -67,11 +67,11 @@
         <!-- /.control-sidebar -->
     </div>
     <!-- ./wrapper -->
-    <!-- <script src="{{ asset('js/app.js') }}"></script> -->
+    <!-- <script src="<?php echo e(asset('js/app.js')); ?>"></script> -->
 
 
-    @yield('js')
-    @yield('model')
+    <?php echo $__env->yieldContent('js'); ?>
+    <?php echo $__env->yieldContent('model'); ?>
 </body>
 
-</html>
+</html><?php /**PATH D:\Shahin Files + Live Projects\LIVE PROJECTS\aone-pos-laravel\aone.qoyelxyz.com\resources\views/user/layouts/user.blade.php ENDPATH**/ ?>

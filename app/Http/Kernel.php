@@ -23,15 +23,7 @@ class Kernel extends HttpKernel
         \Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull::class,
     ];
 
-
-    protected $middlewarePriority = [
-        \Illuminate\Session\Middleware\StartSession::class,
-        \Illuminate\View\Middleware\ShareErrorsFromSession::class,
-        \App\Http\Middleware\Authenticate::class,
-        \App\Http\Middleware\AdminMiddleware::class,
-        \App\Http\Middleware\UserMiddleware::class,
-        // other middleware
-    ];
+ 
   
 
     /**

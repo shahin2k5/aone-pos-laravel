@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+@extends('admin.layouts.admin')
 
 @section('title', __('product.Create_Product'))
 @section('content-header', __('product.Create_Product'))

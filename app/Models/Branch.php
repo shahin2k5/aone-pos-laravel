@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Builder;
 
 class Branch extends Model
 {
@@ -11,6 +12,14 @@ class Branch extends Model
         'address',
         'mobile',
         'user_id',
-        'company_id'
+        'branch_id',
+        'company_id',
     ];
+    
+    protected static function booted() {
+        static::addGlobalScope('branch', function (Builder $builder) {
+            $company_id = auth()->user()->company_id;
+            $builder->where('company_id', $company_id);
+        });
+    }
 }

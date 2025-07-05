@@ -54,9 +54,7 @@ class UserController extends Controller
 
         $today_profit = Sale::whereBetween('created_at', [now()->startOfDay(), now()->endOfDay()])
                                         ->sum('profit_amount');
-        $today_profit = Order::whereBetween('created_at', [now()->startOfDay(), now()->endOfDay()])
-            ->sum('profit_amount');
-
+   
         $orders = Sale::with(['items', 'payments'])->get();
         $customers_count = Customer::count();
 
@@ -70,125 +68,45 @@ class UserController extends Controller
             ->havingRaw('SUM(sale_items.quantity) > 10')
             ->get();
 
+   
+         
+
         $currentMonthBestSelling = DB::table('products')
-            ->select('products.*', DB::raw('SUM(sale_items.quantity) AS total_sold'))
+            ->select(
+                'products.id',
+                'products.name',
+                'products.description',
+                'products.image',
+                'products.barcode',
+                'products.purchase_price',
+                'products.sell_price',
+                'products.quantity',
+                'products.status',
+                'products.created_at',
+                'products.updated_at',
+                DB::raw('SUM(sale_items.quantity) AS total_sold')
+            )
             ->join('sale_items', 'sale_items.product_id', '=', 'products.id')
             ->join('sales', 'sales.id', '=', 'sale_items.sale_id')
             ->whereYear('sales.created_at', date('Y'))
             ->whereMonth('sales.created_at', date('m'))
-            ->groupBy('products.id')
+            ->groupBy(
+                'products.id',
+                'products.name',
+                'products.description',
+                'products.image',
+                'products.barcode',
+                'products.purchase_price',
+                'products.sell_price',
+                'products.quantity',
+                'products.status',
+                'products.created_at',
+                'products.updated_at'
+            )
             ->havingRaw('SUM(sale_items.quantity) > 500')  // Best-selling threshold for the current month
             ->get();
 
-        $pastSixMonthsHotProducts = DB::table('products')
-            ->select('products.*', DB::raw('SUM(sale_items.quantity) AS total_sold'))
-            ->join('sale_items', 'sale_items.product_id', '=', 'products.id')
-            ->join('sales', 'sales.id', '=', 'sale_items.sale_id')
-            ->where('sales.created_at', '>=', now()->subMonths(6))  // Filter for the past 6 months
-            ->groupBy('products.id')
-            ->havingRaw('SUM(sale_items.quantity) > 1000')  // Hot product threshold for past 6 months
-            ->select(
-                'products.id',
-                'products.name',
-                'products.description',
-                'products.image',
-                'products.barcode',
-                'products.purchase_price',
-                'products.sell_price',
-                'products.quantity',
-                'products.status',
-                'products.created_at',
-                'products.updated_at',
-                DB::raw('SUM(order_items.quantity) AS total_sold')
-            )
-            ->join('order_items', 'order_items.product_id', '=', 'products.id')
-            ->join('orders', 'orders.id', '=', 'order_items.order_id')
-            ->groupBy(
-                'products.id',
-                'products.name',
-                'products.description',
-                'products.image',
-                'products.barcode',
-                'products.purchase_price',
-                'products.sell_price',
-                'products.quantity',
-                'products.status',
-                'products.created_at',
-                'products.updated_at'
-            )
-            ->havingRaw('SUM(order_items.quantity) > 10')
-            ->get();
-
-        $currentMonthBestSelling = DB::table('products')
-            ->select(
-                'products.id',
-                'products.name',
-                'products.description',
-                'products.image',
-                'products.barcode',
-                'products.purchase_price',
-                'products.sell_price',
-                'products.quantity',
-                'products.status',
-                'products.created_at',
-                'products.updated_at',
-                DB::raw('SUM(order_items.quantity) AS total_sold')
-            )
-            ->join('order_items', 'order_items.product_id', '=', 'products.id')
-            ->join('orders', 'orders.id', '=', 'order_items.order_id')
-            ->whereYear('orders.created_at', date('Y'))
-            ->whereMonth('orders.created_at', date('m'))
-            ->groupBy(
-                'products.id',
-                'products.name',
-                'products.description',
-                'products.image',
-                'products.barcode',
-                'products.purchase_price',
-                'products.sell_price',
-                'products.quantity',
-                'products.status',
-                'products.created_at',
-                'products.updated_at'
-            )
-            ->havingRaw('SUM(order_items.quantity) > 500')  // Best-selling threshold for the current month
-            ->get();
-
-        $pastSixMonthsHotProducts = DB::table('products')
-            ->select(
-                'products.id',
-                'products.name',
-                'products.description',
-                'products.image',
-                'products.barcode',
-                'products.purchase_price',
-                'products.sell_price',
-                'products.quantity',
-                'products.status',
-                'products.created_at',
-                'products.updated_at',
-                DB::raw('SUM(order_items.quantity) AS total_sold')
-            )
-            ->join('order_items', 'order_items.product_id', '=', 'products.id')
-            ->join('orders', 'orders.id', '=', 'order_items.order_id')
-            ->where('orders.created_at', '>=', now()->subMonths(6))  // Filter for the past 6 months
-            ->groupBy(
-                'products.id',
-                'products.name',
-                'products.description',
-                'products.image',
-                'products.barcode',
-                'products.purchase_price',
-                'products.sell_price',
-                'products.quantity',
-                'products.status',
-                'products.created_at',
-                'products.updated_at'
-            )
-            ->havingRaw('SUM(order_items.quantity) > 1000')  // Hot product threshold for past 6 months
-            ->get();
-
-
+         
 
         
 
@@ -204,7 +122,7 @@ class UserController extends Controller
             'low_stock_products' => $low_stock_products,
             'best_selling_products' => $bestSellingProducts,
             'current_month_products' => $currentMonthBestSelling,
-            'past_months_products' => $pastSixMonthsHotProducts,
+ 
             'payment_customer_today' => $customer_payment,
             'payment_supplier_today' => $supplier_payment,
             'today_sales' => $today_sales,

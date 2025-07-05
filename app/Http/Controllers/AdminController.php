@@ -19,6 +19,7 @@ class AdminController extends Controller
      */
     public function __construct()
     {
+        
         $this->middleware(['auth']);
     }
 
@@ -43,6 +44,10 @@ class AdminController extends Controller
 
         $today_profit = Sale::whereBetween('created_at', [now()->startOfDay(), now()->endOfDay()])
                                         ->sum('profit_amount');
+
+        $today_purchase_due = Purchase::whereBetween('created_at', [now()->startOfDay(), now()->endOfDay()])
+            ->whereColumn('paid_amount', '<', 'gr_total')
+            ->sum(DB::raw('gr_total - paid_amount'));
 
         $sales = Sale::with(['items', 'payments'])->get();
         $customers_count = Customer::count();
@@ -97,6 +102,7 @@ class AdminController extends Controller
             'payment_supplier_today' => $supplier_payment,
             'today_sales' => $today_sales,
             'today_purchase' => $today_purchase,
+            'today_purchase_due' => $today_purchase_due,
             'today_profit' => $today_profit,
         ]);
     }

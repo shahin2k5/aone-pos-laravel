@@ -28,7 +28,7 @@ class SalesreturnController extends Controller
         $total = 0;
         
  
-        return view('salesreturn.index', compact('salesreturns', 'total'));
+        return view('admin.salesreturn.index', compact('salesreturns', 'total'));
     }
 
     public function salesreturnDetails($salesreturn_id){

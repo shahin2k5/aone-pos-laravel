@@ -40,14 +40,25 @@ class SaleController extends Controller
 
     public function store(SaleStoreRequest $request)
     {
+        $user = auth()->user();
+        $company_id = $user->company_id;
+        $branch_id = "";
+        $role = $user->role;
+        if($role=="admin"){
+            $branch_id = $request->branch_id;
+        }else{
+            $branch_id = $user->branch_id;
+        }
         $sale = Sale::create([
             'customer_id' => $request->customer_id,
-            'user_id' => $request->user()->id,
             'sub_total' => 0,
             'discount_amount' => 0,
             'gr_total' => 0,
             'paid_amount' => 0,
             'profit_amount' => 0,
+            'user_id' => $request->user()->id,
+            'branch_id' => $branch_id,
+            'company_id' => $company_id,
         ]);
 
         $cart = $request->user()->cart()->get();
@@ -62,6 +73,9 @@ class SaleController extends Controller
                 'sell_price' => $item->sell_price * $item->pivot->quantity,
                 'quantity' => $item->pivot->quantity,
                 'product_id' => $item->id,
+                'user_id' => $request->user()->id,
+                'branch_id' => $branch_id,
+                'company_id' => $company_id,
             ]);
 
             // Calculate profit for this item: (sell_price - purchase_price) * quantity
@@ -72,15 +86,18 @@ class SaleController extends Controller
             $subTotal += $item->sell_price * $item->pivot->quantity;
 
             $item->quantity = $item->quantity - $item->pivot->quantity;
+            $item->user_id = $request->user()->id;
+            $item->branch_id = $branch_id;
+            $item->company_id = $company_id;
             $item->save();
         }
 
         // Update the order with calculated values
-        $order->sub_total = $subTotal;
-        $order->gr_total = $subTotal; // Assuming no discount for now
-        $order->paid_amount = $request->amount;
-        $order->profit_amount = $totalProfit;
-        $order->save();
+        $sale->sub_total = $subTotal;
+        $sale->gr_total = $subTotal; // Assuming no discount for now
+        $sale->paid_amount = $request->amount;
+        $sale->profit_amount = $totalProfit;
+        $sale->save();
 
         $request->user()->cart()->detach();
         $sale->payments()->create([
@@ -100,6 +117,12 @@ class SaleController extends Controller
         // return $request;
         $orderId = $request->order_id;
         $amount = $request->amount;
+        $user = auth()->user();
+        if($user->role=="admin"){
+            $branch_id = $request->branch_id;
+        }else{
+            $branch_id = $user->branch_id;
+        }
 
         // Find the order
         $order = Sale::findOrFail($orderId);
@@ -117,10 +140,12 @@ class SaleController extends Controller
         }
 
         // Save the payment
-        DB::transaction(function () use ($order, $amount) {
+        DB::transaction(function () use ($order, $amount, $user,$branch_id) {
             $order->payments()->create([
                 'amount' => $amount,
                 'user_id' => auth()->user()->id,
+                'branch_id' => $branch_id,
+                'company_id' => $user->company_id,
             ]);
         });
 

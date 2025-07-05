@@ -1,5 +1,5 @@
 @extends('admin.layouts.admin')
-@section('content-header', 'Admin Dashboard - '. now())
+@section('content-header', strtoupper(auth()->user()->role).' Dashboard - '. now())
 @section('content')
 <div class="container-fluid">
    <div class="row">

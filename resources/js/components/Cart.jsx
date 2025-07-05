@@ -337,7 +337,7 @@ class Cart extends Component {
     }
 
     printInvoice = () => {
-        const invoiceUrl = `/admin/orders/print/${this.state.saleId}`;
+        const invoiceUrl = `/admin/sales/print/${this.state.saleId}`;
         window.open(invoiceUrl, "_blank");
     };
 
@@ -356,14 +356,14 @@ class Cart extends Component {
             showLoaderOnConfirm: true,
             preConfirm: (amount) => {
                 return axios
-                    .post("/admin/orders", {
+                    .post("/admin/sales", {
                         customer_id: this.state.customer_id,
                         amount,
                     })
                     .then((res) => {
                         this.loadCart();
                         // Assuming the response includes an order ID or invoice URL
-                        const printUrl = `/admin/orders/print/${res.data.id}`;
+                        const printUrl = `/admin/sales/print/${res.data.id}`;
                         this.setState({ printUrl, paid_amount:0 });
                         Swal.fire("Success", "Order has been saved!", "success");
                         return res.data;
