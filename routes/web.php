@@ -36,6 +36,7 @@ Route::middleware(['auth' ])->prefix('admin')->group(function () {
     Route::get('/dashboard', [AdminController::class, 'index'])->name('admin-dashboard');
     Route::get('/settings', [SettingController::class, 'index'])->name('settings.index');
     Route::post('/settings', [SettingController::class, 'store'])->name('settings.store');
+    Route::get('/load-branches', [SettingController::class, 'loadBranches'])->name('load.branches');
     Route::resource('products', ProductController::class);
     Route::resource('customers', CustomerController::class);
     Route::resource('suppliers', SupplierController::class);

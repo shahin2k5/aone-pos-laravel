@@ -1,5 +1,5 @@
 
-<?php $__env->startSection('content-header', 'Admin Dashboard - '. now()); ?>
+<?php $__env->startSection('content-header', strtoupper(auth()->user()->role).' Dashboard - '. now()); ?>
 <?php $__env->startSection('content'); ?>
 <div class="container-fluid">
    <div class="row">

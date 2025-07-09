@@ -11,7 +11,7 @@ class Branch extends Model
         'branch_name',
         'address',
         'mobile',
-        'user_id',
+        'admin_id',
         'branch_id',
         'company_id',
     ];

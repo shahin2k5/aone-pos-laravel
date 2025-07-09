@@ -32,7 +32,12 @@ class SettingController extends Controller
         return redirect()->route('settings.index');
     }
 
-    public function branchList(){
+    public function loadBranches(){
+        if (request()->wantsJson()) {
+            return response(
+                Branch::all()
+            );
+        }
 
     }
 

@@ -28,6 +28,13 @@
 <body class="hold-transition sidebar-mini">
     <!-- Site wrapper -->
     <div class="wrapper">
+        <?php
+            if(auth()->user()->role!=="admin"){
+              echo "  <script>
+                    window.location = '/user/dashboards';
+                </script>";
+            }
+        ?>
 
         <?php echo $__env->make('admin.layouts.partials.navbar', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
         <?php echo $__env->make('admin.layouts.partials.sidebar', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>

@@ -17,17 +17,23 @@
 </head>
 
 <body class="hold-transition login-page">
-    <div class="login-box">
+    <div class="login-box" style="width: 100%;">
         <div class="login-logo">
-            <a href="/">{{ config('app.name') }}</a>
+            <a href="/">Registration New Company</a>
         </div>
         <!-- /.login-logo -->
-        <div class="card">
-            <div class="card-body login-card-body">
-                @yield('content')
+         <div class="row">
+            <div class="col-md-4"></div>
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-body login-card-body">
+                        @yield('content')
+                    </div>
+                    <!-- /.login-card-body -->
+                </div>
             </div>
-            <!-- /.login-card-body -->
-        </div>
+         </div>
+        
     </div>
     <!-- /.login-box -->
 

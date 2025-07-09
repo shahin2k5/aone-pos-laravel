@@ -10,6 +10,7 @@
 @endsection
 
 @section('content')
+ 
 <p class="login-box-msg">Signin to start your session</p>
 
 <form action="{{ route('login') }}" method="post" class="login-form">
@@ -71,4 +72,5 @@
 <p class="mb-0">
     <a href="{{ route('register')}}" class="text-center">Register a new membership</a>
 </p>
+
 @endsection

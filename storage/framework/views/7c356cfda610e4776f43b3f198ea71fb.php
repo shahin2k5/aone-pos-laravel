@@ -37,11 +37,10 @@
             <section class="content-header">
                 <div class="container-fluid">
                     <div class="row mb-2">
-                        <div class="col-sm-6">
+                        <div class="col-sm-8">
                             <h1><?php echo $__env->yieldContent('content-header'); ?></h1>
-                            
                         </div>
-                        <div class="col-sm-6 text-right">
+                        <div class="col-sm-4 text-right">
                             <h1>Branch: <?php echo e(auth()->user()->branch->branch_name); ?></h1>
                             <?php echo $__env->yieldContent('content-actions'); ?>
                         </div><!-- /.col -->

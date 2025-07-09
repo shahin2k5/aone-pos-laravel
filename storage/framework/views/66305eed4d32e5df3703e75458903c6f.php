@@ -10,6 +10,7 @@
 <?php $__env->stopSection(); ?>
 
 <?php $__env->startSection('content'); ?>
+ 
 <p class="login-box-msg">Signin to start your session</p>
 
 <form action="<?php echo e(route('login')); ?>" method="post" class="login-form">
@@ -99,5 +100,6 @@ unset($__errorArgs, $__bag); ?>
 <p class="mb-0">
     <a href="<?php echo e(route('register')); ?>" class="text-center">Register a new membership</a>
 </p>
+
 <?php $__env->stopSection(); ?>
 <?php echo $__env->make('auth.layouts.auth', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH D:\Shahin Files + Live Projects\LIVE PROJECTS\aone-pos-laravel\aone.qoyelxyz.com\resources\views/auth/login.blade.php ENDPATH**/ ?>

@@ -11,9 +11,11 @@ class Cart extends Component {
             cart: [],
             products: [],
             customers: [],
+            branches: [],
             barcode: "",
             search: "",
             customer_id: "",
+            branch_id: "",
             translations: {},
             sub_total:0,
             discount_amount:0,
@@ -41,6 +43,7 @@ class Cart extends Component {
         this.handleChangeSearch = this.handleChangeSearch.bind(this);
         this.handleSeach = this.handleSeach.bind(this);
         this.setCustomerId = this.setCustomerId.bind(this);
+        this.setBranchId = this.setBranchId.bind(this);
         this.handleClickSubmit = this.handleClickSubmit.bind(this);
         this.loadTranslations = this.loadTranslations.bind(this);
     }
@@ -48,9 +51,12 @@ class Cart extends Component {
     componentDidMount() {
         // load user cart
         this.loadTranslations();
-        this.loadCart();
-        this.loadProducts();
+        this.loadBranch();
         this.loadCustomers();
+        this.loadProducts();
+        this.loadCart();
+
+        console.log('branch_id',this.state.branch_id)
         
     }
 
@@ -71,6 +77,14 @@ class Cart extends Component {
         axios.get(`/admin/customers`).then((res) => {
             const customers = res.data;
             this.setState({ customers });
+        });
+    }
+
+    loadBranch() {
+        axios.get(`/admin/load-branches`).then((res) => {
+            const branches = res.data;
+            console.log('branches::', branches)
+            this.setState({ branches });
         });
     }
 
@@ -95,10 +109,12 @@ class Cart extends Component {
                 const sub_total = this.getTotal(cart)
                 const gr_total = sub_total - this.state.discount_amount 
                 const customer_id = cart[0].pivot.customer_id
+                const branch_id = cart[0].branch_id
                 const prev_balance = cart[0].pivot.user_balance
                 const new_balance = cart[0].pivot.user_balance+gr_total
                 const last_balance = cart[0].pivot.user_balance+gr_total
-                this.setState({ cart, sub_total, gr_total,customer_id, prev_balance, new_balance,last_balance });
+                this.setState({ cart, sub_total, gr_total,customer_id,branch_id, prev_balance, new_balance,last_balance });
+         
             }else{
                 const sub_total = 0
                 const gr_total = 0
@@ -108,23 +124,17 @@ class Cart extends Component {
                 const last_balance = 0
                 this.setState({ cart, sub_total, gr_total,customer_id, prev_balance, new_balance,last_balance });
             }
-            // const sub_total = this.getTotal(cart)
-            // const gr_total = sub_total - this.state.discount_amount 
-            // const customer_id = cart[0].pivot.customer_id
-            // const prev_balance = cart[0].pivot.user_balance
-            // const new_balance = cart[0].pivot.user_balance+gr_total
-            // const last_balance = cart[0].pivot.user_balance+gr_total
-            // this.setState({ cart, sub_total, gr_total,customer_id, prev_balance, new_balance,last_balance });
-            // console.log('customer_id',customer_id)
+            
+            
         });
     }
 
     handleScanBarcode(event) {
         event.preventDefault();
-        const { barcode, customer_id } = this.state;
+        const { barcode, customer_id,  } = this.state;
         if (!!barcode && !!customer_id) {
             axios
-                .post("/admin/cart", { barcode, customer_id })
+                .post("/admin/cart", { barcode, customer_id, branch_id })
                 .then((res) => {
                     this.loadCart();
                     this.setState({ barcode: "" });
@@ -144,9 +154,9 @@ class Cart extends Component {
         });
        
         if (!qty) return;
-
+        const {customer_id, branch_id} = this.state
         axios
-            .post("/admin/cart/change-qty", { product_id, quantity: qty })
+            .post("/admin/cart/change-qty", { product_id, quantity: qty,customer_id, branch_id })
             .then((res) => {
                 const sub_total = this.getTotal(cart)
                 const gr_total = sub_total - this.state.discount_amount
@@ -167,8 +177,9 @@ class Cart extends Component {
     }
 
     handleClickDelete(product_id) {
+        const branch_id = this.state.branch_id;
         axios
-            .post("/admin/cart/delete", { product_id, _method: "DELETE" })
+            .post("/admin/cart/delete", { product_id, _method: "DELETE", branch_id })
             .then((res) => {
                 const cart = this.state.cart.filter((c) => c.id !== product_id);
                 const sub_total = this.getTotal(cart)
@@ -214,6 +225,7 @@ class Cart extends Component {
             return false
         }
         const customer_id = this.state.customer_id
+        const branch_id = this.state.branch_id
         let product = this.state.products.find((p) => p.barcode === barcode);
         const elements = document.querySelectorAll('[class*="product-"]');
     
@@ -284,7 +296,7 @@ class Cart extends Component {
             
 
             axios
-                .post("/admin/cart", { barcode, customer_id })
+                .post("/admin/cart", { barcode, customer_id, branch_id })
                 .then((res) => {
                     // this.loadCart();
                     console.log(res);
@@ -336,6 +348,21 @@ class Cart extends Component {
         
     }
 
+    setBranchId(event) {
+        const branchData = event.target.value
+        if(branchData){
+            this.setState({ 
+                branch_id: branchData
+            });
+        }else{
+            this.setState({ 
+                branch_id: '',  
+            });
+        }
+        console.log('branch id:::', branchData)
+        
+    }
+
     printInvoice = () => {
         const invoiceUrl = `/admin/sales/print/${this.state.saleId}`;
         window.open(invoiceUrl, "_blank");
@@ -358,6 +385,7 @@ class Cart extends Component {
                 return axios
                     .post("/admin/sales", {
                         customer_id: this.state.customer_id,
+                        branch_id: this.state.branch_id,
                         amount,
                     })
                     .then((res) => {
@@ -417,14 +445,14 @@ class Cart extends Component {
     }
 
     render() {
-        const { cart, products, customers, barcode, translations } = this.state;
+        const { cart, products, customers,branches, barcode, translations } = this.state;
         return (
             <div className="row">
                
                 <div className="col-md-6 col-lg-6">
                     <div className="row mb-2">
                         <div className="col-md-3"><input type="text" onChange={this.setCustomerId} value={this.state.customer_id} name="customer-input" id="customer-input" className="form-control"></input></div>
-                        <div className="col-md-9">
+                        <div className="col-md-4">
                             <select  onChange={this.setCustomerId}  id="sel-customer" className="form-control"  >
                                 <option value="">Select a customer</option>
                                 {customers.map((cus) => (
@@ -437,6 +465,21 @@ class Cart extends Component {
                                 ))}
                             </select>
                         </div>
+
+                        <div className="col-md-4">
+                            <select  onChange={this.setBranchId}  id="sel-branch" className="form-control"  >
+                                <option value="">Select a branch</option>
+                                {branches.map((branch) => (
+                                    <option
+                                        key={branch.id}
+                                        selected={branch.id==this.state.branch_id}
+                                        value={branch.id} >
+                                        {`${branch.branch_name} `} 
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+
                         <div className="col">
                             <input type="hidden" onChange={this.setCustomerId} value={this.state.customer_id} name="customer-input" id="customer-input" className="form-control"></input>
                             <datalist  id="sel-customer"  >
@@ -458,7 +501,7 @@ class Cart extends Component {
                         <div className="col-md-3"><span className="text-primary"><b>{this.state.selCustomerBalance} BDT</b></span></div>
                     </div>
                     <div className="user-cart mt-1">
-                        <div className="card">
+                        <div className="card" style={{ overflowY:'scroll' }}>
                             <table className="table table-striped">
                                 <thead>
                                     <tr>

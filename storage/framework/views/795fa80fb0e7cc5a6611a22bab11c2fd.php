@@ -17,9 +17,9 @@
 </head>
 
 <body class="hold-transition login-page">
-    <div class="login-box">
+    <div class="login-box" style="width: 100%;">
         <div class="login-logo">
-            <a href="/"><?php echo e(config('app.name')); ?></a>
+            <a href="/">Registration New Company</a>
         </div>
         <!-- /.login-logo -->
         <div class="card">

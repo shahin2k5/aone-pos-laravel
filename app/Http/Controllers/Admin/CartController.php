@@ -30,9 +30,11 @@ class CartController extends Controller
         $request->validate([
             'barcode' => 'required|exists:products,barcode',
             'customer_id' => 'required|exists:customers,id',
+            'branch_id' => 'required|exists:branches,id',
         ]);
         $barcode = $request->barcode;
         $customer_id = $request->customer_id;
+        $branch_id = $request->branch_id;
         $user = auth()->user();
         $company_id = $user->company_id;
 
@@ -85,10 +87,18 @@ class CartController extends Controller
         $request->validate([
             'product_id' => 'required|exists:products,id',
             'quantity' => 'required|integer|min:1',
+            'branch_id' => 'required|integer|min:1',
+            'customer_id' => 'required|integer|min:1',
         ]);
 
+        $branch_id = $request->branch_id;
+        $company_id = auth()->user()->company_id;
+
         $product = Product::find($request->product_id);
-        $cart = $request->user()->cart()->where('id', $request->product_id)->first();
+        $cart = $request->user()->cart()->
+            where('id', $request->product_id)->
+            where('user_cart.company_id', $company_id)->
+            where('user_cart.branch_id', $branch_id)->first();
 
         if ($cart) {
             // check product quantity
@@ -109,13 +119,15 @@ class CartController extends Controller
     public function delete(Request $request)
     {
         $request->validate([
-            'product_id' => 'required|integer|exists:products,id'
+            'product_id' => 'required|integer|exists:products,id',
+            'branch_id' => 'required|integer|exists:branches,id'
         ]);
-        $request->user()->cart()->detach($request->product_id);
+        $request->user()->cart()->detach(['product_id'=>$request->product_id,'branch_id'=> $request->branch_id]);
 
         return response('', 204);
     }
 
+    
     public function empty(Request $request)
     {
         $request->user()->cart()->detach();
