@@ -53,7 +53,7 @@ class Purchasereturn extends Component {
         this.loadCart();
         this.loadProducts();
         this.loadCustomers();
-        
+
     }
 
     // load the transaltions for the react component
@@ -96,7 +96,7 @@ class Purchasereturn extends Component {
             const purchase = res.data.purchase;
             if(cart && cart.length){
                 const sub_total = this.getTotal(cart)
-                const gr_total = sub_total - this.state.discount_amount 
+                const gr_total = sub_total - this.state.discount_amount
                 const customer_id = purchase.customer_id
                 const prev_balance = purchase.customer.balance
                 const new_balance = purchase.customer.balance+gr_total
@@ -111,7 +111,7 @@ class Purchasereturn extends Component {
                 const last_balance = 0
                 this.setState({ cart, sub_total, gr_total,customer_id, prev_balance, new_balance,last_balance });
             }
-          
+
         });
     }
 
@@ -140,7 +140,7 @@ class Purchasereturn extends Component {
             }
             return c;
         });
-       
+
         if (!qty) return;
 
         axios
@@ -175,9 +175,9 @@ class Purchasereturn extends Component {
                 const new_balance = this.state.prev_balance + gr_total
                 const last_balance = new_balance - this.state.discount_amount
 
-                this.setState({ 
-                    cart, 
-                    sub_total, 
+                this.setState({
+                    cart,
+                    sub_total,
                     gr_total,
                     new_balance,
                     last_balance
@@ -228,7 +228,7 @@ class Purchasereturn extends Component {
         if(prodInput){
             prodInput.style.border = "2px solid #fcc";
         }
-        
+
         if (!!product) {
             // if product is already in cart
             let cart = this.state.cart.find((c) => c.product_id === product.id);
@@ -236,7 +236,7 @@ class Purchasereturn extends Component {
                 // update quantity
                 const carts = this.state.cart.map((c) => {
                         if (
-                            c.product_id === product.id  
+                            c.product_id === product.id
                         ) {
                             c.qnty = parseInt(c.qnty) + 1;
                         }
@@ -248,7 +248,7 @@ class Purchasereturn extends Component {
                 const last_balance = new_balance - this.state.discount_amount
 
                 this.setState({
-                    cart: carts, 
+                    cart: carts,
                     sub_total,
                     gr_total,
                     new_balance,
@@ -281,14 +281,14 @@ class Purchasereturn extends Component {
                             user_id: 1,
                         },
                     };
-                    const productList = [...this.state.cart, purchase_return_cart] 
+                    const productList = [...this.state.cart, purchase_return_cart]
                     const sub_totals = this.getTotal(productList)
                     const gr_total = sub_totals - this.state.discount_amount
                     const new_balance = this.state.prev_balance + gr_total
                     const last_balance = new_balance - this.state.discount_amount
-                    this.setState({ 
-                        cart: productList, 
-                        sub_total: sub_totals, 
+                    this.setState({
+                        cart: productList,
+                        sub_total: sub_totals,
                         gr_total,
                         new_balance,
                         last_balance
@@ -296,10 +296,10 @@ class Purchasereturn extends Component {
                 }
             }
 
-            
+
 
             axios
-                .post("/admin/purchasereturn/cart", { product_id:product.id, barcode, supplier_id })
+                .post("/admin/purchasereturn/cart", { product_id:product.id, barcode, supplier_id, purchase_id: this.state.purchase_id })
                 .then((res) => {
                     // this.loadCart();
                     console.log(this.state.cart);
@@ -310,7 +310,7 @@ class Purchasereturn extends Component {
                 });
         }
 
-        
+
     }
 
     selectPurchaseField = (event) =>{
@@ -320,9 +320,9 @@ class Purchasereturn extends Component {
     findPurchaseID(event) {
         const purchase_id = event.target.value
         const key_code = event.keyCode
-      
+
         if(purchase_id && key_code == 13){
-            
+
             axios.get(`/admin/purchasereturn/findpurchaseid/${purchase_id}`).then((res) => {
                 const purchase = res.data.purchase;
                 const purchasereturn_items = res.data.purchasereturn_items;
@@ -330,9 +330,9 @@ class Purchasereturn extends Component {
                 console.log('purchasereturn_items',purchasereturn_items);
 
                 if(purchase){
-                    
+
                     const sub_total = this.getTotal(purchasereturn_items)
-                    const gr_total = sub_total - this.state.discount_amount 
+                    const gr_total = sub_total - this.state.discount_amount
                     const supplier_id = purchase.supplier_id
                     const user_balance = purchase.supplier.balance
                     const prev_balance = user_balance
@@ -357,14 +357,14 @@ class Purchasereturn extends Component {
                     const last_balance = 0
                     this.setState({ purchase_id,  cart:[], sub_total, gr_total,customer_id, prev_balance, new_balance,last_balance });
                 }
-                
 
-                
+
+
         });
-          
+
         }
 
-        
+
     }
 
     printInvoice = () => {
@@ -420,7 +420,7 @@ class Purchasereturn extends Component {
 
     changeDiscount = (e) =>{
         const discount_amount = e.target.value
-        const gr_total = this.state.sub_total - discount_amount 
+        const gr_total = this.state.sub_total - discount_amount
         this.setState({
             discount_amount,
             gr_total
@@ -451,10 +451,10 @@ class Purchasereturn extends Component {
 
     render() {
         const { cart, products, supplier, barcode, translations } = this.state;
-        
+
         return (
             <div className="row">
-               
+
                 <div className="col-md-6 col-lg-6">
                     <div className="row mb-2">
                         <div className="col-md-3">
@@ -470,7 +470,7 @@ class Purchasereturn extends Component {
                         <div className="col-md-5"><span className="text-danger"><b>{this.state.selCustomerFName } {this.state.selCustomerLName}</b></span>, <span className="text-danger"><b>{this.state.selCustomerAddress}</b></span></div>
                         <div className="col-md-2"> <span className="text-danger"><b>{this.state.selCustomerBalance?this.state.selCustomerBalance+' BDT':''}</b></span> </div>
                     </div>
-                    
+
                     <div className="user-cart mt-1">
                         <div className="card">
                             <table className="table table-striped">
@@ -527,18 +527,18 @@ class Purchasereturn extends Component {
                     <div className="row">
                         <div className="col">
                             <div className="font-weight-bold">Sub. Total</div>
-                  
+
                             <div>{window.APP.currency_symbol} {this.numberFormat(this.state.gr_total)}</div>
                         </div>
                         <div className="col">
                             {/* <div className="font-weight-bold">Discount (0.00)</div>
                             <input type="text" readOnly={true} onChange={this.changeDiscount} placeholder="Discount amount" name="discount" id="discount" className="form-control form-sm text-right"/> */}
-                        
+
                             <div className="font-weight-bold">Return Amount</div>
                             <input type="text"  onChange={this.changeReturnAmount}  value={this.state.return_amount} name="discount" id="discount" placeholder="Return amount" className="form-control form-sm text-right"/>
                         </div>
                         <div className="col text-right">
-                        
+
                             <div className="font-weight-bold">Last Balance </div>
                             <input type="text" value={this.numberFormat(this.state.last_balance)} readOnly name="discount" id="discount" className="form-control form-sm text-right"/>
                         </div>
@@ -549,15 +549,15 @@ class Purchasereturn extends Component {
                             <input type="text" value={this.numberFormat(this.state.new_balance)} readOnly name="discount" id="discount" className="form-control form-sm text-right"/> */}
                         </div>
                         <div className="col">
-                            
+
                         </div>
                         <div className="col text-right">
-                            
+
                         </div>
                     </div>
                     <div className="row mt-3">
                         <div className="col">
-                             
+
                         </div>
                         <div className="col">
                             <button
@@ -579,7 +579,7 @@ class Purchasereturn extends Component {
                                 {"Confirm Pur. Return"}
                             </button>
                         </div>
-                        
+
                     </div>
                 </div>
 
@@ -609,7 +609,7 @@ class Purchasereturn extends Component {
                         </div>
 
                     </div>
-                    
+
                     <div className="order-product">
                         {products.map((p) => (
                             <div
@@ -635,7 +635,7 @@ class Purchasereturn extends Component {
                     </div>
                 </div>
 
-                
+
 
             </div>
         );

@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+@extends('admin.layouts.admin')
 
 @section('title', __('supplier.Create_supplier') )
 @section('content-header', __('supplier.Create_supplier') )
@@ -8,7 +8,7 @@
     <div class="card">
         <div class="card-body">
 
-            <form action="{{ route('suppliers.store') }}" method="POST" enctype="multipart/form-data">
+            <form action="{{ route('admin.suppliers.store') }}" method="POST" enctype="multipart/form-data">
                 @csrf
 
                 <div class="form-group">

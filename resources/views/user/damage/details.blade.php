@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+@extends('user.layouts.app')
 
 @section('title', __('Salesreturn'))
 @section('content-header', __('Salesreturn#'.$salesreturns[0]->id))
@@ -8,12 +8,12 @@
 @section('content')
 
 <div class="card">
-    
+
     <div class="card-body">
         <div class="row">
             <div class="col-md-6"></div>
             <div class="col-md-6">
-                <form action="{{route('salesreturns.index')}}">
+                <form action="{{route('user.salesreturns.index')}}">
                     <div class="row">
                         <div class="col-md-4">
                             <input type="date" name="start_date" class="form-control" value="{{request('start_date')}}" />
@@ -40,9 +40,9 @@
                 <div class="col-md-4"></div>
             </div>
         @endif
-         
+
         <hr>
- 
+
         <table class="table">
             <thead>
                 <tr>
@@ -52,13 +52,13 @@
                     <th>{{ 'Return Qnty.' }}</th>
                     <th>{{ 'Total' }}</th>
                     <th>{{ 'Created' }}</th>
-           
+
                 </tr>
             </thead>
             <tbody>
                 @foreach ($salesreturns[0]->items as $salesreturn)
                 <tr>
-                  
+
                     <td>{{$salesreturn->id}}</td>
                     <td><img class="product-img" src="{{ Storage::url($salesreturn->product->image) }}" alt="" style="width:75px;height:75px"></td>
                     <td>{{$salesreturn->product->name}}</td>
@@ -66,7 +66,7 @@
                     <td>{{number_format($salesreturn->qnty)}}</td>
                     <td>{{$salesreturn->total_price}}</td>
                     <td>{{$salesreturn->created_at}}</td>
-                     
+
                 </tr>
                 @endforeach
             </tbody>
@@ -82,7 +82,7 @@
                 </tr>
             </tfoot>
         </table>
-    
+
         <div class="text-center"></div>
     </div>
 </div>

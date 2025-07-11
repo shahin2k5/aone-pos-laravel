@@ -3,17 +3,17 @@
 @section('title', __('Purchase'))
 @section('content-header', __('Purchase'))
 @section('content-actions')
-<a href="{{route('purchases.create')}}" class="btn btn-primary">{{ __('New Purchase') }}</a>
+<a href="{{route('admin.purchases.create')}}" class="btn btn-primary">{{ __('New Purchase') }}</a>
 @endsection
 @section('content')
 
 <div class="card">
-    
+
     <div class="card-body">
         <div class="row">
             <div class="col-md-6"></div>
             <div class="col-md-6">
-                <form action="{{route('purchase.index')}}">
+                <form action="{{route('admin.purchase.index')}}">
                     <div class="row">
                         <div class="col-md-4">
                             <input type="date" name="start_date" class="form-control" value="{{request('start_date')}}" />
@@ -40,7 +40,7 @@
                     <th>{{ 'Paid' }}</th>
                     <th>{{ 'Due' }}</th>
                     <th>{{ 'Created' }}</th>
-           
+
                 </tr>
             </thead>
             <tbody>
@@ -55,7 +55,7 @@
                     <td>{{ config('settings.currency_symbol') }} {{number_format($purchase->paid_amount)}}</td>
                     <td>{{$purchase->created_at}}</td>
                     <td><a href="/admin/purchase/details/{{ $purchase->id }}" class="btn btn-success"><i class="fa fa-eye"></i></a></td>
-                     
+
                 </tr>
                 @endforeach
             </tbody>
@@ -71,7 +71,7 @@
                 </tr>
             </tfoot>
         </table>
-    
+
         <div class="text-center"> </div>
     </div>
 </div>

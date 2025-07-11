@@ -16,22 +16,12 @@ class UserCart extends Model
     ];
 
 
-    protected static function booted() {
-        static::addGlobalScope('branch', function (Builder $builder) {
-            $user = auth()->user();
-            $company_id = $user->company_id;
-            $branch_id = $user->branch_id;
-            $role = $user->role;
-            if($role=="admin"){
-                $builder->where('company_id', $company_id);
-            }else{
-                $builder->where('company_id', $company_id)->where('branch_id', $branch_id);
-            }
-        });
-    }
+    // Removed global scope to prevent interference with cart operations
+    // Cart operations should be handled at the controller level with proper scoping
 
 
-    public function balance(){
-        return $this->belongsTo(Customer::class,'customer_id');
+    public function balance()
+    {
+        return $this->belongsTo(Customer::class, 'customer_id');
     }
 }

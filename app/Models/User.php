@@ -47,17 +47,17 @@ class User extends Authenticatable
     ];
 
 
-    
+
 
     public function cart()
     {
-        return $this->belongsToMany(Product::class, 'user_cart')->withPivot('quantity','customer_id','branch_id');
+        return $this->belongsToMany(Product::class, 'user_cart')->withPivot('quantity', 'customer_id', 'branch_id', 'company_id', 'user_id');
     }
 
     public function purchaseCart(): BelongsToMany
     {
         return $this->belongsToMany(Product::class, 'purchase_cart')
-            ->withPivot('qnty','supplier_id','supplier_invoice_id','purchase_price','sell_price')
+            ->withPivot('qnty', 'supplier_id', 'supplier_invoice_id', 'purchase_price', 'sell_price')
             ->withTimestamps();
     }
 
@@ -73,7 +73,7 @@ class User extends Authenticatable
 
     public function branch()
     {
-        return $this->belongsTo(Branch::class,'branch_id');
+        return $this->belongsTo(Branch::class, 'branch_id');
     }
 
     public function branch_name()
@@ -81,7 +81,7 @@ class User extends Authenticatable
         return Branch::where('id', $this->id)->first()->branch_name;
     }
 
- 
+
     public function getAvatar()
     {
         return 'https://www.gravatar.com/avatar/' . md5($this->email);

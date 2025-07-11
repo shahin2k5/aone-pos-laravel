@@ -1,19 +1,19 @@
-@extends('layouts.admin')
+@extends('admin.layouts.admin')
 
-@section('title', __('Salesreturn'))
-@section('content-header', __('Salesreturn#'.$salesreturns[0]->id))
+@section('title', __('Purchase Return'))
+@section('content-header', __('Purchase Return #'.$purchase_return->id))
 @section('content-actions')
-<a href="/admin/salesreturn" class="btn btn-primary">{{ __('<< Salesreturn') }}</a>
+<a href="/admin/purchasereturn" class="btn btn-primary">{{ __('<< Purchase Return') }}</a>
 @endsection
 @section('content')
 
 <div class="card">
-    
+
     <div class="card-body">
         <div class="row">
             <div class="col-md-6"></div>
             <div class="col-md-6">
-                <form action="{{route('salesreturns.index')}}">
+                <form action="{{route('admin.purchasereturn.index')}}">
                     <div class="row">
                         <div class="col-md-4">
                             <input type="date" name="start_date" class="form-control" value="{{request('start_date')}}" />
@@ -22,7 +22,7 @@
                             <input type="date" name="end_date" class="form-control" value="{{request('end_date')}}" />
                         </div>
                         <div class="col-md-4">
-                            <button class="btn btn-outline-primary" type="submit">{{ __('Salesreturn submit') }}</button>
+                            <button class="btn btn-outline-primary" type="submit">{{ __('Purchase Return submit') }}</button>
                         </div>
                     </div>
                 </form>
@@ -30,19 +30,19 @@
         </div>
         <hr>
 
-        @if($salesreturns)
+        @if($purchase_return)
             <div class="row">
-                <div class="col-md-4"><b>Order id: </b> {{$salesreturns[0]->order_id }}</div>
-                <div class="col-md-4"><b>Customer: </b> {{$salesreturns[0]->customer->first_name }}</div>
-                <div class="col-md-4"><b>Total items:</b> {{number_format($salesreturns[0]->total_qnty,0) }}</div>
-                <div class="col-md-4"><b>Total Amount:</b> {{$salesreturns[0]->total_amount }}</div>
-                <div class="col-md-4"><b>Return Amount:</b> {{$salesreturns[0]->return_amount }}</div>
+                <div class="col-md-4"><b>Invoice No: </b> {{$purchase_return->purchase ? $purchase_return->purchase->invoice_no : ''}}</div>
+                <div class="col-md-4"><b>Supplier: </b> {{$purchase_return->supplier ? $purchase_return->supplier->first_name . ' ' . $purchase_return->supplier->last_name : ''}}</div>
+                <div class="col-md-4"><b>Total items:</b> {{number_format($purchase_return->total_qnty,0) }}</div>
+                <div class="col-md-4"><b>Total Amount:</b> {{$purchase_return->total_amount }}</div>
+                <div class="col-md-4"><b>Return Amount:</b> {{$purchase_return->return_amount }}</div>
                 <div class="col-md-4"></div>
             </div>
         @endif
-         
+
         <hr>
- 
+
         <table class="table">
             <thead>
                 <tr>
@@ -52,21 +52,21 @@
                     <th>{{ 'Return Qnty.' }}</th>
                     <th>{{ 'Total' }}</th>
                     <th>{{ 'Created' }}</th>
-           
+
                 </tr>
             </thead>
             <tbody>
-                @foreach ($salesreturns[0]->items as $salesreturn)
+                @foreach ($purchase_return->items as $item)
                 <tr>
-                  
-                    <td>{{$salesreturn->id}}</td>
-                    <td><img class="product-img" src="{{ Storage::url($salesreturn->product->image) }}" alt="" style="width:75px;height:75px"></td>
-                    <td>{{$salesreturn->product->name}}</td>
-                    <td>{{$salesreturn->sell_price}}</td>
-                    <td>{{number_format($salesreturn->qnty)}}</td>
-                    <td>{{$salesreturn->total_price}}</td>
-                    <td>{{$salesreturn->created_at}}</td>
-                     
+
+                    <td>{{$item->id}}</td>
+                    <td><img class="product-img" src="{{ Storage::url($item->product->image) }}" alt="" style="width:75px;height:75px"></td>
+                    <td>{{$item->product->name}}</td>
+                    <td>{{$item->purchase_price}}</td>
+                    <td>{{number_format($item->qnty)}}</td>
+                    <td>{{$item->total_price ?? ($item->purchase_price * $item->qnty)}}</td>
+                    <td>{{$item->created_at}}</td>
+
                 </tr>
                 @endforeach
             </tbody>
@@ -82,7 +82,7 @@
                 </tr>
             </tfoot>
         </table>
-    
+
         <div class="text-center"></div>
     </div>
 </div>

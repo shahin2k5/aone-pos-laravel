@@ -27,9 +27,10 @@ class UserController extends Controller
      *
      * @return \Illuminate\Contracts\Support\Renderable
      */
-    public function index(){
- 
-  
+    public function index()
+    {
+
+
         $today_sales = Sale::whereBetween('created_at', [now()->startOfDay(), now()->endOfDay()])
             ->with('items')
             ->get()
@@ -53,62 +54,51 @@ class UserController extends Controller
             ->sum(DB::raw('gr_total - paid_amount'));
 
         $today_profit = Sale::whereBetween('created_at', [now()->startOfDay(), now()->endOfDay()])
-                                        ->sum('profit_amount');
-   
+            ->sum('profit_amount');
+
         $orders = Sale::with(['items', 'payments'])->get();
         $customers_count = Customer::count();
 
         $low_stock_products = Product::where('quantity', '<', 20)->get();
 
         $bestSellingProducts = DB::table('products')
-            ->select('products.*', DB::raw('SUM(sale_items.quantity) AS total_sold'))
-            ->join('sale_items', 'sale_items.product_id', '=', 'products.id')
-            ->join('sales', 'sales.id', '=', 'sale_items.sale_id')
-            ->groupBy('products.id')
-            ->havingRaw('SUM(sale_items.quantity) > 10')
+            ->joinSub(
+                DB::table('sale_items')
+                    ->select('product_id', DB::raw('SUM(quantity) as total_sold'))
+                    ->groupBy('product_id')
+                    ->having('total_sold', '>', 10),
+                'totals',
+                'products.id',
+                '=',
+                'totals.product_id'
+            )
+            ->select('products.*', 'totals.total_sold')
             ->get();
 
-   
-         
+
+
+
 
         $currentMonthBestSelling = DB::table('products')
-            ->select(
+            ->joinSub(
+                DB::table('sale_items')
+                    ->join('sales', 'sales.id', '=', 'sale_items.sale_id')
+                    ->select('sale_items.product_id', DB::raw('SUM(sale_items.quantity) as total_sold'))
+                    ->whereYear('sales.created_at', date('Y'))
+                    ->whereMonth('sales.created_at', date('m'))
+                    ->groupBy('sale_items.product_id')
+                    ->having('total_sold', '>', 500),
+                'totals',
                 'products.id',
-                'products.name',
-                'products.description',
-                'products.image',
-                'products.barcode',
-                'products.purchase_price',
-                'products.sell_price',
-                'products.quantity',
-                'products.status',
-                'products.created_at',
-                'products.updated_at',
-                DB::raw('SUM(sale_items.quantity) AS total_sold')
+                '=',
+                'totals.product_id'
             )
-            ->join('sale_items', 'sale_items.product_id', '=', 'products.id')
-            ->join('sales', 'sales.id', '=', 'sale_items.sale_id')
-            ->whereYear('sales.created_at', date('Y'))
-            ->whereMonth('sales.created_at', date('m'))
-            ->groupBy(
-                'products.id',
-                'products.name',
-                'products.description',
-                'products.image',
-                'products.barcode',
-                'products.purchase_price',
-                'products.sell_price',
-                'products.quantity',
-                'products.status',
-                'products.created_at',
-                'products.updated_at'
-            )
-            ->havingRaw('SUM(sale_items.quantity) > 500')  // Best-selling threshold for the current month
+            ->select('products.*', 'totals.total_sold')
             ->get();
 
-         
 
-        
+
+
 
         return view('user.dashboard', [
             'orders_count' => $orders->count(),
@@ -122,7 +112,7 @@ class UserController extends Controller
             'low_stock_products' => $low_stock_products,
             'best_selling_products' => $bestSellingProducts,
             'current_month_products' => $currentMonthBestSelling,
- 
+
             'payment_customer_today' => $customer_payment,
             'payment_supplier_today' => $supplier_payment,
             'today_sales' => $today_sales,

@@ -1,19 +1,19 @@
-@extends('layouts.admin')
+@extends('user.layouts.app')
 
 @section('title', __('Sales List'))
 @section('content-header', __('Sales List'))
 @section('content-actions')
-<a href="{{route('cart.index')}}" class="btn btn-primary"> <i class="nav-icon fas fa-cart-plus"></i> {{ __('POS') }}</a>
+<a href="{{route('user.cart.index')}}" class="btn btn-primary"> <i class="nav-icon fas fa-cart-plus"></i> {{ __('POS') }}</a>
 @endsection
 @section('content')
 
 <div class="card">
-    
+
     <div class="card-body">
         <div class="row">
             <div class="col-md-7"></div>
             <div class="col-md-5">
-                <form action="{{route('sales.index')}}">
+                <form action="{{route('user.sales.index')}}">
                     <div class="row">
                         <div class="col-md-5">
                             <input type="date" name="start_date" class="form-control" value="{{request('start_date')}}" />
@@ -92,7 +92,7 @@
                                             </button>
                                         </div>
                                         <div class="modal-body">
-                                            <form id="partialPaymentForm" method="POST" action="{{ route('sales.partial-payment') }}">
+                                            <form id="partialPaymentForm" method="POST" action="{{ route('user.sales.partial-payment') }}">
                                                 @csrf
                                                 <input type="hidden" name="order_id" id="modalOrderId" value="">
                                                 <div class="form-group">
@@ -122,7 +122,7 @@
                 </tr>
             </tfoot>
         </table>
-    
+
         <div class="text-center">{{ $sales->render() }}</div>
     </div>
 </div>

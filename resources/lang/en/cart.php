@@ -38,6 +38,6 @@ return [
     'total'             => 'Total',
     'cancel'            => 'Cancel',
     'checkout'          => 'Checkout',
-    'search_product'    => 'Search Product',
+    'search_product'    => 'Search by Product Name',
 
 ];

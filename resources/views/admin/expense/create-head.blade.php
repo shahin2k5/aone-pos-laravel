@@ -1,9 +1,9 @@
-@extends('layouts.admin')
+@extends('admin.layouts.admin')
 
 @section('title', __('Add Expense Head'))
 @section('content-header', __('Add Expense Head'))
 @section('content-actions')
-<a href="{{route('expense.create')}}" class="btn btn-primary"><i class="fa fa-chevron-left"></i> Add Expenses</a>
+<a href="{{route('admin.expense.create')}}" class="btn btn-primary"><i class="fa fa-chevron-left"></i> Add Expenses</a>
 @endsection
 @section('content')
 <div class="row">
@@ -12,10 +12,10 @@
         <div class="card">
             <div class="card-body">
 
-                <form action="{{ route('expense.head.store') }}" method="POST" enctype="multipart/form-data">
+                <form action="{{ route('admin.expense.head.store') }}" method="POST" enctype="multipart/form-data">
                     @csrf
 
-                    
+
                     <div class="form-group">
                         <label for="damage_notes">Expense Head</label>
                         <textarea name="expense_head" class="form-control @error('expense_head') is-invalid @enderror"
@@ -42,7 +42,7 @@
                     <th>{{ 'Expense Head' }}</th>
                     <th>{{ 'Created' }}</th>
                     <th>{{ 'Actions' }}</th>
-           
+
                 </tr>
             </thead>
             <tbody>
@@ -50,10 +50,10 @@
                 <tr>
                     <td> {{$expense->id}}</td>
                     <td>{{$expense->expense_head}}</td>
-            
+
                     <td>{{$expense->created_at}}</td>
                     <td class="text-center"><form action="/admin/expense-head/{{$expense->id}}" method="POST" onsubmit="return confirm('Are you sure you want to delete this?');"> @method('DELETE') @csrf <button type="submit"><i class="fa fa-trash"></i></button></form></td>
-                     
+
                 </tr>
                 @endforeach
             </tbody>
@@ -61,10 +61,10 @@
                 <tr>
                     <th></th>
                     <th></th>
-              
+
                     <th></th>
                     <th></th>
-                   
+
                 </tr>
             </tfoot>
         </table>
@@ -72,7 +72,7 @@
     </div>
 </div>
 
-       
+
 
 @endsection
 
@@ -86,11 +86,11 @@
            document.getElementById('purchase_price').value = $product[2]
            document.getElementById('sell_price').value = $product[3]
            document.getElementById('stock_qnty').value = $product[4]
-        
+
          }
 
     $(document).ready(function () {
-        
+
     });
 </script>
 @endsection

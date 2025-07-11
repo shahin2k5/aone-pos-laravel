@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Product;
 use App\Models\Customer;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class SalesreturnCartController extends Controller
 {
@@ -19,10 +20,13 @@ class SalesreturnCartController extends Controller
                 })
             );
         }
-        return view('salesreturn.salesreturn-cart');
+
+        $viewPath = Auth::user()->role === 'admin' ? 'admin.salesreturn.salesreturn-cart' : 'user.salesreturn.salesreturn-cart';
+        return view($viewPath);
     }
 
-    public function store(Request $request){
+    public function store(Request $request)
+    {
         $request->validate([
             'barcode' => 'required|exists:products,barcode',
             'customer_id' => 'required|exists:customers,id',
@@ -48,7 +52,7 @@ class SalesreturnCartController extends Controller
                     'message' => __('cart.outstock'),
                 ], 400);
             }
-            $request->user()->cart()->attach($product->id, ['quantity' => 1,'customer_id'=>$customer_id]);
+            $request->user()->cart()->attach($product->id, ['quantity' => 1, 'customer_id' => $customer_id]);
         }
 
         return response('', 204);

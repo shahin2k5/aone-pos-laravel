@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { createRoot } from "react-dom";
+import { createRoot } from "react-dom/client";
 import axios from "axios";
 import Swal from "sweetalert2";
 import { isArray, sum } from "lodash";
@@ -10,7 +10,7 @@ class PurchaseCart extends Component {
         this.state = {
             cart: [],
             products: [],
-            suppliers: [],
+            suppliers: Array.isArray(props && props.suppliers) ? props.suppliers : [],
             barcode: "",
             search: "",
             supplier_id: "",
@@ -53,7 +53,7 @@ class PurchaseCart extends Component {
         this.loadCart();
         this.loadProducts();
         this.loadsuppliers();
-        
+
     }
 
     // load the transaltions for the react component
@@ -94,22 +94,22 @@ class PurchaseCart extends Component {
         axios.get("/admin/purchasecart").then((res) => {
             const cart = res.data;
             console.log('load purchase list:', cart)
-            const discount_amount = 0 
-            const paid_amount = 0 
+            const discount_amount = 0
+            const paid_amount = 0
             if(cart.length){
                 const sub_total = this.getTotal(cart)
-                const gr_total = sub_total - this.state.discount_amount 
+                const gr_total = sub_total - this.state.discount_amount
                 const supplier_id = cart[0].pivot.supplier_id
                 const supplier_invoice_no = cart[0].pivot.supplier_invoice_id
                 const prev_balance = cart[0].pivot.user_balance
                 const new_balance = parseFloat(cart[0].pivot.user_balance) + parseFloat(gr_total)
                 const last_balance = parseFloat(cart[0].pivot.user_balance)+parseFloat(gr_total)
-                
-                this.setState({ cart, 
-                                sub_total, 
+
+                this.setState({ cart,
+                                sub_total,
                                 gr_total,
-                                supplier_id, 
-                                prev_balance, 
+                                supplier_id,
+                                prev_balance,
                                 new_balance,
                                 last_balance,
                                 discount_amount,
@@ -127,7 +127,7 @@ class PurchaseCart extends Component {
                                 paid_amount,
                                 prev_balance, new_balance,last_balance,supplier_invoice_no });
             }
-            
+
         });
     }
 
@@ -154,7 +154,7 @@ class PurchaseCart extends Component {
             }
             return c;
         });
-       
+
         if (!qty) return;
 
         axios
@@ -182,7 +182,7 @@ class PurchaseCart extends Component {
             }
             return c;
         });
-       
+
         if (!purchase_price) return;
 
         axios
@@ -216,9 +216,9 @@ class PurchaseCart extends Component {
                 const new_balance = parseFloat(this.state.prev_balance) + parseFloat(gr_total)
                 const last_balance = new_balance - this.state.discount_amount
 
-                this.setState({ 
-                    cart, 
-                    sub_total, 
+                this.setState({
+                    cart,
+                    sub_total,
                     gr_total,
                     new_balance,
                     last_balance
@@ -257,7 +257,7 @@ class PurchaseCart extends Component {
         const supplier_invoice_no = this.state.supplier_invoice_no
         let product = this.state.products.find((p) => p.barcode === barcode);
         const elements = document.querySelectorAll('[class*="product-"]');
- 
+
         elements.forEach(el => {
             el.style.border = '0px';
         });
@@ -270,7 +270,7 @@ class PurchaseCart extends Component {
         if(prodInput){
             prodInput.style.border = "2px solid #fcc";
         }
-        
+
         if (!!product) {
             // if product is already in cart
             let cart = this.state.cart.find((c) => c.id === product.id);
@@ -278,7 +278,7 @@ class PurchaseCart extends Component {
                 // update quantity
                 const carts = this.state.cart.map((c) => {
                         if (
-                            c.id === product.id 
+                            c.id === product.id
                         ) {
                             c.pivot.qnty = parseInt(c.pivot.qnty) + 1;
                             c.purchase_price = c.pivot.purchase_price
@@ -291,7 +291,7 @@ class PurchaseCart extends Component {
                 const last_balance = new_balance - this.state.discount_amount
 
                 this.setState({
-                    cart: carts, 
+                    cart: carts,
                     sub_total,
                     gr_total,
                     new_balance,
@@ -308,14 +308,14 @@ class PurchaseCart extends Component {
                              purchase_price : product.purchase_price
                         },
                     };
-                    const productList = [...this.state.cart, product] 
+                    const productList = [...this.state.cart, product]
                     const sub_totals = this.getTotal(productList)
                     const gr_total = sub_totals - this.state.discount_amount
                     const new_balance = parseFloat(this.state.prev_balance) + parseFloat(gr_total)
                     const last_balance = new_balance - this.state.discount_amount
-                    this.setState({ 
-                        cart: productList, 
-                        sub_total: sub_totals, 
+                    this.setState({
+                        cart: productList,
+                        sub_total: sub_totals,
                         gr_total,
                         new_balance,
                         last_balance
@@ -323,7 +323,7 @@ class PurchaseCart extends Component {
                 }
             }
 
-            
+
 
             axios
                 .post("/admin/purchase-cart", { barcode, supplier_id, supplier_invoice_no })
@@ -336,7 +336,7 @@ class PurchaseCart extends Component {
                 });
         }
 
-        
+
     }
 
     setSupplierInvoiceNo = (e) =>{
@@ -347,12 +347,12 @@ class PurchaseCart extends Component {
 
     setSupplierId(event) {
         const customerData = event.target.value
-        
+
         if(customerData){
             const customerInfo = this.state.suppliers.filter(cust=>cust.id==customerData)
             const new_balance = parseFloat(customerInfo[0].balance) + parseFloat(this.state.gr_total)
             const last_balance = new_balance - this.state.discount_amount
-            this.setState({ 
+            this.setState({
                 supplier_id: customerInfo[0].id,
                 selCustomerId: customerInfo[0].id,
                 selCustomerFName: customerInfo[0].first_name,
@@ -360,14 +360,14 @@ class PurchaseCart extends Component {
                 selCustomerAddress: customerInfo[0].address,
                 selCustomerPhone: customerInfo[0].phone,
                 selCustomerBalance: customerInfo[0].balance,
-                prev_balance: customerInfo[0].balance, 
-                new_balance, 
-                last_balance 
+                prev_balance: customerInfo[0].balance,
+                new_balance,
+                last_balance
             });
-            
+
             console.log('customerData',customerInfo)
         }else{
-            this.setState({ 
+            this.setState({
                 supplier_id: '',
                 selCustomerId: '',
                 selCustomerFName: '',
@@ -375,13 +375,13 @@ class PurchaseCart extends Component {
                 selCustomerAddress: '',
                 selCustomerPhone: '',
                 selCustomerBalance: '',
-                prev_balance: '0', 
-                new_balance:'', 
-                last_balance:'' 
+                prev_balance: '0',
+                new_balance:'',
+                last_balance:''
             });
         }
 
-        
+
     }
 
     printInvoice = () => {
@@ -448,7 +448,7 @@ class PurchaseCart extends Component {
 
     changeDiscount = (e) =>{
         const discount_amount = parseFloat(e.target.value)
-        const gr_total = this.state.sub_total - discount_amount 
+        const gr_total = this.state.sub_total - discount_amount
         const new_balance = parseFloat(this.state.prev_balance) + parseFloat(gr_total)
         const last_balance = parseFloat(new_balance) - this.state.paid_amount
 
@@ -465,7 +465,7 @@ class PurchaseCart extends Component {
 
         const new_balance = this.state.new_balance
         const paid_amount = e.target.value
-        const last_balance = new_balance - paid_amount 
+        const last_balance = new_balance - paid_amount
 
         this.setState({
             paid_amount,
@@ -483,19 +483,21 @@ class PurchaseCart extends Component {
     }
 
     render() {
-        const { cart, products, suppliers, barcode, translations } = this.state;
+        // Remove suppliers from destructuring
+        const { cart, products, barcode, translations } = this.state;
+        const suppliers = Array.isArray(this.state.suppliers) ? this.state.suppliers : [];
         return (
             <div className="row">
-               
+
                 <div className="col-md-6 col-lg-6">
                     <div className="row mb-2">
                         <div className="col-md-3">
                             <b>Supplier Invoice</b>
-                            <input type="text" 
-                                onChange={this.setSupplierInvoiceNo} 
-                                value={this.state.supplier_invoice_no} 
-                                name="invoice-input" 
-                                id="invoice-input" 
+                            <input type="text"
+                                onChange={this.setSupplierInvoiceNo}
+                                value={this.state.supplier_invoice_no}
+                                name="invoice-input"
+                                id="invoice-input"
                                 placeholder="Invoice no"
                                 className="form-control"></input>
                         </div>
@@ -508,13 +510,13 @@ class PurchaseCart extends Component {
                                         key={sup.id}
                                         selected={sup.id==this.state.supplier_id}
                                         value={sup.id} >
-                                        {`${sup.first_name} ${sup.last_name} - ${sup.address} `} 
+                                        {`${sup.first_name} ${sup.last_name} - ${sup.address} `}
                                     </option>
                                 ))}
                             </select>
                         </div>
                         <div className="col">
-                            
+
                         </div>
                     </div>
                     <div className="row">
@@ -572,8 +574,8 @@ class PurchaseCart extends Component {
                                                     <div class="input-group-prepend">
                                                         <span class="input-group-text" id="basic-addon1">{window.APP.currency_symbol}{" "}</span>
                                                     </div>
-                                                    <input type="text" class="form-control input-sm" 
-                                                        placeholder="Purchase Price" 
+                                                    <input type="text" class="form-control input-sm"
+                                                        placeholder="Purchase Price"
                                                         onChange={(event) =>
                                                         this.handlePurchasePrice(
                                                                 c.id,
@@ -582,21 +584,21 @@ class PurchaseCart extends Component {
                                                         }
 
                                                         value= {(  c.purchase_price )}/>
-                                                        
+
                                                 </div>
 
                                             </td>
 
                                             <td className="text-right">
-                                                
-                                                 {window.APP.currency_symbol}{" "} 
-                                                     
-                                                     {(  c.purchase_price * c.pivot.qnty ).toFixed(2)} 
-                                            
+
+                                                 {window.APP.currency_symbol}{" "}
+
+                                                     {(  c.purchase_price * c.pivot.qnty ).toFixed(2)}
+
 
                                             </td>
 
-                                           
+
 
                                         </tr>
                                     ))}
@@ -636,7 +638,7 @@ class PurchaseCart extends Component {
                     <div className="row mt-3">
                         <div className="col">
                             {this.state.printUrl ? (
-                             
+
                                     <a
                                         href={this.state.printUrl}
                                         target="_blank"
@@ -645,18 +647,18 @@ class PurchaseCart extends Component {
                                     >
                                         🖨️ Print Invoice
                                     </a>
-                                
+
                             ): (
-                             
+
                                     <a
-                                     
-                                        
+
+
                                         rel="noopener noreferrer"
                                         className="btn btn-default btn-block border"
                                     >
                                         🖨️ Print Invoice
                                     </a>
-                                
+
                             )}
 
                         </div>
@@ -680,7 +682,7 @@ class PurchaseCart extends Component {
                                 Make Purchase
                             </button>
                         </div>
-                        
+
                     </div>
                 </div>
 
@@ -712,7 +714,7 @@ class PurchaseCart extends Component {
                         </div>
 
                     </div>
-                    
+
                     <div className="order-product">
                         {products.map((p) => (
                             <div
@@ -723,7 +725,10 @@ class PurchaseCart extends Component {
                                 style={{ width:'100px', overflow:'hidden',height:'140px' }}
                                 title={p.name}
                             >
-                                <img src={ p.image_url} alt="" />
+                                <img src={ p.image_url }
+                                     alt=""
+                                     onError={e => { e.target.onerror = null; e.target.src = '/images/img-placeholder.jpg'; }}
+                                />
                                 <h5
                                     style={
                                         window.APP.warning_quantity > p.quantity
@@ -738,7 +743,7 @@ class PurchaseCart extends Component {
                     </div>
                 </div>
 
-                
+
 
             </div>
         );
@@ -747,8 +752,16 @@ class PurchaseCart extends Component {
 
 export default PurchaseCart;
 
-const root = document.getElementById("purchase-cart");
-if (root) {
-    const rootInstance = createRoot(root);
-    rootInstance.render(<PurchaseCart />);
+const mountPurchaseCart = () => {
+    const root = document.getElementById("purchase-cart");
+    if (root) {
+        const rootInstance = createRoot(root);
+        rootInstance.render(<PurchaseCart />);
+    }
+};
+
+if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", mountPurchaseCart);
+} else {
+    mountPurchaseCart();
 }

@@ -1,7 +1,7 @@
 <!-- Main Sidebar Container -->
 <aside class="main-sidebar sidebar-dark-primary elevation-4">
     <!-- Brand Logo -->
- 
+
 
     <!-- Sidebar -->
     <div class="sidebar">
@@ -19,96 +19,96 @@
         <nav class="mt-2">
             <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
                 <li class="nav-item has-treeview">
-                    <a href="{{route('admin-dashboard')}}" class="nav-link">
+                    <a href="{{route('admin.dashboard')}}" class="nav-link">
                         <i class="nav-icon fas fa-tachometer-alt"></i>
                         <p>{{ __('dashboard.title') }}</p>
                     </a>
                 </li>
 
                 <li class="nav-item has-treeview">
-                    <a href="{{ route('cart.index') }}" class="nav-link {{ activeSegment('cart') }}">
+                    <a href="{{ route('admin.cart.index') }}" class="nav-link {{ activeSegment('cart') }}">
                         <i class="nav-icon fas fa-cart-plus"></i>
                         <p>{{ __('POS') }}</p>
                     </a>
                 </li>
 
                 <li class="nav-item has-treeview">
-                    <a href="{{ route('sales.index') }}" class="nav-link {{ activeSegment('orders') }}">
+                    <a href="{{ route('admin.sales.index') }}" class="nav-link {{ activeSegment('orders') }}">
                         <i class="nav-icon fas fa-cart-plus"></i>
                         <p>Sales list</p>
                     </a>
                 </li>
 
                 <li class="nav-item has-treeview">
-                    <a href="{{ route('purchase.index') }}" class="nav-link {{ activeSegment('purchase') }}">
+                    <a href="{{ route('admin.purchase.index') }}" class="nav-link {{ activeSegment('purchase') }}">
                         <i class="nav-icon fas fa-cart-plus"></i>
                         <p>{{ __('Purchase') }}</p>
                     </a>
-                </li> 
+                </li>
 
-                
+
                 <li class="nav-item item-separator">
                      <hr style="border-top:1px solid #666">
-                </li> 
-                
+                </li>
+
                 <li class="nav-item has-treeview">
-                    <a href="{{ route('salesreturn.index') }}" class="nav-link {{ activeSegment('sales-return') }}">
+                    <a href="{{ route('admin.salesreturn.index') }}" class="nav-link {{ activeSegment('sales-return') }}">
                         <i class="nav-icon fas fa-cart-plus"></i>
                         <p>{{ __('Sales Return') }}</p>
                     </a>
-                </li> 
+                </li>
 
                 <li class="nav-item has-treeview">
-                    <a href="{{ route('purchasereturn.index') }}" class="nav-link {{ activeSegment('purchase-return') }}">
+                    <a href="{{ route('admin.purchasereturn.index') }}" class="nav-link {{ activeSegment('purchase-return') }}">
                         <i class="nav-icon fas fa-cart-plus"></i>
                         <p>{{ __('Purchase Return') }}</p>
                     </a>
-                </li> 
+                </li>
 
                 <li class="nav-item has-treeview">
-                    <a href="{{ route('damage.index') }}" class="nav-link {{ activeSegment('damage') }}">
+                    <a href="{{ route('admin.damage.index') }}" class="nav-link {{ activeSegment('damage') }}">
                         <i class="nav-icon fas fa-cart-plus"></i>
                         <p>{{ __('Damage') }}</p>
                     </a>
-                </li> 
+                </li>
 
                  <li class="nav-item item-separator">
                      <hr style="border-top:1px solid #666">
-                </li> 
+                </li>
 
                  <li class="nav-item has-treeview">
-                    <a href="{{ route('expense.index') }}" class="nav-link {{ activeSegment('expense') }}">
+                    <a href="{{ route('admin.expense.index') }}" class="nav-link {{ activeSegment('expense') }}">
                         <i class="nav-icon fas fa-cart-plus"></i>
-                        <p>{{ __('Expense') }}</p>
+                        <p>Report & Expenses</p>
                     </a>
-                </li> 
+                </li>
 
                 <li class="nav-item item-separator">
                      <hr style="border-top:1px solid #666">
-                </li> 
+                </li>
 
 
                 <li class="nav-item has-treeview">
-                    <a href="{{ route('products.index') }}" class="nav-link {{ activeSegment('products') }}">
+                    <a href="{{ route('admin.products.index') }}" class="nav-link {{ activeSegment('products') }}">
                         <i class="nav-icon fas fa-th-large"></i>
                         <p>{{ __('product.title') }}</p>
                     </a>
                 </li>
 
                 <li class="nav-item has-treeview">
-                    <a href="{{ route('customers.index') }}" class="nav-link {{ activeSegment('customers') }}">
+                    <a href="{{ route('admin.customers.index') }}" class="nav-link {{ activeSegment('customers') }}">
                         <i class="nav-icon fas fa-users"></i>
                         <p>{{ __('customer.title') }}</p>
                     </a>
                 </li>
                 <li class="nav-item has-treeview">
-                    <a href="{{ route('suppliers.index') }}" class="nav-link {{ activeSegment('supplier') }}">
+                    <a href="{{ route('admin.suppliers.index') }}" class="nav-link {{ activeSegment('supplier') }}">
                         <i class="nav-icon fas fa-users"></i>
                         <p>{{ __('Supplier') }}</p>
                     </a>
                 </li>
                 <li class="nav-item has-treeview">
-                    <a href="{{ route('settings.index') }}" class="nav-link {{ activeSegment('settings') }}">
+                    <a href="{{ route('admin.settings.index') }}" class="nav-link {{ activeSegment('settings') }}">
                         <i class="nav-icon fas fa-cogs"></i>
                         <p>{{ __('settings.title') }}</p>
                     </a>

@@ -1,19 +1,19 @@
-@extends('layouts.admin')
+@extends('admin.layouts.admin')
 
 @section('title', __('Purchase Return'))
 @section('content-header', __('Purchase Return'))
 @section('content-actions')
-<a href="{{route('purchasereturns.index')}}" class="btn btn-primary">{{ __('+ Purchase Return') }}</a>
+<a href="{{route('admin.purchasereturns.index')}}" class="btn btn-primary">{{ __('+ Purchase Return') }}</a>
 @endsection
 @section('content')
 
 <div class="card">
-    
+
     <div class="card-body">
         <div class="row">
             <div class="col-md-6"></div>
             <div class="col-md-6">
-                <form action="{{route('salesreturns.index')}}">
+                <form action="{{route('admin.salesreturns.index')}}">
                     <div class="row">
                         <div class="col-md-4">
                             <input type="date" name="start_date" class="form-control" value="{{request('start_date')}}" />
@@ -34,27 +34,27 @@
                     <th>{{ 'ID' }}</th>
                     <th>{{ 'Suppplier' }}</th>
                     <th>{{ 'Invoice' }}</th>
-                    <th>{{ 'Return Qnty.' }}</th>
-                    <th>{{ 'Total' }}</th>
+                    <th>{{ 'Return Quantity' }}</th>
+                    <th>{{ 'Return Total' }}</th>
                     <th>{{ 'Return' }}</th>
                     <th>{{ 'Profit' }}</th>
                     <th>{{ 'Created' }}</th>
-           
+
                 </tr>
             </thead>
             <tbody>
                 @foreach ($purchase_returns as $purchase)
                 <tr>
                     <td> {{$purchase->id}}</td>
-                    <td>{{$purchase->getCustomerName()}}</td>
-                    <td>{{$purchase->order_id}}</td>
+                    <td>{{$purchase->supplier ? $purchase->supplier->first_name . ' ' . $purchase->supplier->last_name : ''}}</td>
+                    <td>{{$purchase->purchase ? $purchase->purchase->invoice_no : ''}}</td>
                     <td>{{number_format($purchase->total_qnty)}}</td>
                     <td>{{ config('settings.currency_symbol') }} {{number_format($purchase->total_amount)}}</td>
                     <td>{{ config('settings.currency_symbol') }} {{number_format($purchase->return_amount)}}</td>
                     <td>{{ config('settings.currency_symbol') }} {{number_format($purchase->profit_amount)}}</td>
                     <td>{{$purchase->created_at}}</td>
                     <td><a href="/admin/purchasereturn/details/{{ $purchase->id }}" class="btn btn-success"><i class="fa fa-eye"></i></a></td>
-                     
+
                 </tr>
                 @endforeach
             </tbody>
@@ -70,7 +70,7 @@
                 </tr>
             </tfoot>
         </table>
-    
+
         <div class="text-center">{{ $purchase_returns->render() }}</div>
     </div>
 </div>

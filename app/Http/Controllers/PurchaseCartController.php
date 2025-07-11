@@ -6,37 +6,37 @@ use App\Models\Product;
 use App\Models\Supplier;
 use App\Models\Purchase;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class PurchaseCartController extends Controller
 {
     public function index(Request $request)
     {
         if ($request->wantsJson()) {
-         
-             return response(
+
+            return response(
                 $request->user()->purchaseCart->each(function ($product) {
                     $supplier = Supplier::find($product->pivot->supplier_id);
                     $product->pivot->user_balance = $supplier?->balance ?? 0;
                 })
             );
-
         }
 
- 
+
         return view('purchase.index');
     }
-    
+
     public function purchaseCart(Request $request)
     {
         return response(
-                $request->user()->purchaseCart->each(function ($product) {
-                    $supplier = Supplier::find($product->pivot->supplier_id);
-                    $product->pivot->user_balance = $supplier?->balance ?? 0;
-                })
-            );
+            $request->user()->purchaseCart->each(function ($product) {
+                $supplier = Supplier::find($product->pivot->supplier_id);
+                $product->pivot->user_balance = $supplier?->balance ?? 0;
+            })
+        );
 
-        
-         $purchase = Purchase::create([
+
+        $purchase = Purchase::create([
             'supplier_id' => $request->supplier_id,
             'invoice_no' => $request->invoice_no,
             'sub_total' => $request->sub_total,
@@ -47,7 +47,7 @@ class PurchaseCartController extends Controller
         ]);
 
         $purchaseCarts = $request->user()->purchaseCart()->get();
-        
+
         foreach ($purchaseCarts as $item) {
             $purchase->items()->create([
                 'purchase_price' => $item->purchase_price,
@@ -65,17 +65,17 @@ class PurchaseCartController extends Controller
             'user_id' => $request->user()->id,
         ]);
 
-        if($request->supplier_id){
+        if ($request->supplier_id) {
             $supplier = Supplier::where('id', $request->supplier_id)->first();
-            $supplier->balance = $supplier->balance + ($sum_cart-$request->amount);
+            $supplier->balance = $supplier->balance + ($sum_cart - $request->amount);
             $supplier->save();
         }
         return $purchase;
 
-            return response(
-                ['hello']
-                // $request->user()->purchaseCart()->get()
-            );
+        return response(
+            ['hello']
+            // $request->user()->purchaseCart()->get()
+        );
     }
 
     public function create(Request $request)
@@ -84,7 +84,8 @@ class PurchaseCartController extends Controller
         $suppliers = Supplier::all();
         $salesreturns = [];
         $total = 0;
-        return view('purchase.create', compact('products', 'suppliers','salesreturns','total'));
+        $viewPath = Auth::user()->role === 'admin' ? 'admin.purchase.create' : 'user.purchase.create';
+        return view($viewPath, compact('products', 'suppliers', 'salesreturns', 'total'));
     }
 
     public function store(Request $request)
@@ -95,27 +96,29 @@ class PurchaseCartController extends Controller
         ]);
         $barcode = $request->barcode;
 
-        
+        $user = $request->user();
+        $company_id = $user->company_id;
+        $branch_id = $user->role == 'admin' ? $request->branch_id : $user->branch_id;
 
         $product = Product::where('barcode', $barcode)->first();
         $cart = $request->user()->purchaseCart()->where('barcode', $barcode)->first();
 
-        
-
         if ($cart) {
             // check product quantity
-            
             // update only quantity
             $cart->pivot->qnty = $cart->pivot->qnty + 1;
             $cart->pivot->save();
         } else {
             $request->user()->purchaseCart()->attach($product->id, [
-                                        'qnty' => 1, 
-                                        'supplier_id'=>$request->supplier_id,
-                                        'supplier_invoice_id'=>$request->supplier_invoice_no,
-                                        'purchase_price'=>$product->purchase_price,
-                                        'sell_price'=>$product->sell_price
-                                    ]); 
+                'qnty' => 1,
+                'supplier_id' => $request->supplier_id,
+                'supplier_invoice_id' => $request->supplier_invoice_no,
+                'purchase_price' => $product->purchase_price,
+                'sell_price' => $product->sell_price,
+                'user_id' => $user->id,
+                'branch_id' => $branch_id,
+                'company_id' => $company_id,
+            ]);
         }
 
         return response('cart added', 204);
@@ -132,7 +135,7 @@ class PurchaseCartController extends Controller
         $cart = $request->user()->purchaseCart()->where('products.id', $request->product_id)->first();
 
         if ($cart) {
-            
+
             $cart->pivot->qnty = $request->quantity;
             $cart->pivot->save();
         }

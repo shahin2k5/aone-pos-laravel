@@ -4,8 +4,9 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Database\Eloquent\Builder;
- 
+
 use Illuminate\Database\Eloquent\Scope;
 
 class Product extends Model
@@ -24,10 +25,15 @@ class Product extends Model
         'company_id',
     ];
 
-    protected static function booted() {
+    protected $appends = ['image_url'];
+
+    protected static function booted()
+    {
         static::addGlobalScope('branch', function (Builder $builder) {
-            $company_id = auth()->user()->company_id;
-            $builder->where('products.company_id', $company_id);
+            if (Auth::check()) {
+                $company_id = Auth::user()->company_id;
+                $builder->where('products.company_id', $company_id);
+            }
         });
     }
 
@@ -37,5 +43,10 @@ class Product extends Model
             return Storage::url($this->image);
         }
         return asset('images/img-placeholder.jpg');
+    }
+
+    public function getImageUrlAttribute()
+    {
+        return $this->getImageUrl();
     }
 }

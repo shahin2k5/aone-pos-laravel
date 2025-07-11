@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Auth;
 
 class PurchaseReturn extends Model
 {
@@ -21,28 +22,36 @@ class PurchaseReturn extends Model
     ];
 
 
-    protected static function booted() {
+    protected static function booted()
+    {
         static::addGlobalScope('branch', function (Builder $builder) {
-             $user = auth()->user();
-            $company_id = $user->company_id;
-            $branch_id = $user->branch_id;
-            $role = $user->role;
-            if($role=="admin"){
-                $builder->where('company_id', $company_id);
-            }else{
-                $builder->where('company_id', $company_id)->where('branch_id', $branch_id);
+            $user = Auth::check() ? Auth::user() : null;
+            if ($user) {
+                $company_id = $user->company_id;
+                $branch_id = $user->branch_id;
+                $role = $user->role;
+                if ($role == "admin") {
+                    $builder->where('company_id', $company_id);
+                } else {
+                    $builder->where('company_id', $company_id)->where('branch_id', $branch_id);
+                }
             }
         });
     }
 
     public function items()
     {
-        return $this->hasMany(PurchaseReturnItems::class,'purchase_return_id');
+        return $this->hasMany(PurchaseReturnItems::class, 'purchase_return_id');
     }
 
     public function supplier()
     {
-        return $this->belongsTo(Supplier::class,'supplier_id');
+        return $this->belongsTo(Supplier::class, 'supplier_id');
+    }
+
+    public function purchase()
+    {
+        return $this->belongsTo(Purchase::class, 'purchase_id');
     }
 
     public function getCustomerName()

@@ -1,39 +1,39 @@
-@extends('layouts.admin')
+@extends('admin.layouts.admin')
 
 @section('title', __('Purchase Details'))
-@section('content-header', __('Purchase Details#'.$purchase_items[0]->id))
+@section('content-header', __('Purchase Details#'.$purchase->id))
 @section('content-actions')
 <a href="/admin/purchase" class="btn btn-primary">{{ __('<< Purchases') }}</a>
 @endsection
 @section('content')
 
 <div class="card">
-    
+
     <div class="card-body">
         <div class="row">
             <div class="col-md-6"></div>
             <div class="col-md-6">
-                <form action="{{route('salesreturns.index')}}">
-                    
+                <form action="{{route('admin.salesreturns.index')}}">
+
                 </form>
             </div>
         </div>
         <hr>
 
-        @if($purchase_items)
+        @if($purchase)
             <div class="row">
-                <div class="col-md-4"><b>Invoice no: </b> {{$purchase_items[0]->invoice_no }}</div>
-                <div class="col-md-4"><b>Supplier: </b> {{$purchase_items[0]->supplier?$purchase_items[0]->supplier->first_name:'' }}</div>
-                <div class="col-md-4"><b>Sub Total:</b> {{number_format($purchase_items[0]->sub_total,0) }}</div>
-                <div class="col-md-4"><b>Discount:</b> {{$purchase_items[0]->discount_amount }}</div>
-                <div class="col-md-4"><b>Gr. Amount:</b> {{$purchase_items[0]->gr_total }}</div>
-                <div class="col-md-4"><b>Paid Amount:</b> {{$purchase_items[0]->paid_amount }}</div>
+                <div class="col-md-4"><b>Invoice no: </b> {{$purchase->invoice_no }}</div>
+                <div class="col-md-4"><b>Supplier: </b> {{$purchase->supplier?$purchase->supplier->first_name:'' }}</div>
+                <div class="col-md-4"><b>Sub Total:</b> {{number_format($purchase->sub_total,0) }}</div>
+                <div class="col-md-4"><b>Discount:</b> {{$purchase->discount_amount }}</div>
+                <div class="col-md-4"><b>Gr. Amount:</b> {{$purchase->gr_total }}</div>
+                <div class="col-md-4"><b>Paid Amount:</b> {{$purchase->paid_amount }}</div>
                 <div class="col-md-4"></div>
             </div>
         @endif
-         
+
         <hr>
- 
+
         <table class="table">
             <thead>
                 <tr>
@@ -43,23 +43,25 @@
                     <th>{{ 'Qnty.' }}</th>
                     <th>{{ 'Total' }}</th>
                     <th>{{ 'Created' }}</th>
-           
+
                 </tr>
             </thead>
             <tbody>
-                @foreach ($purchase_items[0]->items as $purchase_item)
+                @if($purchase && $purchase->items)
+                @foreach ($purchase->items as $purchase_item)
                 <tr>
-                  
+
                     <td>{{$loop->index+1}}</td>
                     <td><img class="product-img" src="{{ Storage::url($purchase_item->product->image) }}" alt="" style="width:55px;height:55px"></td>
                     <td>{{$purchase_item->product->name}}</td>
                     <td>{{number_format($purchase_item->purchase_price,2)}}</td>
-                    <td>{{number_format($purchase_item->qnty,0)}}</td>
-                    <td>{{number_format($purchase_item->purchase_price * $purchase_item->qnty,2) }}</td>
+                    <td>{{number_format($purchase_item->qnty ?? $purchase_item->quantity,0)}}</td>
+                    <td>{{number_format($purchase_item->purchase_price * ($purchase_item->qnty ?? $purchase_item->quantity),2) }}</td>
                     <td>{{$purchase_item->created_at}}</td>
-                     
+
                 </tr>
                 @endforeach
+                @endif
             </tbody>
             <tfoot>
                 <tr>
@@ -73,7 +75,7 @@
                 </tr>
             </tfoot>
         </table>
-    
+
         <div class="text-center"></div>
     </div>
 </div>

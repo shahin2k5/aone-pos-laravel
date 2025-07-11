@@ -32,9 +32,9 @@ class LoginController extends Controller
         $role = Auth::user()->role;
 
         if ($role === 'admin') {
-            return route('admin-dashboard');
+            return route('admin.dashboard');
         } elseif ($role === 'user') {
-            return route('user-dashboard');
+            return route('user.dashboard');
         }
 
         return '/'; // fallback

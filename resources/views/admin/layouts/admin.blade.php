@@ -28,13 +28,6 @@
 <body class="hold-transition sidebar-mini">
     <!-- Site wrapper -->
     <div class="wrapper">
-        @php
-            if(auth()->user()->role!=="admin"){
-              echo "  <script>
-                    window.location = '/user/dashboards';
-                </script>";
-            }
-        @endphp
 
         @include('admin.layouts.partials.navbar')
         @include('admin.layouts.partials.sidebar')

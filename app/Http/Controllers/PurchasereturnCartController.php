@@ -13,16 +13,18 @@ class PurchasereturnCartController extends Controller
         if ($request->wantsJson()) {
 
             return response(
-                $request->user()->cart->each(function ($product) {
+                auth()->user()->cart->each(function ($product) {
                     $customer = Customer::find($product->pivot->customer_id);
                     $product->pivot->user_balance = $customer?->balance ?? 0;
                 })
             );
         }
-        return view('purchasereturn.purchasereturn-cart');
+        $viewPath = auth()->user()->role === 'admin' ? 'admin.purchasereturn.purchasereturn-cart' : 'user.purchasereturn.purchasereturn-cart';
+        return view($viewPath);
     }
 
-    public function store(Request $request){
+    public function store(Request $request)
+    {
         $request->validate([
             'barcode' => 'required|exists:products,barcode',
             'customer_id' => 'required|exists:customers,id',
@@ -31,7 +33,7 @@ class PurchasereturnCartController extends Controller
         $customer_id = $request->customer_id;
 
         $product = Product::where('barcode', $barcode)->first();
-        $cart = $request->user()->cart()->where('barcode', $barcode)->first();
+        $cart = auth()->user()->cart()->where('barcode', $barcode)->first();
         if ($cart) {
             // check product quantity
             if ($product->quantity <= $cart->pivot->quantity) {
@@ -48,7 +50,7 @@ class PurchasereturnCartController extends Controller
                     'message' => __('cart.outstock'),
                 ], 400);
             }
-            $request->user()->cart()->attach($product->id, ['quantity' => 1,'customer_id'=>$customer_id]);
+            auth()->user()->cart()->attach($product->id, ['quantity' => 1, 'customer_id' => $customer_id]);
         }
 
         return response('', 204);
@@ -62,7 +64,7 @@ class PurchasereturnCartController extends Controller
         ]);
 
         $product = Product::find($request->product_id);
-        $cart = $request->user()->cart()->where('id', $request->product_id)->first();
+        $cart = auth()->user()->cart()->where('id', $request->product_id)->first();
 
         if ($cart) {
             // check product quantity
@@ -85,14 +87,14 @@ class PurchasereturnCartController extends Controller
         $request->validate([
             'product_id' => 'required|integer|exists:products,id'
         ]);
-        $request->user()->cart()->detach($request->product_id);
+        auth()->user()->cart()->detach($request->product_id);
 
         return response('', 204);
     }
 
     public function empty(Request $request)
     {
-        $request->user()->cart()->detach();
+        auth()->user()->cart()->detach();
 
         return response('', 204);
     }

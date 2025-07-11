@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+@extends('user.layouts.app')
 
 @section('title', __('Expense'))
 @section('content-header', __('Expense'))
@@ -150,10 +150,15 @@
                                 </div>
                                 <div class="col-md-3">
                                     <div class="form-group">
-                                        <select class="form-control" name="expense_head" id="expense_head" required>
-                                            <option>:: Select expense head ::</option>
+                                        <select class="form-control" name="expense_head" id="expense_head">
+                                            <option value="">:: Select expense head ::</option>
+                                            @if(request('expense_head'))
+                                                <option value="">-- Clear Selection --</option>
+                                            @endif
                                             @foreach ($expense_heads as $exp )
-                                                <option value='{{$exp->expense_head}}'>{{$exp->expense_head}}</option>
+                                                <option value='{{$exp->expense_head}}' {{ request('expense_head') == $exp->expense_head ? 'selected' : '' }}>
+                                                    {{$exp->expense_head}}
+                                                </option>
                                             @endforeach
                                         </select>
                                         @error('product_id')
@@ -165,6 +170,11 @@
                                 </div>
                                 <div class="col-md-3">
                                     <button class="btn btn-outline-primary" type="submit">{{ __('Show') }}</button>
+                                    @if(request('start_date') || request('end_date') || request('expense_head'))
+                                        <a href="{{ route('user.expense.index') }}" class="btn btn-outline-secondary ml-2">
+                                            <i class="fa fa-times"></i> Clear
+                                        </a>
+                                    @endif
                                 </div>
                             </div>
                         </form>
@@ -182,17 +192,33 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach ($expenses as $expense)
-                        <tr>
-                            <td> {{$expense->id}}</td>
-                            <td>{{$expense->expense_head}}</td>
-                            <td>{{number_format($expense->expense_amount,0)}}</td>
-                            <td>{{$expense->expense_description}}</td>
-                            <td>{{$expense->created_at}}</td>
-                            <td><form action="/admin/expense/{{$expense->id}}" method="POST" onsubmit="return confirm('Are you sure you want to delete this?');"> @method('DELETE') @csrf <button type="submit"><i class="fa fa-trash"></i></button></form></td>
-                        </tr>
-                        @endforeach
+                        @if($expenses->count() > 0)
+                            @foreach ($expenses as $expense)
+                            <tr>
+                                <td> {{$expense->id}}</td>
+                                <td>{{$expense->expense_head}}</td>
+                                <td>{{number_format($expense->expense_amount,0)}}</td>
+                                <td>{{$expense->expense_description}}</td>
+                                <td>{{$expense->created_at}}</td>
+                                <td><form action="/admin/expense/{{$expense->id}}" method="POST" onsubmit="return confirm('Are you sure you want to delete this?');"> @method('DELETE') @csrf <button type="submit"><i class="fa fa-trash"></i></button></form></td>
+                            </tr>
+                            @endforeach
+                        @else
+                            <tr>
+                                <td colspan="6" class="text-center">
+                                    <div class="alert alert-info mb-0">
+                                        <i class="fa fa-info-circle"></i>
+                                        @if(request('expense_head') || request('start_date') || request('end_date'))
+                                            No expenses found matching your filter criteria.
+                                        @else
+                                            No expenses found. <a href="{{ route('user.expense.create') }}" class="alert-link">Create your first expense</a>
+                                        @endif
+                                    </div>
+                                </td>
+                            </tr>
+                        @endif
                     </tbody>
+                    @if($expenses->count() > 0)
                     <tfoot>
                         <tr>
                             <th></th>
@@ -204,8 +230,11 @@
                             <th></th>
                         </tr>
                     </tfoot>
+                    @endif
                 </table>
+                @if($expenses->count() > 0)
                 <div class="text-center">{{ $expenses->render() }}</div>
+                @endif
             </div>
         </div>
     </div>

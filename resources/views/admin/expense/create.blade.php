@@ -1,10 +1,10 @@
-@extends('layouts.admin')
+@extends('admin.layouts.admin')
 
 @section('title', __('Add Expense'))
 @section('content-header', __('Add Expense'))
 
 @section('content-actions')
-<a href="{{route('expense.index')}}" class="btn btn-primary"><i class="fa fa-chevron-left"></i> Expenses</a>
+<a href="{{route('admin.expense.index')}}" class="btn btn-primary"><i class="fa fa-chevron-left"></i> Expenses</a>
 @endsection
 
 @section('content')
@@ -14,7 +14,7 @@
         <div class="card">
             <div class="card-body">
 
-                <form action="{{ route('expense.store') }}" method="POST" enctype="multipart/form-data">
+                <form action="{{ route('admin.expense.store') }}" method="POST" enctype="multipart/form-data">
                     @csrf
 
                     <div class="row">
@@ -26,9 +26,9 @@
                                     @foreach ($expense_heads as $exp )
                                         <option value='{{$exp->expense_head}}'>{{$exp->expense_head}}</option>
                                     @endforeach
-                                    
+
                                 </select>
-                                
+
 
                                 @error('expense_head')
                                 <span class="invalid-feedback" role="alert">
@@ -40,7 +40,7 @@
                         <div class="col-sm-3">
                             <label for="damage_notes">Expense Head</label><br>
 
-                            <a href="{{route('expense.head.create')}}" role="button" class="btn btn-success">+ Expense Item</a>
+                            <a href="{{route('admin.expense.head.create')}}" role="button" class="btn btn-success">+ Expense Item</a>
                         </div>
                     </div>
 
@@ -57,9 +57,9 @@
                     </div>
 
 
-                     
 
-                    
+
+
 
                     <div class="form-group">
                         <label for="expense_amount">Expense Amount</label>
@@ -92,11 +92,11 @@
            document.getElementById('purchase_price').value = $product[2]
            document.getElementById('sell_price').value = $product[3]
            document.getElementById('stock_qnty').value = $product[4]
-        
+
          }
 
     $(document).ready(function () {
-        
+
     });
 </script>
 @endsection

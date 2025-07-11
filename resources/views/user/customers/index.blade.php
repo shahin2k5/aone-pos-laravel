@@ -1,9 +1,9 @@
-@extends('layouts.admin')
+@extends('user.layouts.app')
 
 @section('title', __('customer.Customer_List'))
 @section('content-header', __('customer.Customer_List'))
 @section('content-actions')
-<a href="{{route('customers.create')}}" class="btn btn-primary">{{ __('customer.Add_Customer') }}</a>
+<a href="{{route('user.customers.create')}}" class="btn btn-primary">{{ __('customer.Add_Customer') }}</a>
 @endsection
 @section('css')
 <link rel="stylesheet" href="{{ asset('plugins/sweetalert2/sweetalert2.min.css') }}">
@@ -29,7 +29,7 @@
             </thead>
             <tbody>
                 @foreach ($customers as $customer)
-                    <?php 
+                    <?php
                         $total_sales = $customer->order_lists_sum_price;
                         $paid = $customer->payments_sum_amount;
                         $balance = $total_sales - $paid;
@@ -45,11 +45,11 @@
                         <td>{{$customer->phone}}</td>
                         <td>{{$customer->address}}</td>
                         <td>{{$customer->balance?number_format($customer->balance,2):'0'}}</td>
-                      
+
                         <td>{{$customer->created_at}}</td>
                         <td>
-                            <a href="{{ route('customers.edit', $customer) }}" class="btn btn-primary"><i class="fas fa-edit"></i></a>
-                            <button class="btn btn-danger btn-delete" data-url="{{route('customers.destroy', $customer)}}"><i class="fas fa-trash"></i></button>
+                            <a href="{{ route('user.customers.edit', $customer) }}" class="btn btn-primary"><i class="fas fa-edit"></i></a>
+                            <button class="btn btn-danger btn-delete" data-url="{{route('user.customers.destroy', $customer)}}"><i class="fas fa-trash"></i></button>
                         </td>
                     </tr>
                 @endforeach

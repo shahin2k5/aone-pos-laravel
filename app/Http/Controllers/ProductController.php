@@ -7,7 +7,9 @@ use App\Http\Requests\ProductUpdateRequest;
 use App\Http\Resources\ProductResource;
 use App\Models\Product;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
 
 class ProductController extends Controller
 {
@@ -18,15 +20,31 @@ class ProductController extends Controller
      */
     public function index(Request $request)
     {
-        $products = new Product();
-        if ($request->search) {
-            $products = $products->where('name', 'LIKE', "%{$request->search}%");
+        $user = Auth::user();
+        $company_id = $user->company_id;
+
+        // If it's a JSON request (from React component), return products for the company
+        if ($request->wantsJson()) {
+            $query = Product::where('company_id', $company_id);
+
+            // Handle search parameter - only search by product name since barcode has its own input
+            if ($request->has('search') && !empty($request->search)) {
+                $search = $request->search;
+                $query->where('name', 'like', "%{$search}%");
+            }
+
+            $products = $query->get();
+
+            // Add debugging
+            Log::info('Products loaded for company_id: ' . $company_id . ', count: ' . $products->count());
+
+            return response()->json(['data' => $products]);
         }
-        $products = $products->latest()->paginate(10);
-        if (request()->wantsJson()) {
-            return ProductResource::collection($products);
-        }
-        return view('admin.products.index')->with('products', $products);
+
+        // For regular view requests, return paginated products
+        $products = Product::where('company_id', $company_id)->latest()->paginate(10);
+        $viewPath = $user->role === 'admin' ? 'admin.products.index' : 'user.products.index';
+        return view($viewPath, compact('products'));
     }
 
     /**
@@ -36,7 +54,8 @@ class ProductController extends Controller
      */
     public function create()
     {
-        return view('admin.products.create');
+        $viewPath = Auth::user()->role === 'admin' ? 'admin.products.create' : 'user.products.create';
+        return view($viewPath);
     }
 
     /**
@@ -47,30 +66,13 @@ class ProductController extends Controller
      */
     public function store(ProductStoreRequest $request)
     {
-        $image_path = '';
-
-        if ($request->hasFile('image')) {
-            $image_path = $request->file('image')->store('products', 'public');
-        }
-
-        $product = Product::create([
-            'name' => $request->name,
-            'description' => $request->description,
-            'image' => $image_path,
-            'barcode' => $request->barcode,
-            'purchase_price' => $request->purchase_price,
-            'sell_price' => $request->sell_price,
-            'quantity' => $request->quantity,
-            'status' => $request->status,
-            'user_id' => auth()->user()->id,
-            'branch_id' => auth()->user()->branch_id,
-            'company_id' => auth()->user()->company_id,
-        ]);
-
-        if (!$product) {
-            return redirect()->back()->with('error', __('product.error_creating'));
-        }
-        return redirect()->route('products.index')->with('success', __('product.success_creating'));
+        $data = $request->validated();
+        $data['company_id'] = Auth::user()->company_id;
+        $data['branch_id'] = Auth::user()->branch_id;
+        $data['user_id'] = Auth::id();
+        $product = Product::create($data);
+        $routeName = Auth::user()->role === 'admin' ? 'admin.products.index' : 'user.products.index';
+        return redirect()->route($routeName)->with('success', 'Product saved successfully!');
     }
 
     /**
@@ -81,7 +83,8 @@ class ProductController extends Controller
      */
     public function show(Product $product)
     {
-        //
+        $viewPath = Auth::user()->role === 'admin' ? 'admin.products.show' : 'user.products.show';
+        return view($viewPath, compact('product'));
     }
 
     /**
@@ -92,7 +95,8 @@ class ProductController extends Controller
      */
     public function edit(Product $product)
     {
-        return view('products.edit')->with('product', $product);
+        $viewPath = Auth::user()->role === 'admin' ? 'admin.products.edit' : 'user.products.edit';
+        return view($viewPath, compact('product'));
     }
 
     /**
@@ -104,29 +108,9 @@ class ProductController extends Controller
      */
     public function update(ProductUpdateRequest $request, Product $product)
     {
-        $product->name = $request->name;
-        $product->description = $request->description;
-        $product->barcode = $request->barcode;
-        $product->purchase_price = $request->purchase_price;
-        $product->sell_price = $request->sell_price;
-        $product->quantity = $request->quantity;
-        $product->status = $request->status;
-
-        if ($request->hasFile('image')) {
-            // Delete old image
-            if ($product->image) {
-                Storage::delete($product->image);
-            }
-            // Store image
-            $image_path = $request->file('image')->store('products', 'public');
-            // Save to Database
-            $product->image = $image_path;
-        }
-
-        if (!$product->save()) {
-            return redirect()->back()->with('error', __('product.error_updating'));
-        }
-        return redirect()->route('products.index')->with('success', __('product.success_updating'));
+        $product->update($request->validated());
+        $routeName = Auth::user()->role === 'admin' ? 'admin.products.index' : 'user.products.index';
+        return redirect()->route($routeName)->with('success', 'Product updated successfully!');
     }
 
     /**
@@ -137,13 +121,8 @@ class ProductController extends Controller
      */
     public function destroy(Product $product)
     {
-        if ($product->image) {
-            Storage::delete($product->image);
-        }
         $product->delete();
-
-        return response()->json([
-            'success' => true
-        ]);
+        $routeName = Auth::user()->role === 'admin' ? 'admin.products.index' : 'user.products.index';
+        return redirect()->route($routeName)->with('success', 'Product deleted successfully!');
     }
 }
