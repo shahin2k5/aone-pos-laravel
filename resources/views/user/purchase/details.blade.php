@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+@extends('user.layouts.app')
 
 @section('title', __('Purchase Details'))
 @section('content-header', __('Purchase Details#'.$purchase_items[0]->id))
@@ -8,13 +8,13 @@
 @section('content')
 
 <div class="card">
-    
+
     <div class="card-body">
         <div class="row">
             <div class="col-md-6"></div>
             <div class="col-md-6">
-                <form action="{{route('salesreturns.index')}}">
-                    
+                <form action="{{route('user.salesreturns.index')}}">
+
                 </form>
             </div>
         </div>
@@ -31,9 +31,9 @@
                 <div class="col-md-4"></div>
             </div>
         @endif
-         
+
         <hr>
- 
+
         <table class="table">
             <thead>
                 <tr>
@@ -43,13 +43,13 @@
                     <th>{{ 'Qnty.' }}</th>
                     <th>{{ 'Total' }}</th>
                     <th>{{ 'Created' }}</th>
-           
+
                 </tr>
             </thead>
             <tbody>
                 @foreach ($purchase_items[0]->items as $purchase_item)
                 <tr>
-                  
+
                     <td>{{$loop->index+1}}</td>
                     <td><img class="product-img" src="{{ Storage::url($purchase_item->product->image) }}" alt="" style="width:55px;height:55px"></td>
                     <td>{{$purchase_item->product->name}}</td>
@@ -57,7 +57,7 @@
                     <td>{{number_format($purchase_item->qnty,0)}}</td>
                     <td>{{number_format($purchase_item->purchase_price * $purchase_item->qnty,2) }}</td>
                     <td>{{$purchase_item->created_at}}</td>
-                     
+
                 </tr>
                 @endforeach
             </tbody>
@@ -73,7 +73,7 @@
                 </tr>
             </tfoot>
         </table>
-    
+
         <div class="text-center"></div>
     </div>
 </div>

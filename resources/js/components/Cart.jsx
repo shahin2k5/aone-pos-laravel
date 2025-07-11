@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { createRoot } from "react-dom";
+import { createRoot } from "react-dom/client";
 import axios from "axios";
 import Swal from "sweetalert2";
 import { isArray, sum } from "lodash";
@@ -57,7 +57,7 @@ class Cart extends Component {
         this.loadCart();
 
         console.log('branch_id',this.state.branch_id)
-        
+
     }
 
     // load the transaltions for the react component
@@ -75,8 +75,13 @@ class Cart extends Component {
 
     loadCustomers() {
         axios.get(`/admin/customers`).then((res) => {
-            const customers = res.data;
+            // Support both {data: [...]} and [...] responses
+            const customers = Array.isArray(res.data) ? res.data : res.data.data || [];
+            console.log('Customers loaded:', customers);
             this.setState({ customers });
+        }).catch((error) => {
+            console.error('Error loading customers:', error);
+            console.error('Error response:', error.response);
         });
     }
 
@@ -92,7 +97,11 @@ class Cart extends Component {
         const query = !!search ? `?search=${search}` : "";
         axios.get(`/admin/products${query}`).then((res) => {
             const products = res.data.data;
+            console.log('Products loaded:', products);
             this.setState({ products });
+        }).catch((error) => {
+            console.error('Error loading products:', error);
+            console.error('Error response:', error.response);
         });
     }
 
@@ -105,16 +114,17 @@ class Cart extends Component {
     loadCart() {
         axios.get("/admin/cart").then((res) => {
             const cart = res.data;
+            console.log('Cart loaded:', cart);
             if(cart.length){
                 const sub_total = this.getTotal(cart)
-                const gr_total = sub_total - this.state.discount_amount 
+                const gr_total = sub_total - this.state.discount_amount
                 const customer_id = cart[0].pivot.customer_id
-                const branch_id = cart[0].branch_id
+                const branch_id = cart[0].pivot.branch_id
                 const prev_balance = cart[0].pivot.user_balance
                 const new_balance = cart[0].pivot.user_balance+gr_total
                 const last_balance = cart[0].pivot.user_balance+gr_total
                 this.setState({ cart, sub_total, gr_total,customer_id,branch_id, prev_balance, new_balance,last_balance });
-         
+
             }else{
                 const sub_total = 0
                 const gr_total = 0
@@ -124,25 +134,37 @@ class Cart extends Component {
                 const last_balance = 0
                 this.setState({ cart, sub_total, gr_total,customer_id, prev_balance, new_balance,last_balance });
             }
-            
-            
+
+
+        }).catch((error) => {
+            console.error('Error loading cart:', error);
         });
     }
 
     handleScanBarcode(event) {
         event.preventDefault();
-        const { barcode, customer_id,  } = this.state;
-        if (!!barcode && !!customer_id) {
-            axios
-                .post("/admin/cart", { barcode, customer_id, branch_id })
-                .then((res) => {
-                    this.loadCart();
-                    this.setState({ barcode: "" });
-                })
-                .catch((err) => {
-                    Swal.fire("Error!", err.response.data.message, "error");
-                });
+        const { barcode, customer_id, branch_id } = this.state;
+        if (!barcode) {
+            Swal.fire('Please enter a barcode', 'warning');
+            return false;
         }
+        if (!customer_id) {
+            Swal.fire('Please select a customer', 'warning');
+            return false;
+        }
+        if (!branch_id) {
+            Swal.fire('Please select a branch', 'warning');
+            return false;
+        }
+        axios
+            .post("/admin/cart", { barcode, customer_id, branch_id })
+            .then((res) => {
+                this.loadCart();
+                this.setState({ barcode: "" });
+            })
+            .catch((err) => {
+                Swal.fire("Error!", err.response.data.message, "error");
+            });
     }
 
     handleChangeQty(product_id, qty) {
@@ -152,7 +174,7 @@ class Cart extends Component {
             }
             return c;
         });
-       
+
         if (!qty) return;
         const {customer_id, branch_id} = this.state
         axios
@@ -187,9 +209,9 @@ class Cart extends Component {
                 const new_balance = this.state.prev_balance + gr_total
                 const last_balance = new_balance - this.state.discount_amount
 
-                this.setState({ 
-                    cart, 
-                    sub_total, 
+                this.setState({
+                    cart,
+                    sub_total,
                     gr_total,
                     new_balance,
                     last_balance
@@ -224,11 +246,15 @@ class Cart extends Component {
             Swal.fire('Please select a customer', 'warning');
             return false
         }
+        if(!this.state.branch_id){
+            Swal.fire('Please select a branch', 'warning');
+            return false
+        }
         const customer_id = this.state.customer_id
         const branch_id = this.state.branch_id
         let product = this.state.products.find((p) => p.barcode === barcode);
         const elements = document.querySelectorAll('[class*="product-"]');
-    
+
         elements.forEach(el => {
             el.style.border = '0px';
         });
@@ -241,7 +267,7 @@ class Cart extends Component {
         if(prodInput){
             prodInput.style.border = "2px solid #fcc";
         }
-        
+
         if (!!product) {
             // if product is already in cart
             let cart = this.state.cart.find((c) => c.id === product.id);
@@ -262,7 +288,7 @@ class Cart extends Component {
                 const last_balance = new_balance - this.state.discount_amount
 
                 this.setState({
-                    cart: carts, 
+                    cart: carts,
                     sub_total,
                     gr_total,
                     new_balance,
@@ -278,14 +304,14 @@ class Cart extends Component {
                             user_id: 1,
                         },
                     };
-                    const productList = [...this.state.cart, product] 
+                    const productList = [...this.state.cart, product]
                     const sub_totals = this.getTotal(productList)
                     const gr_total = sub_totals - this.state.discount_amount
                     const new_balance = this.state.prev_balance + gr_total
                     const last_balance = new_balance - this.state.discount_amount
-                    this.setState({ 
-                        cart: productList, 
-                        sub_total: sub_totals, 
+                    this.setState({
+                        cart: productList,
+                        sub_total: sub_totals,
                         gr_total,
                         new_balance,
                         last_balance
@@ -293,7 +319,7 @@ class Cart extends Component {
                 }
             }
 
-            
+
 
             axios
                 .post("/admin/cart", { barcode, customer_id, branch_id })
@@ -306,17 +332,17 @@ class Cart extends Component {
                 });
         }
 
-        
+
     }
 
     setCustomerId(event) {
         const customerData = event.target.value
-        
+
         if(customerData){
             const customerInfo = this.state.customers.filter(cust=>cust.id==customerData)
             const new_balance = customerInfo[0].balance + this.state.gr_total
             const last_balance = new_balance - this.state.discount_amount
-            this.setState({ 
+            this.setState({
                 customer_id: customerInfo[0].id,
                 selCustomerId: customerInfo[0].id,
                 selCustomerFName: customerInfo[0].first_name,
@@ -324,14 +350,14 @@ class Cart extends Component {
                 selCustomerAddress: customerInfo[0].address,
                 selCustomerPhone: customerInfo[0].phone,
                 selCustomerBalance: customerInfo[0].balance,
-                prev_balance: customerInfo[0].balance, 
-                new_balance, 
-                last_balance 
+                prev_balance: customerInfo[0].balance,
+                new_balance,
+                last_balance
             });
-            
+
             console.log('customerData',customerInfo)
         }else{
-            this.setState({ 
+            this.setState({
                 customer_id: '',
                 selCustomerId: '',
                 selCustomerFName: '',
@@ -339,28 +365,28 @@ class Cart extends Component {
                 selCustomerAddress: '',
                 selCustomerPhone: '',
                 selCustomerBalance: '',
-                prev_balance: '', 
-                new_balance:'', 
-                last_balance:'' 
+                prev_balance: '',
+                new_balance:'',
+                last_balance:''
             });
         }
 
-        
+
     }
 
     setBranchId(event) {
         const branchData = event.target.value
         if(branchData){
-            this.setState({ 
+            this.setState({
                 branch_id: branchData
             });
         }else{
-            this.setState({ 
-                branch_id: '',  
+            this.setState({
+                branch_id: '',
             });
         }
         console.log('branch id:::', branchData)
-        
+
     }
 
     printInvoice = () => {
@@ -371,6 +397,10 @@ class Cart extends Component {
     handleClickSubmit() {
         if(!this.state.customer_id){
             Swal.fire('Please select a customer', 'warning');
+            return false
+        }
+        if(!this.state.branch_id){
+            Swal.fire('Please select a branch', 'warning');
             return false
         }
         Swal.fire({
@@ -387,6 +417,7 @@ class Cart extends Component {
                         customer_id: this.state.customer_id,
                         branch_id: this.state.branch_id,
                         amount,
+                        discount_amount: this.state.discount_amount,
                     })
                     .then((res) => {
                         this.loadCart();
@@ -416,7 +447,7 @@ class Cart extends Component {
 
     changeDiscount = (e) =>{
         const discount_amount = e.target.value
-        const gr_total = this.state.sub_total - discount_amount 
+        const gr_total = this.state.sub_total - discount_amount
         this.setState({
             discount_amount,
             gr_total
@@ -427,7 +458,7 @@ class Cart extends Component {
 
         const new_balance = this.state.new_balance
         const paid_amount = e.target.value
-        const last_balance = new_balance - paid_amount 
+        const last_balance = new_balance - paid_amount
 
         this.setState({
             paid_amount,
@@ -445,36 +476,38 @@ class Cart extends Component {
     }
 
     render() {
-        const { cart, products, customers,branches, barcode, translations } = this.state;
+        const { cart, products, customers, branches, barcode, translations } = this.state;
+        const cartList = Array.isArray(cart) ? cart : [];
+        const productList = Array.isArray(products) ? products : [];
+        const customerList = Array.isArray(customers) ? customers : [];
+        const safeTranslations = translations || {};
         return (
             <div className="row">
-               
+
                 <div className="col-md-6 col-lg-6">
                     <div className="row mb-2">
-                        <div className="col-md-3"><input type="text" onChange={this.setCustomerId} value={this.state.customer_id} name="customer-input" id="customer-input" className="form-control"></input></div>
+                        <div className="col-md-3"><input type="text" onChange={this.setCustomerId} value={this.state.customer_id} name="customer-input" id="customer-input" className="form-control" placeholder="Enter customer ID or name" /></div>
                         <div className="col-md-4">
-                            <select  onChange={this.setCustomerId}  id="sel-customer" className="form-control"  >
+                            <select  onChange={this.setCustomerId}  id="sel-customer" className="form-control" value={this.state.customer_id} >
                                 <option value="">Select a customer</option>
-                                {customers.map((cus) => (
+                                {customerList.map((cus) => (
                                     <option
                                         key={cus.id}
-                                        selected={cus.id==this.state.customer_id}
                                         value={cus.id} >
-                                        {`${cus.first_name} ${cus.last_name} - ${cus.address} `} 
+                                        {`${cus.first_name} ${cus.last_name} - ${cus.address} `}
                                     </option>
                                 ))}
                             </select>
                         </div>
 
                         <div className="col-md-4">
-                            <select  onChange={this.setBranchId}  id="sel-branch" className="form-control"  >
+                            <select onChange={this.setBranchId} id="sel-branch" className="form-control" value={this.state.branch_id} >
                                 <option value="">Select a branch</option>
                                 {branches.map((branch) => (
                                     <option
                                         key={branch.id}
-                                        selected={branch.id==this.state.branch_id}
                                         value={branch.id} >
-                                        {`${branch.branch_name} `} 
+                                        {`${branch.branch_name} `}
                                     </option>
                                 ))}
                             </select>
@@ -483,12 +516,12 @@ class Cart extends Component {
                         <div className="col">
                             <input type="hidden" onChange={this.setCustomerId} value={this.state.customer_id} name="customer-input" id="customer-input" className="form-control"></input>
                             <datalist  id="sel-customer"  >
-                                 
+
                                 {customers.map((cus) => (
                                     <option
                                         key={cus.id}
                                         value={`${cus.id}-${cus.first_name} ${cus.last_name}`} >
-                                        {`${cus.address} - ${cus.phone} - ${cus.balance}`} 
+                                        {`${cus.address} - ${cus.phone} - ${cus.balance}`}
                                     </option>
                                 ))}
                             </datalist>
@@ -505,15 +538,15 @@ class Cart extends Component {
                             <table className="table table-striped">
                                 <thead>
                                     <tr>
-                                        <th>{translations["product_name"]}</th>
-                                        <th>{translations["quantity"]}</th>
+                                        <th>{safeTranslations["product_name"]}</th>
+                                        <th>{safeTranslations["quantity"]}</th>
                                         <th className="text-right">
-                                            {translations["price"]}
+                                            {safeTranslations["price"]}
                                         </th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {cart.map((c) => (
+                                    {cartList.map((c) => (
                                         <tr key={c.id}>
                                             <td>{c.name}</td>
                                             <td>
@@ -585,7 +618,7 @@ class Cart extends Component {
                     <div className="row mt-3">
                         <div className="col">
                             {this.state.printUrl ? (
-                             
+
                                     <a
                                         href={this.state.printUrl}
                                         target="_blank"
@@ -594,18 +627,18 @@ class Cart extends Component {
                                     >
                                         🖨️ Print Invoice
                                     </a>
-                                
+
                             ): (
-                             
+
                                     <a
-                                     
-                                        
+
+
                                         rel="noopener noreferrer"
                                         className="btn btn-success btn-block"
                                     >
                                         🖨️ Print Invoice
                                     </a>
-                                
+
                             )}
 
                         </div>
@@ -614,22 +647,22 @@ class Cart extends Component {
                                 type="button"
                                 className="btn btn-danger btn-block"
                                 onClick={this.handleEmptyCart}
-                                disabled={!cart.length}
+                                disabled={!cartList.length}
                             >
-                                {translations["cancel"]}
+                                {safeTranslations["cancel"]}
                             </button>
                         </div>
                         <div className="col">
                             <button
                                 type="button"
                                 className="btn btn-primary btn-block"
-                                disabled={!cart.length}
+                                disabled={!cartList.length}
                                 onClick={this.handleClickSubmit}
                             >
-                                {translations["checkout"]}
+                                {safeTranslations["checkout"]}
                             </button>
                         </div>
-                        
+
                     </div>
                 </div>
 
@@ -641,7 +674,7 @@ class Cart extends Component {
                                 <input
                                     type="text"
                                     className="form-control"
-                                    placeholder={translations["scan_barcode"]}
+                                    placeholder={safeTranslations["scan_barcode"]}
                                     value={barcode}
                                     onChange={this.handleOnChangeBarcode}
                                 />
@@ -652,16 +685,16 @@ class Cart extends Component {
                             <input
                                 type="text"
                                 className="form-control"
-                                placeholder={translations["search_product"] + "..."}
+                                placeholder={(safeTranslations["search_product"] || "Search") + "..."}
                                 onChange={this.handleChangeSearch}
                                 onKeyDown={this.handleSeach}
                             />
                         </div>
 
                     </div>
-                    
+
                     <div className="order-product">
-                        {products.map((p) => (
+                        {productList.map((p) => (
                             <div
                                 onClick={() => this.addProductToCart(p.barcode)}
                                 key={p.id}
@@ -685,7 +718,7 @@ class Cart extends Component {
                     </div>
                 </div>
 
-                
+
 
             </div>
         );

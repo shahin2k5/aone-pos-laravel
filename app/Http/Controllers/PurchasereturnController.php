@@ -28,120 +28,142 @@ class PurchasereturnController extends Controller
         if ($request->end_date) {
             $purchase_returns = $purchase_returns->where('created_at', '<=', $request->end_date . ' 23:59:59');
         }
-        $purchase_returns = $purchase_returns->with([ 'items.product', 'supplier','items'])->latest()->paginate(10);
+        $purchase_returns = $purchase_returns->with(['items.product', 'supplier', 'items'])->latest()->paginate(10);
 
         $total = 0;
-        
- 
-        return view('purchasereturn.index', compact('purchase_returns', 'total'));
+
+        $viewPath = auth()->user()->role === 'admin' ? 'admin.purchasereturn.index' : 'user.purchasereturn.index';
+        return view($viewPath, compact('purchase_returns', 'total'));
     }
 
-    public function salesreturnDetails($salesreturn_id){
-        $salesreturns = Salesreturn::where('id', $salesreturn_id)->with(['items','customer'])->get();
-         $total = 0;
-        return view('salesreturn.details', compact('salesreturns','total'));
+    public function salesreturnDetails($salesreturn_id)
+    {
+        $salesreturns = Salesreturn::where('id', $salesreturn_id)->with(['items', 'customer'])->get();
+        $total = 0;
+        return view('salesreturn.details', compact('salesreturns', 'total'));
     }
 
-    public function findPurchaseID($purchase_id){
-        $purchase = Purchase::where('id',$purchase_id)->with(['items','supplier','items.product'])->first();
-        if($purchase){
+    public function findPurchaseID($purchase_id)
+    {
+        $purchase = Purchase::where('id', $purchase_id)->with(['items', 'supplier', 'items.product'])->first();
+        if ($purchase) {
             $items = $purchase->items;
             PurchaseReturnItemCart::truncate();
-            foreach($items as $item){
+            $user = auth()->user();
+            foreach ($items as $item) {
                 $data = [
                     'purchase_price' => $item->purchase_price,
                     'total_price' => $item->purchase_price * $item->qnty,
                     'sell_price' => $item->sell_price,
                     'qnty' => $item->qnty,
                     'product_id' => $item->product_id,
-                    'purchase_id' => $item->purchase_id,
+                    'purchase_id' => $purchase_id, // ensure purchase_id is set
                     'supplier_id' => $purchase->supplier_id,
-                    'user_id' => auth()->user()->id,
+                    'user_id' => $user->id,
+                    'company_id' => $user->company_id,
+                    'branch_id' => $user->branch_id,
                 ];
                 PurchaseReturnItemCart::create($data);
             }
-            $purchasereturn_items = PurchaseReturnItemCart::with(['product','supplier','product'])->get();
-            return response()->json(['purchase'=>$purchase, 'purchasereturn_items'=>$purchasereturn_items]);
+            $purchasereturn_items = PurchaseReturnItemCart::with(['product', 'supplier', 'product'])->get();
+            return response()->json(['purchase' => $purchase, 'purchasereturn_items' => $purchasereturn_items]);
         }
     }
 
-    public function changeQnty(Request $request){
-        $salesreturn_item = SalesreturnItemCart::where('product_id',$request->product_id )->first();
-        if($salesreturn_item){
+    public function changeQnty(Request $request)
+    {
+        $salesreturn_item = SalesreturnItemCart::where('product_id', $request->product_id)->first();
+        if ($salesreturn_item) {
             $salesreturn_item->qnty = $request->qnty;
             $salesreturn_item->sell_price = $request->sell_price;
             $salesreturn_item->total_price = $request->sell_price * $request->qnty;
             $salesreturn_item->save();
         }
-        
+
         return response()->json($request->all());
     }
 
-    public function addProductToCart(Request $request){
-         $request->validate([
+    public function addProductToCart(Request $request)
+    {
+        $request->validate([
             'barcode' => 'required',
             'supplier_id' => 'required|exists:suppliers,id',
         ]);
         $barcode = $request->barcode;
         $product_id = $request->product_id;
         $supplier_id = $request->supplier_id;
+        $purchase_id = $request->purchase_id; // get purchase_id from request if available
         $product = Product::where('id', $request->product_id)->first();
 
-       
+        $user = $request->user();
         $purchasereturn_cart = PurchaseReturnItemCart::where('product_id', $product_id)->first();
         if ($purchasereturn_cart) {
-          
             // update only quantity
             $purchasereturn_cart->qnty = $purchasereturn_cart->qnty + 1;
             $purchasereturn_cart->total_price = $purchasereturn_cart->qnty * $purchasereturn_cart->purchase_price;
+            // ensure purchase_id is set if not already
+            if (!$purchasereturn_cart->purchase_id && $purchase_id) {
+                $purchasereturn_cart->purchase_id = $purchase_id;
+            }
             $purchasereturn_cart->save();
-        }else{
+        } else {
             $purchasereturn_cart = new PurchaseReturnItemCart;
             $purchasereturn_cart->supplier_id = $request->supplier_id;
             $purchasereturn_cart->product_id = $request->product_id;
             $purchasereturn_cart->qnty =  1;
             $purchasereturn_cart->purchase_price = $product->purchase_price;
             $purchasereturn_cart->total_price = 1 * $product->purchase_price;
-            $purchasereturn_cart->user_id = $request->user()->id;
+            $purchasereturn_cart->user_id = $user->id;
+            $purchasereturn_cart->company_id = $user->company_id;
+            $purchasereturn_cart->branch_id = $user->branch_id;
+            $purchasereturn_cart->purchase_id = $purchase_id;
             $purchasereturn_cart->save();
-        }  
-        $purchasereturn_cart = PurchaseReturnItemCart::with(['product','supplier','product'])->get();
+        }
+        $purchasereturn_cart = PurchaseReturnItemCart::with(['product', 'supplier', 'product'])->get();
         return response()->json($purchasereturn_cart, 200);
     }
- 
+
     public function finalSave(Request $request)
     {
-        
-        try{
+        try {
+            $user = auth()->user();
+            // Fallback: ensure all cart items for this user are linked to this purchase_id
+            PurchaseReturnItemCart::where('user_id', $user->id)
+                ->whereNull('purchase_id')
+                ->update(['purchase_id' => $request->purchase_id]);
+
             $purchase = Purchase::where('id', $request->purchase_id)->first();
             $return_items = PurchaseReturnItemCart::where('purchase_id', $request->purchase_id)->get();
-           
-            if(!!$purchase){
+
+            if (!!$purchase) {
                 $total_price = $return_items->sum('total_price');
+                $total_qnty = $return_items->sum('qnty');
                 $return_amount = $request->amount;
                 $profit_amount = $total_price - $return_amount;
                 $purchasereturn = PurchaseReturn::create([
                     'supplier_id' => $request->supplier_id,
-                    'user_id' => $request->user()->id,
-                    'purchase_id'=>$request->purchase_id,
-                    'total_qnty'=>$return_items->sum('qnty'),
-                    'total_amount'=> $total_price,
-                    'return_amount'=>$return_amount,
-                    'profit_amount'=>$profit_amount,
-                    'notes'=>$request->notes,
+                    'user_id' => $user->id,
+                    'purchase_id' => $request->purchase_id,
+                    'total_qnty' => $total_qnty,
+                    'total_amount' => $total_price,
+                    'return_amount' => $return_amount,
+                    'profit_amount' => $profit_amount,
+                    'notes' => $request->notes,
+                    'company_id' => $user->company_id,
+                    'branch_id' => $user->branch_id,
                 ]);
 
-                
-                
+
+
                 foreach ($return_items as $item) {
                     $data = [
-                        'purchase_return_id'=> $purchasereturn->id,
-                        'purchase_id'=>$request->purchase_id,
-                        'product_id'=>$item->product_id,
-                        'purchase_price'=>$item->purchase_price,
-                        'sell_price'=>$item->sell_price,
-                        'qnty'=>$item->qnty,
-                        'supplier_id'=>$request->supplier_id,
+                        'purchase_return_id' => $purchasereturn->id,
+                        'purchase_id' => $request->purchase_id,
+                        'product_id' => $item->product_id,
+                        'purchase_price' => $item->purchase_price,
+                        'sell_price' => $item->sell_price,
+                        'qnty' => $item->qnty,
+                        'supplier_id' => $request->supplier_id,
                         'user_id' => $request->user()->id,
                     ];
                     PurchaseReturnItems::create($data);
@@ -149,11 +171,10 @@ class PurchasereturnController extends Controller
                     $product = Product::where('id', $item->product_id)->first();
                     $product->quantity = $product->quantity - $item->qnty;
                     $product->save();
-                
                 }
- 
 
-                if($request->supplier_id){
+
+                if ($request->supplier_id) {
                     $supplier = Supplier::where('id', $request->supplier_id)->first();
                     $supplier->balance = $supplier->balance - $request->amount;
                     $supplier->save();
@@ -163,18 +184,16 @@ class PurchasereturnController extends Controller
 
                 return $purchasereturn;
             }
-        }catch(\Exception $ex){
+        } catch (\Exception $ex) {
             return response()->json($ex->getMessage(), 500);
         }
-        
-       
     }
 
-    public function handleDelete(Request $request){
+    public function handleDelete(Request $request)
+    {
         $product_id = $request->product_id;
-        SalesreturnItemCart::where('product_id',$product_id)->delete();
+        SalesreturnItemCart::where('product_id', $product_id)->delete();
         return response()->json('success');
-
     }
 
     public function store(OrderStoreRequest $request)
@@ -186,7 +205,7 @@ class PurchasereturnController extends Controller
 
         $cart = $request->user()->cart()->get();
         $sum_cart = $cart->sum('sell_price');
-        
+
         foreach ($cart as $item) {
             $order->items()->create([
                 'sell_price' => $item->sell_price * $item->pivot->quantity,
@@ -202,12 +221,19 @@ class PurchasereturnController extends Controller
             'user_id' => $request->user()->id,
         ]);
 
-        if($request->customer_id){
+        if ($request->customer_id) {
             $customer = Customer::where('id', $request->customer_id)->first();
-            $customer->balance = $customer->balance + ($sum_cart-$request->amount);
+            $customer->balance = $customer->balance + ($sum_cart - $request->amount);
             $customer->save();
         }
         return $order;
     }
- 
+
+    public function details($id)
+    {
+        $purchase_return = PurchaseReturn::with(['items.product', 'supplier', 'purchase'])->findOrFail($id);
+        $total = $purchase_return->total_amount;
+        $viewPath = auth()->user()->role === 'admin' ? 'admin.purchasereturn.details' : 'user.purchasereturn.details';
+        return view($viewPath, compact('purchase_return', 'total'));
+    }
 }

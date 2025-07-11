@@ -9,6 +9,8 @@ use App\Models\Purchase;
 use App\Models\Supplier;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class PurchaseController extends Controller
 {
@@ -35,14 +37,15 @@ class PurchaseController extends Controller
         })->sum();
 
 
-        return view('admin.purchase.index', compact('products', 'suppliers','purchases','total'));
+        return view('admin.purchase.index', compact('products', 'suppliers', 'purchases', 'total'));
     }
 
 
-    public function purchaseDetails($purchase_id){
-        $purchase_items = Purchase::where('id', $purchase_id)->with(['items','supplier'])->get();
+    public function purchaseDetails($purchase_id)
+    {
+        $purchase = Purchase::with(['items.product', 'supplier'])->find($purchase_id);
         $total = 0;
-        return view('purchase.details', compact('purchase_items','total'));
+        return view('admin.purchase.details', compact('purchase', 'total'));
     }
 
 
@@ -50,51 +53,52 @@ class PurchaseController extends Controller
 
     public function store(PurchaseStoreRequest $request)
     {
-         $request->validate([
+        $request->validate([
             'supplier_id' => 'required|exists:suppliers,id',
             'paid_amount' => 'nullable|numeric|min:0',
         ]);
 
         $cart_line = "";
         $invoice_no = "";
-        if(!$request->paid_amount){
-            
+        if (!$request->paid_amount) {
         }
 
         $cart = $request->user()->purchaseCart()->get();
-         
-        if(isset($cart[0]->pivot)){
- 
-            $invoice_no = $cart[0]->pivot?$cart[0]->pivot->supplier_invoice_id:'';
+
+        if (isset($cart[0]->pivot)) {
+
+            $invoice_no = $cart[0]->pivot ? $cart[0]->pivot->supplier_invoice_id : '';
         }
- 
+
+        $user = Auth::user();
         $purchase = Purchase::create([
             'supplier_id' => $request->supplier_id,
             'invoice_no' => $invoice_no,
             'paid_amount' => $request->paid_amount,
-            'user_id' => $request->user()->id,
+            'user_id' => $user->id,
+            'company_id' => $user->company_id,
+            'branch_id' => $user->branch_id,
         ]);
 
         $sub_total = 0;
         $discount_amount = 0;
         $gr_total = 0;
         $paid_amount = 0;
-        
+
         foreach ($cart as $item) {
             $product = Product::where('id', $item->product_id)->first();
             $purchase->items()->create([
-                'purchase_price' => $item->purchase_price?$item->purchase_price: $item->pivot->purchase_price,
+                'purchase_price' => $item->purchase_price ? $item->purchase_price : $item->pivot->purchase_price,
                 'quantity' => $item->pivot->qnty,
                 'product_id' => $item->id,
             ]);
             $item->quantity = $item->quantity + $item->pivot->qnty;
             $item->save();
-            $sub_total+= $item->pivot->qnty * $item->pivot->purchase_price;
-
+            $sub_total += $item->pivot->qnty * $item->pivot->purchase_price;
         }
 
         $discount_amount = $request->discount_amount;
-        $gr_total = $sub_total- $discount_amount;
+        $gr_total = $sub_total - $discount_amount;
         $paid_amount = $request->paid_amount;
 
         $purchase->sub_total = $sub_total;
@@ -102,19 +106,19 @@ class PurchaseController extends Controller
         $purchase->gr_total = $gr_total;
         $purchase->paid_amount = $paid_amount;
         $purchase->save();
- 
+
         $request->user()->purchaseCart()->detach();
 
-        $supplier = Supplier::where('id',$request->supplier_id)->first();
+        $supplier = Supplier::where('id', $request->supplier_id)->first();
         $supplier->balance = ($supplier->balance + $purchase->gr_total) - $paid_amount;
         $supplier->save();
-        if($request->paid_amount>0){
+        if ($request->paid_amount > 0) {
             $purchase->supplierPayments()->create([
                 'amount' => $request->paid_amount,
                 'user_id' => $request->user()->id,
             ]);
         }
-        
+
         return $purchase;
     }
 
@@ -137,7 +141,7 @@ class PurchaseController extends Controller
         DB::transaction(function () use ($purchase, $amount) {
             $purchase->supplierPayments()->create([
                 'amount' => $amount,
-                'user_id' => auth()->user()->id,
+                'user_id' => Auth::user()->id,
             ]);
         });
 
@@ -149,5 +153,4 @@ class PurchaseController extends Controller
         $order = Purchase::with(['supplier', 'items'])->findOrFail($id);
         return view('purchase.print', compact('order'));
     }
-    
 }

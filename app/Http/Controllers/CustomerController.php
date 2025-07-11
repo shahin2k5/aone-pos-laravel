@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\CustomerStoreRequest;
 use App\Models\Customer;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 
 class CustomerController extends Controller
@@ -14,17 +15,23 @@ class CustomerController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(Request $request)
     {
-        if (request()->wantsJson()) {
-            return response(
-                Customer::all()
-            );
+        $user = Auth::user();
+        $company_id = $user->company_id;
+
+        // If it's a JSON request (from React component), return customers for the company
+        if ($request->wantsJson()) {
+            $customers = Customer::where('company_id', $company_id)
+                ->select('id', 'first_name', 'last_name', 'address', 'phone', 'balance')
+                ->get();
+            return response()->json($customers);
         }
 
-
-        $customers = Customer::withSum('orderLists', 'sell_price')->withSum('payments','amount')->latest()->paginate(10);
-        return view('customers.index')->with('customers', $customers);
+        // For regular view requests, return paginated customers
+        $customers = Customer::where('company_id', $company_id)->latest()->paginate(10);
+        $viewPath = $user->role === 'admin' ? 'admin.customers.index' : 'user.customers.index';
+        return view($viewPath, compact('customers'));
     }
 
     /**
@@ -34,7 +41,8 @@ class CustomerController extends Controller
      */
     public function create()
     {
-        return view('customers.create');
+        $viewPath = Auth::user()->role === 'admin' ? 'admin.customers.create' : 'user.customers.create';
+        return view($viewPath);
     }
 
     /**
@@ -45,26 +53,16 @@ class CustomerController extends Controller
      */
     public function store(CustomerStoreRequest $request)
     {
-        $avatar_path = '';
-
+        $data = $request->validated();
+        $data['company_id'] = Auth::user()->company_id;
+        $data['branch_id'] = Auth::user()->branch_id;
+        $data['user_id'] = Auth::id();
         if ($request->hasFile('avatar')) {
-            $avatar_path = $request->file('avatar')->store('customers', 'public');
+            $data['avatar'] = $request->file('avatar')->store('avatars', 'public');
         }
-
-        $customer = Customer::create([
-            'first_name' => $request->first_name,
-            'last_name' => $request->last_name,
-            'email' => $request->email,
-            'phone' => $request->phone,
-            'address' => $request->address,
-            'avatar' => $avatar_path,
-            'user_id' => $request->user()->id,
-        ]);
-
-        if (!$customer) {
-            return redirect()->back()->with('error', __('customer.error_creating'));
-        }
-        return redirect()->route('customers.index')->with('success', __('customer.succes_creating'));
+        $customer = Customer::create($data);
+        $routeName = Auth::user()->role === 'admin' ? 'admin.customers.index' : 'user.customers.index';
+        return redirect()->route($routeName)->with('success', 'Customer saved successfully!');
     }
 
     /**
@@ -73,7 +71,11 @@ class CustomerController extends Controller
      * @param  \App\Models\Customer  $customer
      * @return \Illuminate\Http\Response
      */
-    public function show(Customer $customer) {}
+    public function show(Customer $customer)
+    {
+        $viewPath = Auth::user()->role === 'admin' ? 'admin.customers.show' : 'user.customers.show';
+        return view($viewPath, compact('customer'));
+    }
 
     /**
      * Show the form for editing the specified resource.
@@ -83,7 +85,8 @@ class CustomerController extends Controller
      */
     public function edit(Customer $customer)
     {
-        return view('customers.edit', compact('customer'));
+        $viewPath = Auth::user()->role === 'admin' ? 'admin.customers.edit' : 'user.customers.edit';
+        return view($viewPath, compact('customer'));
     }
 
     /**
@@ -93,41 +96,17 @@ class CustomerController extends Controller
      * @param  \App\Models\Customer  $customer
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, Customer $customer)
+    public function update(CustomerStoreRequest $request, Customer $customer)
     {
-        $customer->first_name = $request->first_name;
-        $customer->last_name = $request->last_name;
-        $customer->email = $request->email;
-        $customer->phone = $request->phone;
-        $customer->address = $request->address;
-
-        if ($request->hasFile('avatar')) {
-            // Delete old avatar
-            if ($customer->avatar) {
-                Storage::delete($customer->avatar);
-            }
-            // Store avatar
-            $avatar_path = $request->file('avatar')->store('customers', 'public');
-            // Save to Database
-            $customer->avatar = $avatar_path;
-        }
-
-        if (!$customer->save()) {
-            return redirect()->back()->with('error', __('customer.error_updating'));
-        }
-        return redirect()->route('customers.index')->with('success', __('customer.success_updating'));
+        $customer->update($request->validated());
+        $routeName = Auth::user()->role === 'admin' ? 'admin.customers.index' : 'user.customers.index';
+        return redirect()->route($routeName)->with('success', 'Customer updated successfully!');
     }
 
     public function destroy(Customer $customer)
     {
-        if ($customer->avatar) {
-            Storage::delete($customer->avatar);
-        }
-
         $customer->delete();
-
-        return response()->json([
-            'success' => true
-        ]);
+        $routeName = Auth::user()->role === 'admin' ? 'admin.customers.index' : 'user.customers.index';
+        return redirect()->route($routeName)->with('success', 'Customer deleted successfully!');
     }
 }

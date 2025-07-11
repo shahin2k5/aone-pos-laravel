@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+@extends('admin.layouts.admin')
 
 @section('title', __('customer.Update_Customer'))
 @section('content-header', __('customer.Update_Customer'))
@@ -8,7 +8,7 @@
     <div class="card">
         <div class="card-body">
 
-            <form action="{{ route('customers.update', $customer) }}" method="POST" enctype="multipart/form-data">
+            <form action="{{ route('admin.customers.update', $customer) }}" method="POST" enctype="multipart/form-data">
                 @csrf
                 @method('PUT')
 

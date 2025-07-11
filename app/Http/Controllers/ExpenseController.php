@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Order;
+use App\Models\Sale;
 use App\Models\Salesreturn;
 use App\Models\DamageItem;
 use App\Models\Expense;
@@ -13,20 +13,40 @@ use App\Models\SupplierPayment;
 use App\Models\PurchaseReturn;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
 
 class ExpenseController extends Controller
 {
     public function index(Request $request)
     {
         $expenses = new Expense();
-        $expense_heads = new ExpenseHead();
-        $expense_heads = $expense_heads->get();
+
+        // Get expense heads without global scope to include legacy records
+        $expense_heads = ExpenseHead::withoutGlobalScope('branch')->get();
+
+        // Filter by current user's company and branch if they exist
+        $user = Auth::user();
+        if ($user && $user->company_id) {
+            if ($user->role === 'admin') {
+                $expense_heads = $expense_heads->where('company_id', $user->company_id);
+            } else {
+                $expense_heads = $expense_heads->where('company_id', $user->company_id)
+                    ->where('branch_id', $user->branch_id);
+            }
+        }
+
+        // Apply filters
         if ($request->start_date) {
             $expenses = $expenses->where('created_at', '>=', $request->start_date);
         }
         if ($request->end_date) {
             $expenses = $expenses->where('created_at', '<=', $request->end_date . ' 23:59:59');
         }
+        if ($request->expense_head) {
+            $expenses = $expenses->where('expense_head', $request->expense_head);
+        }
+
         $expenses = $expenses->latest()->paginate(10);
 
         $total = $expenses->sum('expense_amount');
@@ -42,11 +62,11 @@ class ExpenseController extends Controller
         }
 
         // Total Sales (sum of all order items' sell_price * quantity for orders created in date range)
-        $totalSales = \App\Models\Order::whereBetween('created_at', [$reportStartDate, $reportEndDate])
+        $totalSales = \App\Models\Sale::whereBetween('created_at', [$reportStartDate, $reportEndDate])
             ->with('items')
             ->get()
-            ->flatMap(function ($order) {
-                return $order->items;
+            ->flatMap(function ($sale) {
+                return $sale->items;
             })
             ->reduce(function ($carry, $item) {
                 return $carry + ($item->sell_price * $item->quantity);
@@ -61,7 +81,7 @@ class ExpenseController extends Controller
             ->sum('expense_amount');
 
         // Total Profit (sum of all orders' profit_amount for date range)
-        $totalProfit = \App\Models\Order::whereBetween('created_at', [$reportStartDate, $reportEndDate])
+        $totalProfit = \App\Models\Sale::whereBetween('created_at', [$reportStartDate, $reportEndDate])
             ->sum('profit_amount');
 
         // Sales Returns (for date range)
@@ -90,7 +110,8 @@ class ExpenseController extends Controller
             ->whereColumn('paid_amount', '<', 'gr_total')
             ->sum(DB::raw('gr_total - paid_amount'));
 
-        return view('expense.index', compact(
+        $viewPath = Auth::user()->role === 'admin' ? 'admin.expense.index' : 'user.expense.index';
+        return view($viewPath, compact(
             'expenses',
             'expense_heads',
             'total',
@@ -115,52 +136,99 @@ class ExpenseController extends Controller
 
     public function create(Request $request)
     {
-        $expense_heads = new ExpenseHead;
-        $expense_heads = $expense_heads->get();
-        return view('expense.create', compact('expense_heads'));
+        // Get expense heads without global scope to include legacy records
+        $expense_heads = ExpenseHead::withoutGlobalScope('branch')->get();
+
+        // Filter by current user's company and branch if they exist
+        $user = Auth::user();
+        if ($user && $user->company_id) {
+            if ($user->role === 'admin') {
+                $expense_heads = $expense_heads->where('company_id', $user->company_id);
+            } else {
+                $expense_heads = $expense_heads->where('company_id', $user->company_id)
+                    ->where('branch_id', $user->branch_id);
+            }
+        }
+
+        $viewPath = Auth::user()->role === 'admin' ? 'admin.expense.create' : 'user.expense.create';
+        return view($viewPath, compact('expense_heads'));
     }
 
     public function createExpenseHead(Request $request)
     {
-        $expense_heads = new ExpenseHead;
-        $expense_heads = $expense_heads->get();
-        return view('expense.create-head', compact('expense_heads'));
+        // Get expense heads without global scope to include legacy records
+        $expense_heads = ExpenseHead::withoutGlobalScope('branch')->get();
+
+        // Filter by current user's company and branch if they exist
+        $user = Auth::user();
+        if ($user && $user->company_id) {
+            if ($user->role === 'admin') {
+                $expense_heads = $expense_heads->where('company_id', $user->company_id);
+            } else {
+                $expense_heads = $expense_heads->where('company_id', $user->company_id)
+                    ->where('branch_id', $user->branch_id);
+            }
+        }
+
+        $viewPath = Auth::user()->role === 'admin' ? 'admin.expense.create-head' : 'user.expense.create-head';
+        return view($viewPath, compact('expense_heads'));
     }
 
     public function storeExpenseHead(Request $request)
     {
+        $user = $request->user();
         $request->validate([
-            'expense_head' => 'required|string|max:255',
+            'expense_head' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('expense_heads')->where(function ($query) use ($user) {
+                    return $query->where('company_id', $user->company_id);
+                }),
+            ],
         ]);
 
         $expense_head = new ExpenseHead();
         $expense_head->expense_head = $request->expense_head;
-        $expense_head->user_id = $request->user()->id;
+        $expense_head->user_id = $user->id;
+        $expense_head->company_id = $user->company_id;
+        $expense_head->branch_id = $user->branch_id;
         $expense_head->save();
 
-        return redirect()->route('expense.head.create')->with('success', 'Expense head created successfully!');
+        $routeName = $user->role === 'admin' ? 'admin.expense.head.create' : 'user.expense.head.create';
+        return redirect()->route($routeName)->with('success', 'Expense head created successfully!');
     }
 
     public function deleteExpenseHead($exp_head_id)
     {
-        $expense_head = ExpenseHead::findOrFail($exp_head_id);
+        $user = Auth::user();
+
+        // Find expense head and ensure it belongs to the user's company
+        $expense_head = ExpenseHead::where('id', $exp_head_id)
+            ->where('company_id', $user->company_id)
+            ->firstOrFail();
+
         $expense_head->delete();
 
-        return redirect()->route('expense.head.create')->with('success', 'Expense head deleted successfully!');
+        $routeName = $user->role === 'admin' ? 'admin.expense.head.create' : 'user.expense.head.create';
+        return redirect()->route($routeName)->with('success', 'Expense head deleted successfully!');
     }
 
     public function store(Request $request)
     {
+        $user = $request->user();
 
         $expense = Expense::create([
             'expense_head' => $request->expense_head,
             'expense_description' => $request->expense_description,
             'expense_amount' => $request->expense_amount,
-            'user_id' => $request->user()->id,
+            'user_id' => $user->id,
+            'company_id' => $user->company_id,
+            'branch_id' => $user->branch_id,
         ]);
 
-
-        return redirect()->route('expense.index')->with('success', 'Expense saved successfully!');
+        $routeName = $user->role === 'admin' ? 'admin.expense.index' : 'user.expense.index';
+        return redirect()->route($routeName)->with('success', 'Expense saved successfully!');
     }
 
 
@@ -187,15 +255,15 @@ class ExpenseController extends Controller
             $startDate = now()->startOfMonth();
             $endDate = now()->endOfMonth();
         }
-        $orders = Order::whereBetween('created_at', [$startDate, $endDate])
+        $sales = Sale::whereBetween('created_at', [$startDate, $endDate])
             ->with(['items.product', 'customer'])
             ->latest()
             ->paginate(15);
-        $totalSales = Order::whereBetween('created_at', [$startDate, $endDate])
+        $totalSales = Sale::whereBetween('created_at', [$startDate, $endDate])
             ->with('items')
             ->get()
-            ->flatMap(function ($order) {
-                return $order->items;
+            ->flatMap(function ($sale) {
+                return $sale->items;
             })
             ->reduce(function ($carry, $item) {
                 return $carry + ($item->sell_price);
@@ -203,7 +271,7 @@ class ExpenseController extends Controller
         $returnsTotal = Salesreturn::whereBetween('created_at', [$startDate, $endDate])
             ->sum('total_amount');
         $netSales = $totalSales - $returnsTotal;
-        return view('expense.sales-details', compact('orders', 'totalSales', 'returnsTotal', 'netSales', 'startDate', 'endDate'));
+        return view('expense.sales-details', compact('sales', 'totalSales', 'returnsTotal', 'netSales', 'startDate', 'endDate'));
     }
 
     // Purchase Details Page
@@ -253,11 +321,11 @@ class ExpenseController extends Controller
             $startDate = now()->startOfMonth();
             $endDate = now()->endOfMonth();
         }
-        $orders = Order::whereBetween('created_at', [$startDate, $endDate])
+        $sales = Sale::whereBetween('created_at', [$startDate, $endDate])
             ->with(['items.product', 'customer'])
             ->latest()
             ->paginate(15);
-        $totalProfit = Order::whereBetween('created_at', [$startDate, $endDate])
+        $totalProfit = Sale::whereBetween('created_at', [$startDate, $endDate])
             ->sum('profit_amount');
         $returnsProfit = Salesreturn::whereBetween('created_at', [$startDate, $endDate])
             ->sum('profit_amount');
@@ -266,7 +334,7 @@ class ExpenseController extends Controller
         $damagesTotal = DamageItem::whereBetween('created_at', [$startDate, $endDate])
             ->sum(DB::raw('purchase_price * qnty'));
         $netProfit = $totalProfit - $returnsProfit - $purchaseReturnsProfit - $damagesTotal;
-        return view('expense.profit-details', compact('orders', 'totalProfit', 'returnsProfit', 'purchaseReturnsProfit', 'damagesTotal', 'netProfit', 'startDate', 'endDate'));
+        return view('expense.profit-details', compact('sales', 'totalProfit', 'returnsProfit', 'purchaseReturnsProfit', 'damagesTotal', 'netProfit', 'startDate', 'endDate'));
     }
 
     // Cash Details Page
@@ -279,11 +347,11 @@ class ExpenseController extends Controller
             $startDate = now()->startOfMonth();
             $endDate = now()->endOfMonth();
         }
-        $totalSales = Order::whereBetween('created_at', [$startDate, $endDate])
+        $totalSales = Sale::whereBetween('created_at', [$startDate, $endDate])
             ->with('items')
             ->get()
-            ->flatMap(function ($order) {
-                return $order->items;
+            ->flatMap(function ($sale) {
+                return $sale->items;
             })
             ->reduce(function ($carry, $item) {
                 return $carry + ($item->sell_price);
@@ -301,7 +369,7 @@ class ExpenseController extends Controller
         $netSales = $totalSales - $returnsTotal - $purchaseReturnsTotal;
         $cashInHand = $netSales - $totalPurchase - $totalExpenses - $damagesTotal;
         $customerPayments = Payment::whereBetween('created_at', [$startDate, $endDate])
-            ->with(['order.customer'])
+            ->with(['sale.customer'])
             ->latest()
             ->paginate(15);
         $supplierPayments = SupplierPayment::whereBetween('created_at', [$startDate, $endDate])

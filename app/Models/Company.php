@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Auth;
 
 class Company extends Model
 {
@@ -16,10 +17,14 @@ class Company extends Model
         'admin_id',
     ];
 
-    protected static function booted() {
+    protected static function booted()
+    {
         static::addGlobalScope('branch', function (Builder $builder) {
-            $user_id = auth()->user()->id;
-            $builder->where('user_id', $user_id);
+            $user = Auth::user();
+            if (!$user) {
+                return; // Don't apply scope if no user is authenticated
+            }
+            $builder->where('user_id', $user->id);
         });
     }
 }

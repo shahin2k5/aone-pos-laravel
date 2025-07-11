@@ -1,19 +1,19 @@
-@extends('layouts.admin')
+@extends('user.layouts.app')
 
 @section('title', __('Damages'))
 @section('content-header', __('Damages'))
 @section('content-actions')
-<a href="{{route('damages.create')}}" class="btn btn-primary">{{ __('+ Damage') }}</a>
+<a href="{{route('user.damages.create')}}" class="btn btn-primary">{{ __('+ Damage') }}</a>
 @endsection
 @section('content')
 
 <div class="card">
-    
+
     <div class="card-body">
         <div class="row">
             <div class="col-md-6"></div>
             <div class="col-md-6">
-                <form action="{{route('salesreturns.index')}}">
+                <form action="{{route('user.salesreturns.index')}}">
                     <div class="row">
                         <div class="col-md-4">
                             <input type="date" name="start_date" class="form-control" value="{{request('start_date')}}" />
@@ -39,7 +39,7 @@
                     <th>{{ 'Total' }}</th>
                     <th>{{ 'Notes' }}</th>
                     <th>{{ 'Created' }}</th>
-           
+
                 </tr>
             </thead>
             <tbody>
@@ -47,7 +47,7 @@
                 <tr>
                     <td> {{$damage->id}}</td>
                     <td>{{$damage->product->name}}</td>
-             
+
                     <td>{{number_format($damage->qnty,0)}}</td>
                     <td>{{ config('settings.currency_symbol') }} {{number_format($damage->purchase_price)}}</td>
                     <td>{{ config('settings.currency_symbol') }} {{number_format($damage->sell_price)}}</td>
@@ -55,7 +55,7 @@
                     <td>{{ $damage->notes }}</td>
                     <td>{{$damage->created_at}}</td>
                     <td><form action="/admin/damage/{{$damage->id}}" method="POST" onsubmit="return confirm('Are you sure you want to delete this?');"> @method('DELETE') @csrf <button type="submit"><i class="fa fa-trash"></i></button></form></td>
-                     
+
                 </tr>
                 @endforeach
             </tbody>
@@ -71,7 +71,7 @@
                 </tr>
             </tfoot>
         </table>
-    
+
         <div class="text-center">{{ $damages->render() }}</div>
     </div>
 </div>

@@ -1,9 +1,9 @@
-@extends('layouts.admin')
+@extends('admin.layouts.admin')
 
 @section('title', __('Supplier List'))
 @section('content-header', __('Supplier List'))
 @section('content-actions')
-<a href="{{route('suppliers.create')}}" class="btn btn-primary">{{ __('Add Supplier') }}</a>
+<a href="{{route('admin.suppliers.create')}}" class="btn btn-primary">{{ __('Add Supplier') }}</a>
 @endsection
 @section('css')
 <link rel="stylesheet" href="{{ asset('plugins/sweetalert2/sweetalert2.min.css') }}">
@@ -30,7 +30,7 @@
                 <tr>
                     <td>{{$supplier->id}}</td>
                     {{-- <td>
-                       <img width="50" src="{{$supplier->getAvatarUrl()}}" alt=""> 
+                       <img width="50" src="{{$supplier->getAvatarUrl()}}" alt="">
                     </td> --}}
                     <td>{{$supplier->first_name}}</td>
                     <td>{{$supplier->last_name}}</td>
@@ -39,8 +39,8 @@
                     <td>{{$supplier->address}}</td>
                     <td>{{$supplier->created_at}}</td>
                     <td>
-                        <!-- <a href="{{ route('suppliers.edit', $supplier) }}" class="btn btn-primary"><i class="fas fa-edit"></i></a> -->
-                        <button class="btn btn-danger btn-delete" data-url="{{route('suppliers.destroy', $supplier)}}"><i class="fas fa-trash"></i></button>
+                        <a href="{{ route('admin.suppliers.edit', $supplier) }}" class="btn btn-primary"><i class="fas fa-edit"></i></a>
+                        <button class="btn btn-danger btn-delete" data-url="{{route('admin.suppliers.destroy', $supplier)}}"><i class="fas fa-trash"></i></button>
                     </td>
                 </tr>
                 @endforeach
@@ -66,12 +66,12 @@
             })
 
             swalWithBootstrapButtons.fire({
-                title: {{ __('customer.sure') }},
-                text: {{ __('customer.really_delete') }},
+                title: 'Are you sure?',
+                text: 'Do you really want to delete this customer?',
                 icon: 'warning',
                 showCancelButton: true,
-                confirmButtonText: {{ __('customer.yes_delete') }},
-                cancelButtonText: {{ __('customer.No') }},
+                confirmButtonText: 'Yes, delete it!',
+                cancelButtonText: 'No',
                 reverseButtons: true
             }).then((result) => {
                 if (result.value) {

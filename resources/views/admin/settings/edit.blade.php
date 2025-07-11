@@ -8,7 +8,7 @@
     <div class="col-sm-10">
         <div class="card">
             <div class="card-body">
- 
+
                 <nav>
                     <div class="nav nav-tabs" id="nav-tab" role="tablist">
                         <a class="nav-item nav-link {{request()->tab==''?'active':''}}" id="nav-home-tab" data-toggle="tab" href="#nav-home" role="tab" aria-controls="nav-home" aria-selected="true">Home</a>
@@ -18,8 +18,8 @@
                 </nav>
                 <div class="tab-content" id="nav-tabContent">
                     <div class="tab-pane border p-5 fade {{request()->tab==''?'active show':''}} " id="nav-home" role="tabpanel" aria-labelledby="nav-home-tab">
-                        
-                        <form action="{{ route('settings.store') }}" method="post">
+
+                        <form action="{{ route('admin.settings.store') }}" method="post">
                             @csrf
 
                             <div class="form-group">
@@ -67,7 +67,7 @@
                     </div><!---------- end tab-one ------------->
 
                     <div class="tab-pane fade border p-5 {{request()->tab=='user'?'active show':''}}" id="nav-profile" role="tabpanel" aria-labelledby="nav-profile-tab">
-                           <form action="{{ route('user.store') }}" method="post">
+                           <form action="{{ route('admin.user.store') }}" method="post">
                             @csrf
                                 <div class="row">
                                      <div class="form-group col-sm-2">
@@ -75,7 +75,7 @@
                                         <select name="branch_id" class="form-control @error('branch_id') is-invalid @enderror" id="branch_id" placeholder="Branch Name" value="{{ old('branch_id' ) }}" required>
                                             <option value="">Select a branch</option>
                                             @foreach ($branch_list as $branch_data )
-                                                <option value="{{$branch_data->id}}">{{$branch_data->branch_name}}</option>                                                
+                                                <option value="{{$branch_data->id}}">{{$branch_data->branch_name}}</option>
                                             @endforeach
                                         </select>
                                         @error('branch_id')
@@ -123,16 +123,16 @@
                                         </span>
                                         @enderror
                                     </div>
- 
-                                
+
+
                                     <div class="form-group col-sm-9 text-right"></div>
                                     <div class="form-group col-sm-3 text-right">
                                         <label for="address"> </label><br>
                                         <button type="submit" class="btn btn-primary">Save User</button>
                                     </div>
                                 </div>
-                               
- 
+
+
                         </form>
 
                          <table class="border table table-border mt-5">
@@ -163,7 +163,7 @@
 
                     </div><!---------- end tab-two ------------->
                     <div class="tab-pane fade border p-5 {{request()->tab=='branch'?'active show':''}}" id="nav-contact" role="tabpanel" aria-labelledby="nav-contact-tab">
-                        <form action="{{ route('branch.store') }}" method="post">
+                        <form action="{{ route('admin.branch.store') }}" method="post">
                             @csrf
                                 <div class="row">
                                      <div class="form-group col-sm-3">
@@ -193,12 +193,12 @@
                                         </span>
                                         @enderror
                                     </div>
-                                      
+
                                 </div>
                                 <div class="text-right">
                                     <button type="submit" class="btn btn-primary">Save Branch</button>
                                 </div>
- 
+
                         </form>
 
                          <table class="border table table-border mt-5">

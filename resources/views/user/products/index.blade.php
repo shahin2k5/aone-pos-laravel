@@ -1,9 +1,9 @@
-@extends('layouts.admin')
+@extends('user.layouts.app')
 
 @section('title', __('product.Product_List'))
 @section('content-header', __('product.Product_List'))
 @section('content-actions')
-<a href="{{route('products.create')}}" class="btn btn-primary">{{ __('product.Create_Product') }}</a>
+<a href="{{route('user.products.create')}}" class="btn btn-primary">{{ __('product.Create_Product') }}</a>
 @endsection
 @section('css')
 <link rel="stylesheet" href="{{ asset('plugins/sweetalert2/sweetalert2.min.css') }}">
@@ -43,8 +43,8 @@
                     <td>{{$product->created_at}}</td>
                     <td>{{$product->updated_at}}</td>
                     <td>
-                        <a href="{{ route('products.edit', $product) }}" class="btn btn-primary"><i class="fas fa-edit"></i></a>
-                        <button class="btn btn-danger btn-delete" data-url="{{route('products.destroy', $product)}}"><i class="fas fa-trash"></i></button>
+                        <a href="{{ route('user.products.edit', $product) }}" class="btn btn-primary"><i class="fas fa-edit"></i></a>
+                        <button class="btn btn-danger btn-delete" data-url="{{route('user.products.destroy', $product)}}"><i class="fas fa-trash"></i></button>
                     </td>
                 </tr>
                 @endforeach

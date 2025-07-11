@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Models\Product;
 use App\Models\Customer;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\Controller;
 
 class CartController extends Controller
@@ -12,9 +13,6 @@ class CartController extends Controller
     public function index(Request $request)
     {
         if ($request->wantsJson()) {
-
-            
-
             return response(
                 $request->user()->cart->each(function ($product) {
                     $customer = Customer::find($product->pivot->customer_id);
@@ -32,15 +30,28 @@ class CartController extends Controller
             'customer_id' => 'required|exists:customers,id',
             'branch_id' => 'required|exists:branches,id',
         ]);
+
         $barcode = $request->barcode;
         $customer_id = $request->customer_id;
         $branch_id = $request->branch_id;
-        $user = auth()->user();
+        $user = Auth::user();
         $company_id = $user->company_id;
+        $user_id = $user->id;
 
-        $product = Product::where('barcode', $barcode)->where('products.company_id',$company_id)->first();
-        $cart = $request->user()->cart()->where('barcode', $barcode)->first();
-       
+        $product = Product::where('barcode', $barcode)->where('products.company_id', $company_id)->first();
+
+        if (!$product) {
+            return response([
+                'message' => 'Product not found or not available for your company.',
+            ], 404);
+        }
+
+        $cart = $request->user()->cart()
+            ->where('barcode', $barcode)
+            ->where('user_cart.branch_id', $branch_id)
+            ->where('user_cart.company_id', $company_id)
+            ->first();
+
         if ($cart) {
             // check product quantity
             if ($product->quantity <= $cart->pivot->quantity) {
@@ -57,26 +68,14 @@ class CartController extends Controller
                     'message' => __('cart.outstock'),
                 ], 400);
             }
-            
-            $role = $user->role;
-            if($role=="admin"){
-                $branch_id = $request->branch_id;
-                $request->user()->cart()->attach($product->id, [
-                    'quantity' => 1,
-                    'customer_id'=>$customer_id,
-                    'branch_id'=>$branch_id,
-                    'company_id'=>$company_id,
-                ]);
-            }else{
-                $request->user()->cart()->attach($product->id, [
-                    'quantity' => 1,
-                    'customer_id'=>$customer_id,
-                    'branch_id'=>$user->branch_id,
-                    'company_id'=>$company_id,
-                ]);
-            }
 
-            
+            $request->user()->cart()->attach($product->id, [
+                'quantity' => 1,
+                'customer_id' => $customer_id,
+                'branch_id' => $branch_id,
+                'company_id' => $company_id,
+                'user_id' => $user_id,
+            ]);
         }
 
         return response('', 204);
@@ -92,13 +91,15 @@ class CartController extends Controller
         ]);
 
         $branch_id = $request->branch_id;
-        $company_id = auth()->user()->company_id;
+        $company_id = Auth::user()->company_id;
+        $user_id = Auth::id();
 
         $product = Product::find($request->product_id);
-        $cart = $request->user()->cart()->
-            where('id', $request->product_id)->
-            where('user_cart.company_id', $company_id)->
-            where('user_cart.branch_id', $branch_id)->first();
+        $cart = $request->user()->cart()
+            ->where('id', $request->product_id)
+            ->where('user_cart.company_id', $company_id)
+            ->where('user_cart.branch_id', $branch_id)
+            ->first();
 
         if ($cart) {
             // check product quantity
@@ -122,15 +123,24 @@ class CartController extends Controller
             'product_id' => 'required|integer|exists:products,id',
             'branch_id' => 'required|integer|exists:branches,id'
         ]);
-        $request->user()->cart()->detach(['product_id'=>$request->product_id,'branch_id'=> $request->branch_id]);
+
+        $company_id = Auth::user()->company_id;
+
+        $request->user()->cart()
+            ->where('user_cart.company_id', $company_id)
+            ->where('user_cart.branch_id', $request->branch_id)
+            ->detach($request->product_id);
 
         return response('', 204);
     }
 
-    
     public function empty(Request $request)
     {
-        $request->user()->cart()->detach();
+        $company_id = Auth::user()->company_id;
+
+        $request->user()->cart()
+            ->where('user_cart.company_id', $company_id)
+            ->detach();
 
         return response('', 204);
     }

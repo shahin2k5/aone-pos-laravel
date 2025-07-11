@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+@extends('user.layouts.app')
 
 @section('title', __('product.Create_Product'))
 @section('content-header', __('product.Create_Product'))
@@ -8,7 +8,7 @@
 <div class="card">
     <div class="card-body">
 
-        <form action="{{ route('products.store') }}" method="POST" enctype="multipart/form-data">
+        <form action="{{ route('user.products.store') }}" method="POST" enctype="multipart/form-data">
             @csrf
 
             <div class="form-group">

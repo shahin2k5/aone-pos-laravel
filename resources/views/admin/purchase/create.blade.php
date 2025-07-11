@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+@extends('admin.layouts.admin')
 
 @section('title', __('Purchase'))
 @section('content-header', __('Purchase Product'))

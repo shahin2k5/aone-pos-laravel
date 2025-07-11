@@ -1,19 +1,19 @@
-@extends('layouts.admin')
+@extends('user.layouts.app')
 
 @section('title', __('Purchase Return'))
 @section('content-header', __('Purchase Return'))
 @section('content-actions')
-<a href="{{route('purchasereturns.index')}}" class="btn btn-primary">{{ __('+ Purchase Return') }}</a>
+<a href="{{route('user.purchasereturns.index')}}" class="btn btn-primary">{{ __('+ Purchase Return') }}</a>
 @endsection
 @section('content')
 
 <div class="card">
-    
+
     <div class="card-body">
         <div class="row">
             <div class="col-md-6"></div>
             <div class="col-md-6">
-                <form action="{{route('salesreturns.index')}}">
+                <form action="{{route('user.salesreturns.index')}}">
                     <div class="row">
                         <div class="col-md-4">
                             <input type="date" name="start_date" class="form-control" value="{{request('start_date')}}" />
@@ -39,7 +39,7 @@
                     <th>{{ 'Return' }}</th>
                     <th>{{ 'Profit' }}</th>
                     <th>{{ 'Created' }}</th>
-           
+
                 </tr>
             </thead>
             <tbody>
@@ -54,7 +54,7 @@
                     <td>{{ config('settings.currency_symbol') }} {{number_format($purchase->profit_amount)}}</td>
                     <td>{{$purchase->created_at}}</td>
                     <td><a href="/admin/purchasereturn/details/{{ $purchase->id }}" class="btn btn-success"><i class="fa fa-eye"></i></a></td>
-                     
+
                 </tr>
                 @endforeach
             </tbody>
@@ -70,7 +70,7 @@
                 </tr>
             </tfoot>
         </table>
-    
+
         <div class="text-center">{{ $purchase_returns->render() }}</div>
     </div>
 </div>

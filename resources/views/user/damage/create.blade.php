@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+@extends('user.layouts.app')
 
 @section('title', __('Add Damage'))
 @section('content-header', __('Add Damage'))
@@ -10,7 +10,7 @@
         <div class="card">
             <div class="card-body">
 
-                <form action="{{ route('damages.store') }}" method="POST" enctype="multipart/form-data">
+                <form action="{{ route('user.damages.store') }}" method="POST" enctype="multipart/form-data">
                     @csrf
 
                     <div class="form-group">
@@ -20,7 +20,7 @@
                             @foreach ($products as $product )
                                 <option value='{{$product->id."=".$product->name."=".$product->purchase_price."=".$product->sell_price."=".$product->quantity}}'>{{$product->name}}</option>
                             @endforeach
-                            
+
                         </select>
                         <input type="hidden" name="product_id" readonly class="form-control @error('product_id') is-invalid @enderror" id="product_id"
                             placeholder="Product ID" required value="{{ old('product_id') }}">
@@ -48,7 +48,7 @@
                         <label for="sell_price">Sell Price</label>
                         <div class="custom-file">
                             <input type="text" name="sell_price" readonly class="form-control @error('sell_price') is-invalid @enderror" id="sell_price"
-                            placeholder="Sell Price" value="{{ old('sell_price') }}">  
+                            placeholder="Sell Price" value="{{ old('sell_price') }}">
                         </div>
                         @error('sell_price')
                         <span class="invalid-feedback" role="alert">
@@ -110,11 +110,11 @@
            document.getElementById('purchase_price').value = $product[2]
            document.getElementById('sell_price').value = $product[3]
            document.getElementById('stock_qnty').value = $product[4]
-        
+
          }
 
     $(document).ready(function () {
-        
+
     });
 </script>
 @endsection

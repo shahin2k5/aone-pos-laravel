@@ -3,17 +3,17 @@
 @section('title', __('Salesreturn'))
 @section('content-header', __('Salesreturn'))
 @section('content-actions')
-<a href="{{route('salesreturns.index')}}" class="btn btn-primary">{{ __('+ Salesreturn') }}</a>
+<a href="{{route('admin.salesreturns.index')}}" class="btn btn-primary">{{ __('+ Salesreturn') }}</a>
 @endsection
 @section('content')
 
 <div class="card">
-    
+
     <div class="card-body">
         <div class="row">
             <div class="col-md-6"></div>
             <div class="col-md-6">
-                <form action="{{route('salesreturns.index')}}">
+                <form action="{{route('admin.salesreturns.index')}}">
                     <div class="row">
                         <div class="col-md-4">
                             <input type="date" name="start_date" class="form-control" value="{{request('start_date')}}" />
@@ -39,7 +39,7 @@
                     <th>{{ 'Return' }}</th>
                     <th>{{ 'Profit' }}</th>
                     <th>{{ 'Created' }}</th>
-           
+
                 </tr>
             </thead>
             <tbody>
@@ -54,7 +54,7 @@
                     <td>{{ config('settings.currency_symbol') }} {{number_format($salesreturn->profit_amount)}}</td>
                     <td>{{$salesreturn->created_at}}</td>
                     <td><a href="/admin/salesreturn/details/{{ $salesreturn->id }}" class="btn btn-success"><i class="fa fa-eye"></i></a></td>
-                     
+
                 </tr>
                 @endforeach
             </tbody>
@@ -70,7 +70,7 @@
                 </tr>
             </tfoot>
         </table>
-    
+
         <div class="text-center">{{ $salesreturns->render() }}</div>
     </div>
 </div>

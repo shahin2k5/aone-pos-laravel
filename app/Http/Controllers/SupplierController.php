@@ -2,10 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\SupplierStoreRequest;
 use App\Models\Supplier;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Auth;
 
 class SupplierController extends Controller
 {
@@ -14,15 +13,25 @@ class SupplierController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(Request $request)
     {
-        if (request()->wantsJson()) {
-            return response(
-                Supplier::all()
-            );
+        $user = Auth::user();
+        $suppliersQuery = Supplier::query();
+        if ($user) {
+            $suppliersQuery->where('company_id', $user->company_id);
+            if ($user->role !== 'admin') {
+                $suppliersQuery->where('branch_id', $user->branch_id);
+            }
+            // Optionally, filter by user_id if needed:
+            // $suppliersQuery->where('user_id', $user->id);
         }
-        $suppliers = Supplier::latest()->paginate(10);
-        return view('suppliers.index')->with('suppliers', $suppliers);
+        if ($request->wantsJson() || $request->ajax()) {
+            $suppliers = $suppliersQuery->latest()->get();
+            return response()->json($suppliers);
+        }
+        $suppliers = $suppliersQuery->latest()->paginate(10);
+        $viewPath = Auth::user()->role === 'admin' ? 'admin.suppliers.index' : 'user.suppliers.index';
+        return view($viewPath, compact('suppliers'));
     }
 
     /**
@@ -32,7 +41,8 @@ class SupplierController extends Controller
      */
     public function create()
     {
-        return view('suppliers.create');
+        $viewPath = Auth::user()->role === 'admin' ? 'admin.suppliers.create' : 'user.suppliers.create';
+        return view($viewPath);
     }
 
     /**
@@ -43,25 +53,13 @@ class SupplierController extends Controller
      */
     public function store(Request $request)
     {
-        $logo_path = '';
-
-        if ($request->hasFile('logo')) {
-            $logo_path = $request->file('logo')->store('suppliers', 'public');
-        }
-
-        $supplier = Supplier::create([
-            'first_name' => $request->first_name,
-            'last_name' => $request->last_name,
-            'email' => $request->email,
-            'phone' => $request->phone,
-            'address' => $request->address,
-            'logo' => $logo_path,
-        ]);
-
-        if (!$supplier) {
-            return redirect()->back()->with('error', __('supplier.error_creating'));
-        }
-        return redirect()->route('suppliers.index')->with('success', __('supplier.success_creating'));
+        $data = $request->all();
+        $data['company_id'] = Auth::user()->company_id;
+        $data['branch_id'] = Auth::user()->branch_id;
+        $data['user_id'] = Auth::id();
+        $supplier = Supplier::create($data);
+        $routeName = Auth::user()->role === 'admin' ? 'admin.suppliers.index' : 'user.suppliers.index';
+        return redirect()->route($routeName)->with('success', 'Supplier saved successfully!');
     }
 
     /**
@@ -72,8 +70,8 @@ class SupplierController extends Controller
      */
     public function show(Supplier $supplier)
     {
-        // Implement logic to show details of a specific supplier
-        return view('suppliers.show', compact('supplier'));
+        $viewPath = Auth::user()->role === 'admin' ? 'admin.suppliers.show' : 'user.suppliers.show';
+        return view($viewPath, compact('supplier'));
     }
 
     /**
@@ -84,7 +82,8 @@ class SupplierController extends Controller
      */
     public function edit(Supplier $supplier)
     {
-        return view('suppliers.edit', compact('supplier'));
+        $viewPath = Auth::user()->role === 'admin' ? 'admin.suppliers.edit' : 'user.suppliers.edit';
+        return view($viewPath, compact('supplier'));
     }
 
     /**
@@ -96,38 +95,15 @@ class SupplierController extends Controller
      */
     public function update(Request $request, Supplier $supplier)
     {
-        $supplier->name = $request->name;
-        $supplier->email = $request->email;
-        $supplier->phone = $request->phone;
-        $supplier->address = $request->address;
-
-        if ($request->hasFile('logo')) {
-            // Delete old logo
-            if ($supplier->logo) {
-                Storage::delete($supplier->logo);
-            }
-            // Store new logo
-            $logo_path = $request->file('logo')->store('suppliers', 'public');
-            // Save to Database
-            $supplier->logo = $logo_path;
-        }
-
-        if (!$supplier->save()) {
-            return redirect()->back()->with('error', __('supplier.error_updating'));
-        }
-        return redirect()->route('suppliers.index')->with('success', __('supplier.success_updating'));
+        $supplier->update($request->all());
+        $routeName = Auth::user()->role === 'admin' ? 'admin.suppliers.index' : 'user.suppliers.index';
+        return redirect()->route($routeName)->with('success', 'Supplier updated successfully!');
     }
 
     public function destroy(Supplier $supplier)
     {
-        if ($supplier->logo) {
-            Storage::delete($supplier->logo);
-        }
-
         $supplier->delete();
-
-        return response()->json([
-            'success' => true
-        ]);
+        $routeName = Auth::user()->role === 'admin' ? 'admin.suppliers.index' : 'user.suppliers.index';
+        return redirect()->route($routeName)->with('success', 'Supplier deleted successfully!');
     }
 }

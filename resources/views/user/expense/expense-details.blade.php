@@ -2,13 +2,13 @@
 @section('content-header', 'Expense Details Report')
 @section('content')
 
-<a href="{{ route('expense.index') }}" class="btn btn-secondary mb-3">&larr; Back</a>
+<a href="{{ route('user.expense.index') }}" class="btn btn-secondary mb-3">&larr; Back</a>
 
 <div class="container-fluid">
     <!-- Date Range Filter -->
     <div class="row mb-4">
         <div class="col-md-8">
-            <form method="GET" action="{{ route('expense.expense-details') }}" class="form-inline">
+            <form method="GET" action="{{ route('user.expense.expense-details') }}" class="form-inline">
                 <div class="form-group mr-3">
                     <label for="start_date" class="mr-2">From:</label>
                     <input type="date" class="form-control" id="start_date" name="start_date"
@@ -20,7 +20,7 @@
                            value="{{ request('end_date', \Carbon\Carbon::parse($endDate)->format('Y-m-d')) }}">
                 </div>
                 <button type="submit" class="btn btn-primary mr-2">Filter</button>
-                <a href="{{ route('expense.expense-details') }}" class="btn btn-secondary">Reset</a>
+                <a href="{{ route('user.expense.expense-details') }}" class="btn btn-secondary">Reset</a>
             </form>
         </div>
         <div class="col-md-4 text-right">
