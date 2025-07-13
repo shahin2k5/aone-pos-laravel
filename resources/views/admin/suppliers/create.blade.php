@@ -1,10 +1,12 @@
 @extends('admin.layouts.admin')
 
 @section('title', __('supplier.Create_supplier') )
-@section('content-header', __('supplier.Create_supplier') )
+@section('content-header',  'Create supplier')  
 
 @section('content')
 
+    <div class="row">
+    <div class="col-sm-6">
     <div class="card">
         <div class="card-body">
 
@@ -12,10 +14,10 @@
                 @csrf
 
                 <div class="form-group">
-                    <label for="first_name">{{ __('supplier.First_Name') }}</label>
+                    <label for="first_name">First Name</label>
                     <input type="text" name="first_name" class="form-control @error('first_name') is-invalid @enderror"
                            id="first_name"
-                           placeholder="{{ __('supplier.First_Name') }}" value="{{ old('first_name') }}">
+                           placeholder="First Name" value="{{ old('first_name') }}">
                     @error('first_name')
                     <span class="invalid-feedback" role="alert">
                         <strong>{{ $message }}</strong>
@@ -24,10 +26,10 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="last_name">{{ __('supplier.Last_Name') }}</label>
+                    <label for="last_name">Last Name</label>
                     <input type="text" name="last_name" class="form-control @error('last_name') is-invalid @enderror"
                            id="last_name"
-                           placeholder="{{ __('supplier.Last_Name') }}" value="{{ old('last_name') }}">
+                           placeholder="Last Name" value="{{ old('last_name') }}">
                     @error('last_name')
                     <span class="invalid-feedback" role="alert">
                         <strong>{{ $message }}</strong>
@@ -36,9 +38,9 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="email">{{ __('supplier.Email') }}</label>
+                    <label for="email">Email</label>
                     <input type="text" name="email" class="form-control @error('email') is-invalid @enderror" id="email"
-                           placeholder="{{ __('supplier.Email') }}" value="{{ old('email') }}">
+                           placeholder="Email" value="{{ old('email') }}">
                     @error('email')
                     <span class="invalid-feedback" role="alert">
                         <strong>{{ $message }}</strong>
@@ -47,9 +49,9 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="phone">{{ __('supplier.Phone') }}</label>
+                    <label for="phone">Phone</label>
                     <input type="text" name="phone" class="form-control @error('phone') is-invalid @enderror" id="phone"
-                           placeholder="{{ __('supplier.Phone') }}" value="{{ old('phone') }}">
+                           placeholder="Phone" value="{{ old('phone') }}">
                     @error('phone')
                     <span class="invalid-feedback" role="alert">
                         <strong>{{ $message }}</strong>
@@ -58,10 +60,10 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="address">{{ __('supplier.Address') }}</label>
+                    <label for="address">Address</label>
                     <input type="text" name="address" class="form-control @error('address') is-invalid @enderror"
                            id="address"
-                           placeholder="{{ __('supplier.Address') }}" value="{{ old('address') }}">
+                           placeholder="Address" value="{{ old('address') }}">
                     @error('address')
                     <span class="invalid-feedback" role="alert">
                         <strong>{{ $message }}</strong>
@@ -70,10 +72,10 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="avatar">{{ __('supplier.Avatar') }}</label>
+                    <label for="avatar">Picture/Image</label>
                     <div class="custom-file">
                         <input type="file" class="custom-file-input" name="avatar" id="avatar">
-                        <label class="custom-file-label" for="avatar">{{ __('supplier.Choose_file') }}</label>
+                        <label class="custom-file-label" for="avatar">Pic</label>
                     </div>
                     @error('avatar')
                     <span class="invalid-feedback" role="alert">
@@ -83,9 +85,11 @@
                 </div>
 
 
-                <button class="btn btn-primary" type="submit">{{ __('common.Create') }}</button>
+                <button class="btn btn-primary" type="submit">Create</button>
             </form>
         </div>
+    </div>
+    </div>
     </div>
 @endsection
 
