@@ -154,7 +154,13 @@
                                         <th>{{$user->role}}</th>
                                         <th>{{$user->branch->branch_name}}</th>
                                         <th><a href="#" class="btn btn-success">Edit</a></th>
-                                        <th><a href="#" class="btn btn-danger">Delete</a></th>
+                                        <th>
+                                            <form action="{{ route('admin.user.delete', $user->id) }}" method="POST" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this user?');">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="btn btn-danger">Delete</button>
+                                            </form>
+                                        </th>
                                     </tr>
                                 @endforeach
                             @endif
@@ -217,7 +223,13 @@
                                         <th>{{$branch->address}}</th>
                                         <th>{{$branch->mobile}}</th>
                                         <th><a href="#" class="btn btn-success">Edit</a></th>
-                                        <th><a href="#" class="btn btn-danger">Delete</a></th>
+                                        <th>
+                                            <form action="{{ route('admin.branch.delete', $branch->id) }}" method="POST" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this branch?');">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="btn btn-danger">Delete</button>
+                                            </form>
+                                        </th>
                                     </tr>
                                 @endforeach
                             @endif

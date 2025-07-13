@@ -23,8 +23,8 @@ class Kernel extends HttpKernel
         \Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull::class,
     ];
 
- 
-  
+
+
 
     /**
      * The application's route middleware groups.
@@ -46,6 +46,11 @@ class Kernel extends HttpKernel
             \Illuminate\Routing\Middleware\ThrottleRequests::class . ':api',
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
         ],
+    ];
+
+    protected $routeMiddleware = [
+        'admin_guard' => \App\Http\Middleware\AdminMiddleware::class,
+        'user_guard' => \App\Http\Middleware\UserMiddleware::class,
     ];
 
     /**

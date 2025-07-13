@@ -1,9 +1,9 @@
-@extends('user.layouts.app')
+@extends('user.layouts.user')
 
 @section('title', __('Salesreturn'))
 @section('content-header', __('Salesreturn#'.$salesreturns[0]->id))
 @section('content-actions')
-<a href="/admin/salesreturn" class="btn btn-primary">{{ __('<< Salesreturn') }}</a>
+<a href="{{ route('user.salesreturn.index') }}" class="btn btn-primary">{{ __('<< Salesreturn') }}</a>
 @endsection
 @section('content')
 

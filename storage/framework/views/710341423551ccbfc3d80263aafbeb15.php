@@ -20,7 +20,8 @@
     <script>
         window.APP = <?php echo json_encode([
                             'currency_symbol' => config('settings.currency_symbol'),
-                            'warning_quantity' => config('settings.warning_quantity')
+                            'warning_quantity' => config('settings.warning_quantity'),
+                            'branch_id' => auth()->user()->branch_id,
                         ]) ?>
     </script>
 </head>
@@ -74,4 +75,5 @@
     <?php echo $__env->yieldContent('model'); ?>
 </body>
 
-</html><?php /**PATH /home/senpai/Work/laravel/aone-pos-laravel/resources/views/user/layouts/user.blade.php ENDPATH**/ ?>
+</html>
+<?php /**PATH /home/senpai/Work/laravel/aone-pos-laravel/resources/views/user/layouts/user.blade.php ENDPATH**/ ?>

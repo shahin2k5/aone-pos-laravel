@@ -7,7 +7,7 @@ use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Illuminate\Support\Facades\Auth;
 
-class UserMiddleware 
+class UserMiddleware
 {
     /**
      * Handle an incoming request.
@@ -16,11 +16,12 @@ class UserMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
-        dd( Auth::user());
         if (Auth::check() && Auth::user()->role === 'user') {
             return $next($request);
         }
-
-        abort(403, 'Unauthorized: Admins only.');
+        if (Auth::check()) {
+            return redirect('/admin/dashboard');
+        }
+        abort(403, 'Unauthorized: Users only.');
     }
 }

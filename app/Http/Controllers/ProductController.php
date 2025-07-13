@@ -21,28 +21,28 @@ class ProductController extends Controller
     public function index(Request $request)
     {
         $user = Auth::user();
-        $company_id = $user->company_id;
 
-        // If it's a JSON request (from React component), return products for the company
+        // If it's a JSON request (from React component), return products using global scope
         if ($request->wantsJson()) {
-            $query = Product::where('company_id', $company_id);
+            $query = new Product();
 
             // Handle search parameter - only search by product name since barcode has its own input
             if ($request->has('search') && !empty($request->search)) {
                 $search = $request->search;
-                $query->where('name', 'like', "%{$search}%");
+                $query = $query->where('name', 'like', "%{$search}%");
             }
 
             $products = $query->get();
 
             // Add debugging
-            Log::info('Products loaded for company_id: ' . $company_id . ', count: ' . $products->count());
+            Log::info('Products loaded for user: ' . $user->id . ', company_id: ' . $user->company_id . ', count: ' . $products->count());
 
             return response()->json(['data' => $products]);
         }
 
-        // For regular view requests, return paginated products
-        $products = Product::where('company_id', $company_id)->latest()->paginate(10);
+        // For regular view requests, return paginated products using global scope
+        $products = new Product();
+        $products = $products->latest()->paginate(10);
         $viewPath = $user->role === 'admin' ? 'admin.products.index' : 'user.products.index';
         return view($viewPath, compact('products'));
     }

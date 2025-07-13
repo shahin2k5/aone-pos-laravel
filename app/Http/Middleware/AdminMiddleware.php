@@ -19,7 +19,9 @@ class AdminMiddleware
         if (Auth::check() && Auth::user()->role === 'admin') {
             return $next($request);
         }
-
+        if (Auth::check()) {
+            return redirect('/user/dashboard');
+        }
         abort(403, 'Unauthorized: Admins only.');
     }
 }

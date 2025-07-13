@@ -31,19 +31,7 @@
          </div>
       </div>
       <!-- ./col -->
-      <div class="col-lg-3 col-6">
-         <!-- small box -->
-         <div class="small-box bg-success">
-            <div class="inner">
-               <h3><?php echo e(config('settings.currency_symbol')); ?> <?php echo e(number_format($today_purchase, 2)); ?></h3>
-               <p><?php echo e(__('Today Purchase')); ?></p>
-            </div>
-            <div class="icon">
-               <i class="ion ion-stats-bars"></i>
-            </div>
-            <a href="<?php echo e(route('user.sales.index')); ?>" class="small-box-footer"><?php echo e(__('common.More_info')); ?> <i class="fas fa-arrow-circle-right"></i></a>
-         </div>
-      </div>
+      
       <!-- ./col -->
 
       <!-- ./col -->

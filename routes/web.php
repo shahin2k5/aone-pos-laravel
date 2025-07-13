@@ -12,7 +12,6 @@ use App\Http\Controllers\SalesreturnController;
 use App\Http\Controllers\PurchasereturnController;
 use App\Http\Controllers\PurchasereturnCartController;
 use App\Http\Controllers\DamageController;
-use App\Http\Controllers\DamageCartController;
 use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\ExpenseController;
@@ -22,7 +21,12 @@ use Illuminate\Support\Facades\Auth;
 
 Route::get('/', function () {
     if (Auth::check()) {
-        return redirect('/admin/dashboard');
+        $user = Auth::user();
+        if ($user->role === 'admin') {
+            return redirect('/admin/dashboard');
+        } else {
+            return redirect('/user/dashboard');
+        }
     }
     return redirect('/login');
 });
@@ -30,7 +34,7 @@ Route::get('/', function () {
 Auth::routes();
 
 // User Routes
-Route::prefix('user')->middleware(['auth'])->group(function () {
+Route::prefix('user', 'user_guard')->middleware(['auth'])->group(function () {
     Route::get('/dashboard', [UserController::class, 'index'])->name('user.dashboard');
 
     // User Products
@@ -79,29 +83,6 @@ Route::prefix('user')->middleware(['auth'])->group(function () {
     Route::post('/sales/partial-payment', [SaleController::class, 'partialPayment'])->name('user.sales.partial-payment');
     Route::get('/sales/print/{id}', [SaleController::class, 'print'])->name('user.sales.print');
 
-    // User Purchase
-    Route::resource('purchase', PurchaseController::class)->names([
-        'index' => 'user.purchase.index',
-        'create' => 'user.purchase.create',
-        'store' => 'user.purchase.store',
-        'show' => 'user.purchase.show',
-        'edit' => 'user.purchase.edit',
-        'update' => 'user.purchase.update',
-        'destroy' => 'user.purchase.destroy',
-    ]);
-    Route::get('/purchase/print/{id}', [PurchaseController::class, 'print'])->name('user.purchase.print');
-
-    // User Purchase Cart
-    Route::get('/purchase-index', [PurchaseCartController::class, 'index'])->name('user.purchases.index');
-    Route::get('/purchase-create', [PurchaseCartController::class, 'create'])->name('user.purchases.create');
-    Route::get('/purchasecart', [PurchaseCartController::class, 'purchaseCart'])->name('user.purchases.cart');
-    Route::post('/purchase-cart', [PurchaseCartController::class, 'store'])->name('user.purchases.store');
-    Route::post('/purchase-cart/change-qty', [PurchaseCartController::class, 'changpurchaseeQty']);
-    Route::post('/purchase-cart/change-purchaseprice', [PurchaseCartController::class, 'changePurchaseprice']);
-    Route::delete('/purchase-cart/delete', [PurchaseCartController::class, 'delete']);
-    Route::delete('/purchase-cart/empty', [PurchaseCartController::class, 'empty']);
-    Route::get('/purchase/details/{purchase_id}', [PurchaseController::class, 'purchaseDetails']);
-
     // User Sales Return
     Route::resource('salesreturn', SalesreturnController::class)->names([
         'index' => 'user.salesreturn.index',
@@ -121,30 +102,8 @@ Route::prefix('user')->middleware(['auth'])->group(function () {
     Route::post('/salesreturn/cart', [SalesreturnController::class, 'addProductToCart']);
     Route::post('/salesreturn/changeqnty', [SalesreturnController::class, 'changeQnty']);
     Route::post('/salesreturn/delete', [SalesreturnController::class, 'handleDelete']);
-    Route::get('/salesreturn/details/{salesreturn_id}', [SalesreturnController::class, 'salesreturnDetails']);
+    Route::get('/salesreturn/details/{salesreturn_id}', [SalesreturnController::class, 'salesreturnDetails'])->name('user.salesreturn.details');
     Route::post('/salesreturn/finalsave', [SalesreturnController::class, 'finalSave']);
-
-    // User Purchase Return
-    Route::resource('purchasereturn', PurchasereturnController::class)->names([
-        'index' => 'user.purchasereturn.index',
-        'create' => 'user.purchasereturn.create',
-        'store' => 'user.purchasereturn.store',
-        'show' => 'user.purchasereturn.show',
-        'edit' => 'user.purchasereturn.edit',
-        'update' => 'user.purchasereturn.update',
-        'destroy' => 'user.purchasereturn.destroy',
-    ]);
-    Route::get('/purchasereturn-cart', [PurchasereturnCartController::class, 'index'])->name('user.purchasereturns.index');
-    Route::post('/purchasereturn-cart', [PurchasereturnCartController::class, 'store'])->name('user.purchasereturns.store');
-    Route::post('/purchasereturn-cart/change-qty', [PurchasereturnCartController::class, 'changeQty']);
-    Route::delete('/purchasereturn-cart/delete', [PurchasereturnCartController::class, 'delete']);
-    Route::delete('/purchasereturn-cart/empty', [PurchasereturnCartController::class, 'empty']);
-    Route::get('/purchasereturn/findpurchaseid/{purchase_id}', [PurchasereturnController::class, 'findPurchaseID']);
-    Route::post('/purchasereturn/cart', [PurchasereturnController::class, 'addProductToCart']);
-    Route::post('/purchasereturn/changeqnty', [PurchasereturnController::class, 'changeQnty']);
-    Route::post('/purchasereturn/delete', [PurchasereturnController::class, 'handleDelete']);
-    Route::get('/purchasereturn/details/{salesreturn_id}', [PurchasereturnController::class, 'purchasereturn.details']);
-    Route::post('/purchasereturn/finalsave', [PurchasereturnController::class, 'finalSave']);
 
     // User Damage
     Route::resource('damage', DamageController::class)->names([
@@ -184,17 +143,26 @@ Route::prefix('user')->middleware(['auth'])->group(function () {
     Route::get('/expense/profit-details', [ExpenseController::class, 'profitDetails'])->name('user.expense.profit-details');
     Route::get('/expense/cash-details', [ExpenseController::class, 'cashDetails'])->name('user.expense.cash-details');
 
-    // User Settings
-    Route::get('/settings', [SettingController::class, 'index'])->name('user.settings.index');
-    Route::post('/settings', [SettingController::class, 'store'])->name('user.settings.store');
-    Route::get('/load-branches', [SettingController::class, 'loadBranches'])->name('user.load.branches');
-    Route::get('/branch/list', [SettingController::class, 'branchList'])->name('user.branch.list');
-    Route::post('/branch/store', [SettingController::class, 'branchStore'])->name('user.branch.store');
-    Route::post('/user/store', [SettingController::class, 'userStore'])->name('user.user.store');
+    // User Cart (POS)
+    Route::get('/cart', [App\Http\Controllers\UserCartController::class, 'index'])->name('user.cart.index');
+    Route::get('/user-cart', [App\Http\Controllers\UserCartController::class, 'getCart'])->name('user.cart.get');
+    Route::post('/user-cart', [App\Http\Controllers\UserCartController::class, 'store'])->name('user.cart.store');
+    Route::post('/user-cart/change-qty', [App\Http\Controllers\UserCartController::class, 'changeQty'])->name('user.cart.change-qty');
+    Route::delete('/user-cart/delete', [App\Http\Controllers\UserCartController::class, 'delete'])->name('user.cart.delete');
+    Route::delete('/user-cart/empty', [App\Http\Controllers\UserCartController::class, 'empty'])->name('user.cart.empty');
+
+    // User Branches
+    Route::get('/load-branches', [App\Http\Controllers\UserCartController::class, 'loadBranches'])->name('user.load.branches');
+
+    // User Translations
+    Route::get('/locale/{type}', function ($type) {
+        $translations = trans($type);
+        return response()->json($translations);
+    });
 });
 
 // Admin Routes
-Route::middleware(['auth'])->prefix('admin')->group(function () {
+Route::middleware(['auth', 'admin_guard'])->prefix('admin')->group(function () {
     Route::get('/dashboard', [AdminController::class, 'index'])->name('admin.dashboard');
 
     // Admin Settings
@@ -204,6 +172,8 @@ Route::middleware(['auth'])->prefix('admin')->group(function () {
     Route::get('/branch/list', [SettingController::class, 'branchList'])->name('admin.branch.list');
     Route::post('/branch/store', [SettingController::class, 'branchStore'])->name('admin.branch.store');
     Route::post('/user/store', [SettingController::class, 'userStore'])->name('admin.user.store');
+    Route::delete('/admin/user/delete/{user}', [App\Http\Controllers\Admin\SettingController::class, 'deleteUser'])->name('admin.user.delete');
+    Route::delete('/admin/branch/delete/{branch}', [App\Http\Controllers\Admin\SettingController::class, 'deleteBranch'])->name('admin.branch.delete');
 
     // Admin Products
     Route::resource('products', ProductController::class)->names([

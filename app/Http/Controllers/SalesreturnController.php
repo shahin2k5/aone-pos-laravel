@@ -27,16 +27,16 @@ class SalesreturnController extends Controller
         $salesreturns = $salesreturns->with(['items.product', 'customer', 'items'])->latest()->paginate(10);
 
         $total = 0;
-
-
-        return view('admin.salesreturn.index', compact('salesreturns', 'total'));
+        $viewPath = auth()->user()->role === 'admin' ? 'admin.salesreturn.index' : 'user.salesreturn.index';
+        return view($viewPath, compact('salesreturns', 'total'));
     }
 
     public function salesreturnDetails($salesreturn_id)
     {
         $salesreturns = Salesreturn::where('id', $salesreturn_id)->with(['items', 'customer'])->get();
         $total = 0;
-        return view('salesreturn.details', compact('salesreturns', 'total'));
+        $viewPath = auth()->user()->role === 'admin' ? 'admin.salesreturn.details' : 'user.salesreturn.details';
+        return view($viewPath, compact('salesreturns', 'total'));
     }
 
     public function findOrderID($order_id)

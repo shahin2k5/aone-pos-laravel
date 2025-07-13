@@ -1,4 +1,4 @@
-@extends('user.layouts.admin')
+@extends('user.layouts.user')
 @section('content-header', 'Expense Details Report')
 @section('content')
 

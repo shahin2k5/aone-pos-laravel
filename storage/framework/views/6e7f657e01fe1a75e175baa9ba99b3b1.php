@@ -6,7 +6,7 @@
 <div class="card">
     <div class="card-body">
 
-        <form action="<?php echo e(route('admin.products.store')); ?>" method="POST" enctype="multipart/form-data">
+        <form action="<?php echo e(route('user.products.store')); ?>" method="POST" enctype="multipart/form-data">
             <?php echo csrf_field(); ?>
 
             <div class="form-group">
@@ -222,4 +222,4 @@ unset($__errorArgs, $__bag); ?>
 </script>
 <?php $__env->stopSection(); ?>
 
-<?php echo $__env->make('admin.layouts.admin', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH /home/senpai/Work/laravel/aone-pos-laravel/resources/views/admin/products/create.blade.php ENDPATH**/ ?>
+<?php echo $__env->make('user.layouts.user', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH /home/senpai/Work/laravel/aone-pos-laravel/resources/views/user/products/create.blade.php ENDPATH**/ ?>

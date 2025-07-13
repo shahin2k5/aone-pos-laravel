@@ -40,28 +40,9 @@
                 </li>
 
                 <li class="nav-item has-treeview">
-                    <a href="{{ route('user.purchase.index') }}" class="nav-link {{ activeSegment('purchase') }}">
-                        <i class="nav-icon fas fa-cart-plus"></i>
-                        <p>{{ __('Purchase') }}</p>
-                    </a>
-                </li>
-
-
-                <li class="nav-item item-separator">
-                     <hr style="border-top:1px solid #666">
-                </li>
-
-                <li class="nav-item has-treeview">
                     <a href="{{ route('user.salesreturn.index') }}" class="nav-link {{ activeSegment('sales-return') }}">
                         <i class="nav-icon fas fa-cart-plus"></i>
                         <p>{{ __('Sales Return') }}</p>
-                    </a>
-                </li>
-
-                <li class="nav-item has-treeview">
-                    <a href="{{ route('user.purchasereturn.index') }}" class="nav-link {{ activeSegment('purchase-return') }}">
-                        <i class="nav-icon fas fa-cart-plus"></i>
-                        <p>{{ __('Purchase Return') }}</p>
                     </a>
                 </li>
 
@@ -105,12 +86,6 @@
                     <a href="{{ route('user.suppliers.index') }}" class="nav-link {{ activeSegment('supplier') }}">
                         <i class="nav-icon fas fa-users"></i>
                         <p>{{ __('Supplier') }}</p>
-                    </a>
-                </li>
-                <li class="nav-item has-treeview">
-                    <a href="{{ route('user.settings.index') }}" class="nav-link {{ activeSegment('settings') }}">
-                        <i class="nav-icon fas fa-cogs"></i>
-                        <p>{{ __('settings.title') }}</p>
                     </a>
                 </li>
                 <li class="nav-item">

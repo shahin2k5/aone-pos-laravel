@@ -32,19 +32,7 @@
          </div>
       </div>
       <!-- ./col -->
-      <div class="col-lg-3 col-6">
-         <!-- small box -->
-         <div class="small-box bg-success">
-            <div class="inner">
-               <h3>{{config('settings.currency_symbol')}} {{number_format($today_purchase, 2)}}</h3>
-               <p>{{ __('Today Purchase') }}</p>
-            </div>
-            <div class="icon">
-               <i class="ion ion-stats-bars"></i>
-            </div>
-            <a href="{{route('user.sales.index')}}" class="small-box-footer">{{ __('common.More_info') }} <i class="fas fa-arrow-circle-right"></i></a>
-         </div>
-      </div>
+      {{-- Remove any purchase or purchase return blocks/cards --}}
       <!-- ./col -->
 
       <!-- ./col -->

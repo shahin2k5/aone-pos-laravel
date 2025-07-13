@@ -16,21 +16,18 @@ class SupplierController extends Controller
     public function index(Request $request)
     {
         $user = Auth::user();
-        $suppliersQuery = Supplier::query();
-        if ($user) {
-            $suppliersQuery->where('company_id', $user->company_id);
-            if ($user->role !== 'admin') {
-                $suppliersQuery->where('branch_id', $user->branch_id);
-            }
-            // Optionally, filter by user_id if needed:
-            // $suppliersQuery->where('user_id', $user->id);
-        }
+
+        // If it's a JSON request (from React component), return suppliers using global scope
         if ($request->wantsJson() || $request->ajax()) {
-            $suppliers = $suppliersQuery->latest()->get();
+            $suppliers = new Supplier();
+            $suppliers = $suppliers->latest()->get();
             return response()->json($suppliers);
         }
-        $suppliers = $suppliersQuery->latest()->paginate(10);
-        $viewPath = Auth::user()->role === 'admin' ? 'admin.suppliers.index' : 'user.suppliers.index';
+
+        // For regular view requests, return paginated suppliers using global scope
+        $suppliers = new Supplier();
+        $suppliers = $suppliers->latest()->paginate(10);
+        $viewPath = $user->role === 'admin' ? 'admin.suppliers.index' : 'user.suppliers.index';
         return view($viewPath, compact('suppliers'));
     }
 

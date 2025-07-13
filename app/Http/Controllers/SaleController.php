@@ -13,7 +13,11 @@ class SaleController extends Controller
 {
     public function index(Request $request)
     {
+        $user = Auth::user();
         $sales = new Sale();
+        if ($user->role !== 'admin') {
+            $sales = $sales->where('branch_id', $user->branch_id)->where('company_id', $user->company_id);
+        }
         if ($request->start_date) {
             $sales = $sales->where('created_at', '>=', $request->start_date);
         }
@@ -29,7 +33,7 @@ class SaleController extends Controller
             return $i->receivedAmount();
         })->sum();
 
-        $viewPath = Auth::user()->role === 'admin' ? 'admin.sales.index' : 'user.sales.index';
+        $viewPath = $user->role === 'admin' ? 'admin.sales.index' : 'user.sales.index';
         return view($viewPath, compact('sales', 'total', 'receivedAmount'));
     }
 
@@ -63,8 +67,10 @@ class SaleController extends Controller
         $subTotal = 0; // Initialize subtotal calculation
 
         foreach ($cart as $item) {
+            $product = \App\Models\Product::find($item->id);
+            $purchasePrice = $product && $product->purchase_price !== null ? $product->purchase_price : 0;
             $sale->items()->create([
-                'purchase_price' => $item->purchase_price,
+                'purchase_price' => $purchasePrice,
                 'sell_price' => $item->sell_price * $item->pivot->quantity,
                 'quantity' => $item->pivot->quantity,
                 'product_id' => $item->id,
@@ -74,7 +80,7 @@ class SaleController extends Controller
             ]);
 
             // Calculate profit for this item: (sell_price - purchase_price) * quantity
-            $itemProfit = ($item->sell_price - $item->purchase_price) * $item->pivot->quantity;
+            $itemProfit = ($item->sell_price - $purchasePrice) * $item->pivot->quantity;
             $totalProfit += $itemProfit;
 
             // Calculate subtotal

@@ -1,7 +1,7 @@
 <?php $__env->startSection('title', __('Expense')); ?>
 <?php $__env->startSection('content-header', __('Expense')); ?>
 <?php $__env->startSection('content-actions'); ?>
-<a href="<?php echo e(route('admin.expense.create')); ?>" class="btn btn-primary"><i class="fa fa-plus"></i> Add Expenses</a>
+<a href="<?php echo e(route('user.expense.create')); ?>" class="btn btn-primary"><i class="fa fa-plus"></i> Add Expenses</a>
 <?php $__env->stopSection(); ?>
 <?php $__env->startSection('content'); ?>
 
@@ -31,7 +31,7 @@
 
                     <div class="report-cards-row">
                         <div class="report-card mb-3">
-                            <a href="<?php echo e(route('admin.expense.sales-details')); ?>" class="text-decoration-none">
+                            <a href="<?php echo e(route('user.expense.sales-details')); ?>" class="text-decoration-none">
                                 <div class="card shadow-sm border-0 text-center h-100">
                                     <div class="card-body d-flex flex-column justify-content-center" style="min-height: 150px;">
                                         <div class="mb-2" style="font-size:2rem; color:#007bff;"><i class="fa fa-shopping-cart"></i></div>
@@ -46,32 +46,7 @@
                             </a>
                         </div>
                         <div class="report-card mb-3">
-                            <a href="<?php echo e(route('admin.expense.purchase-details')); ?>" class="text-decoration-none">
-                                <div class="card shadow-sm border-0 text-center h-100">
-                                    <div class="card-body d-flex flex-column justify-content-center" style="min-height: 150px;">
-                                        <div class="mb-2" style="font-size:2rem; color:#6f42c1;"><i class="fa fa-truck"></i></div>
-                                        <div class="font-weight-bold">Total Purchase</div>
-                                        <div class="h5 text-primary mt-1"><?php echo e(config('settings.currency_symbol')); ?> <?php echo e(number_format($totalPurchase, 2)); ?></div>
-                                    </div>
-                                </div>
-                            </a>
-                        </div>
-                        <div class="report-card mb-3">
-                            <a href="<?php echo e(route('admin.purchasereturn.index')); ?>" class="text-decoration-none">
-                                <div class="card shadow-sm border-0 text-center h-100">
-                                    <div class="card-body d-flex flex-column justify-content-center" style="min-height: 150px;">
-                                        <div class="mb-2" style="font-size:2rem; color:#fd7e14;"><i class="fa fa-undo-alt"></i></div>
-                                        <div class="font-weight-bold">Purchase Returns</div>
-                                        <div class="h5 text-warning mt-1">-<?php echo e(config('settings.currency_symbol')); ?> <?php echo e(number_format($purchaseReturnsTotal, 2)); ?>
-
-                                            <small class="text-muted d-block" style="font-size: 0.8em;">Profit Loss: -<?php echo e(config('settings.currency_symbol')); ?> <?php echo e(number_format($purchaseReturnsProfit, 2)); ?></small>
-                                        </div>
-                                    </div>
-                                </div>
-                            </a>
-                        </div>
-                        <div class="report-card mb-3">
-                            <a href="<?php echo e(route('admin.expense.expense-details')); ?>" class="text-decoration-none">
+                            <a href="<?php echo e(route('user.expense.expense-details')); ?>" class="text-decoration-none">
                                 <div class="card shadow-sm border-0 text-center h-100">
                                     <div class="card-body d-flex flex-column justify-content-center" style="min-height: 150px;">
                                         <div class="mb-2" style="font-size:2rem; color:#dc3545;"><i class="fa fa-credit-card"></i></div>
@@ -82,7 +57,7 @@
                             </a>
                         </div>
                         <div class="report-card mb-3">
-                            <a href="<?php echo e(route('admin.damage.index')); ?>" class="text-decoration-none">
+                            <a href="<?php echo e(route('user.damage.index')); ?>" class="text-decoration-none">
                                 <div class="card shadow-sm border-0 text-center h-100">
                                     <div class="card-body d-flex flex-column justify-content-center" style="min-height: 150px;">
                                         <div class="mb-2" style="font-size:2rem; color:#343a40;"><i class="fa fa-exclamation-triangle"></i></div>
@@ -93,7 +68,7 @@
                             </a>
                         </div>
                         <div class="report-card mb-3">
-                            <a href="<?php echo e(route('admin.expense.profit-details')); ?>" class="text-decoration-none">
+                            <a href="<?php echo e(route('user.expense.profit-details')); ?>" class="text-decoration-none">
                                 <div class="card shadow-sm border-0 text-center h-100">
                                     <div class="card-body d-flex flex-column justify-content-center" style="min-height: 150px;">
                                         <div class="mb-2" style="font-size:2rem; color:#28a745;"><i class="fa fa-chart-line"></i></div>
@@ -108,7 +83,7 @@
                             </a>
                         </div>
                         <div class="report-card mb-3">
-                            <a href="<?php echo e(route('admin.expense.cash-details')); ?>" class="text-decoration-none">
+                            <a href="<?php echo e(route('user.expense.cash-details')); ?>" class="text-decoration-none">
                                 <div class="card shadow-sm border-0 text-center h-100">
                                     <div class="card-body d-flex flex-column justify-content-center" style="min-height: 150px;">
                                         <div class="mb-2" style="font-size:2rem; color:#ffc107;"><i class="fa fa-wallet"></i></div>
@@ -117,18 +92,6 @@
 
                                             <small class="text-muted d-block" style="font-size: 0.8em;">Net (after all returns & damages)</small>
                                         </div>
-                                    </div>
-                                </div>
-                            </a>
-                        </div>
-                        <div class="report-card mb-3">
-                            <a href="<?php echo e(route('admin.expense.purchase-details')); ?>" class="text-decoration-none">
-                                <div class="card shadow-sm border-0 text-center h-100">
-                                    <div class="card-body d-flex flex-column justify-content-center" style="min-height: 150px;">
-                                        <div class="mb-2" style="font-size:2rem; color:#e83e8c;"><i class="fa fa-exclamation-circle"></i></div>
-                                        <div class="font-weight-bold">Purchase Due</div>
-                                        <div class="h5 text-danger mt-1"><?php echo e(config('settings.currency_symbol')); ?> <?php echo e(number_format($totalPurchaseDue, 2)); ?></div>
-                                        <small class="text-muted d-block" style="font-size: 0.8em;">Unpaid/Partially Paid Purchases</small>
                                     </div>
                                 </div>
                             </a>
@@ -142,7 +105,7 @@
                 <div class="row">
                     <div class="col-md-5"></div>
                     <div class="col-md-7">
-                        <form action="<?php echo e(route('admin.expense.index')); ?>">
+                        <form action="<?php echo e(route('user.expense.index')); ?>">
                             <div class="row">
                                 <div class="col-md-3">
                                     <input type="date" name="start_date" class="form-control" value="<?php echo e(request('start_date')); ?>" />
@@ -164,7 +127,6 @@
                                                 </option>
                                             <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                         </select>
-
                                         <?php $__errorArgs = ['product_id'];
 $__bag = $errors->getBag($__errorArgs[1] ?? 'default');
 if ($__bag->has($__errorArgs[0])) :
@@ -179,11 +141,10 @@ endif;
 unset($__errorArgs, $__bag); ?>
                                     </div>
                                 </div>
-
                                 <div class="col-md-3">
                                     <button class="btn btn-outline-primary" type="submit"><?php echo e(__('Show')); ?></button>
                                     <?php if(request('start_date') || request('end_date') || request('expense_head')): ?>
-                                        <a href="<?php echo e(route('admin.expense.index')); ?>" class="btn btn-outline-secondary ml-2">
+                                        <a href="<?php echo e(route('user.expense.index')); ?>" class="btn btn-outline-secondary ml-2">
                                             <i class="fa fa-times"></i> Clear
                                         </a>
                                     <?php endif; ?>
@@ -223,7 +184,7 @@ unset($__errorArgs, $__bag); ?>
                                         <?php if(request('expense_head') || request('start_date') || request('end_date')): ?>
                                             No expenses found matching your filter criteria.
                                         <?php else: ?>
-                                            No expenses found. <a href="<?php echo e(route('admin.expense.create')); ?>" class="alert-link">Create your first expense</a>
+                                            No expenses found. <a href="<?php echo e(route('user.expense.create')); ?>" class="alert-link">Create your first expense</a>
                                         <?php endif; ?>
                                     </div>
                                 </td>
@@ -244,7 +205,6 @@ unset($__errorArgs, $__bag); ?>
                     </tfoot>
                     <?php endif; ?>
                 </table>
-
                 <?php if($expenses->count() > 0): ?>
                 <div class="text-center"><?php echo e($expenses->render()); ?></div>
                 <?php endif; ?>
@@ -275,58 +235,6 @@ unset($__errorArgs, $__bag); ?>
 </div>
 
 <?php $__env->stopSection(); ?>
-
-<style>
-.report-cards-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1.5rem;
-  justify-content: flex-start;
-}
-.report-card {
-  flex: 0 0 220px;
-  max-width: 220px;
-  min-width: 220px;
-  margin-bottom: 1.5rem;
-}
-.report-card a {
-  display: block;
-  border-radius: 12px;
-  transition: box-shadow 0.2s, background 0.2s, transform 0.15s;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-  cursor: pointer;
-  background: #fff;
-}
-.report-card a:hover, .report-card a:focus {
-  box-shadow: 0 6px 24px rgba(0,0,0,0.12);
-  background: #f5f7fa;
-  text-decoration: none;
-  transform: translateY(-2px) scale(1.03);
-}
-.report-card a:active {
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-  background: #f0f0f0;
-  transform: scale(0.98);
-}
-@media (max-width: 991.98px) {
-  .report-cards-row {
-    flex-wrap: wrap;
-    justify-content: center;
-  }
-  .report-card {
-    flex: 1 1 45%;
-    max-width: 100%;
-    min-width: 180px;
-  }
-}
-@media (max-width: 767.98px) {
-  .report-card {
-    flex: 1 1 100%;
-    max-width: 100%;
-    min-width: 0;
-  }
-}
-</style>
 
 <?php $__env->startSection('js'); ?>
 <script src="https://unpkg.com/ionicons@4.5.10-0/dist/ionicons.js"></script>
@@ -425,7 +333,7 @@ unset($__errorArgs, $__bag); ?>
                           Total
                         </th>
                         <th class="right">
-                          <strong><?php echo e(config('settings.currency_symbol')); ?> ${totalAmount}</strong>
+                          <strong>$<?php echo e(config('settings.currency_symbol')); ?> ${totalAmount}</strong>
                         </th>
                       </tr>
 
@@ -434,10 +342,10 @@ unset($__errorArgs, $__bag); ?>
                           Paid
                         </th>
                         <th class="right">
-                          <strong><?php echo e(config('settings.currency_symbol')); ?> ${receivedAmount}</strong>
+                          <strong>$<?php echo e(config('settings.currency_symbol')); ?> ${receivedAmount}</strong>
                         </th>
                       </tr>
-                    </tfoot>
+                    </tfood>
                 </table>
             </div>
         </div>
@@ -465,4 +373,56 @@ unset($__errorArgs, $__bag); ?>
 </script>
 <?php $__env->stopSection(); ?>
 
-<?php echo $__env->make('admin.layouts.admin', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH /home/senpai/Work/laravel/aone-pos-laravel/resources/views/admin/expense/index.blade.php ENDPATH**/ ?>
+<style>
+.report-cards-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  justify-content: flex-start;
+}
+.report-card {
+  flex: 0 0 220px;
+  max-width: 220px;
+  min-width: 220px;
+  margin-bottom: 1.5rem;
+}
+.report-card a {
+  display: block;
+  border-radius: 12px;
+  transition: box-shadow 0.2s, background 0.2s, transform 0.15s;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  cursor: pointer;
+  background: #fff;
+}
+.report-card a:hover, .report-card a:focus {
+  box-shadow: 0 6px 24px rgba(0,0,0,0.12);
+  background: #f5f7fa;
+  text-decoration: none;
+  transform: translateY(-2px) scale(1.03);
+}
+.report-card a:active {
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  background: #f0f0f0;
+  transform: scale(0.98);
+}
+@media (max-width: 991.98px) {
+  .report-cards-row {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .report-card {
+    flex: 1 1 45%;
+    max-width: 100%;
+    min-width: 180px;
+  }
+}
+@media (max-width: 767.98px) {
+  .report-card {
+    flex: 1 1 100%;
+    max-width: 100%;
+    min-width: 0;
+  }
+}
+</style>
+
+<?php echo $__env->make('user.layouts.user', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH /home/senpai/Work/laravel/aone-pos-laravel/resources/views/user/expense/index.blade.php ENDPATH**/ ?>

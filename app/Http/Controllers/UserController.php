@@ -9,6 +9,7 @@ use App\Models\Payment;
 use App\Models\SupplierPayment;
 use App\Models\Purchase;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 
 class UserController extends Controller
 {
@@ -29,7 +30,9 @@ class UserController extends Controller
      */
     public function index()
     {
-
+        $user = Auth::user();
+        $company_id = $user->company_id;
+        $branch_id = $user->branch_id;
 
         $today_sales = Sale::whereBetween('created_at', [now()->startOfDay(), now()->endOfDay()])
             ->with('items')
@@ -59,9 +62,12 @@ class UserController extends Controller
         $orders = Sale::with(['items', 'payments'])->get();
         $customers_count = Customer::count();
 
-        $low_stock_products = Product::where('quantity', '<', 20)->get();
+        $low_stock_products = new Product();
+        $low_stock_products = $low_stock_products->where('quantity', '<', 20)->get();
 
         $bestSellingProducts = DB::table('products')
+            ->where('products.company_id', $company_id)
+            ->where('products.branch_id', $branch_id)
             ->joinSub(
                 DB::table('sale_items')
                     ->select('product_id', DB::raw('SUM(quantity) as total_sold'))
@@ -80,6 +86,8 @@ class UserController extends Controller
 
 
         $currentMonthBestSelling = DB::table('products')
+            ->where('products.company_id', $company_id)
+            ->where('products.branch_id', $branch_id)
             ->joinSub(
                 DB::table('sale_items')
                     ->join('sales', 'sales.id', '=', 'sale_items.sale_id')

@@ -1,4 +1,4 @@
-@extends('user.layouts.app')
+@extends('user.layouts.user')
 
 @section('title', __('Purchase Details'))
 @section('content-header', __('Purchase Details#'.$purchase_items[0]->id))

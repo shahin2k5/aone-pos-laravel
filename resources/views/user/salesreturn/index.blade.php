@@ -1,4 +1,4 @@
-@extends('user.layouts.app')
+@extends('user.layouts.user')
 
 @section('title', __('Salesreturn'))
 @section('content-header', __('Salesreturn'))
@@ -53,7 +53,7 @@
                     <td>{{ config('settings.currency_symbol') }} {{number_format($salesreturn->return_amount)}}</td>
                     <td>{{ config('settings.currency_symbol') }} {{number_format($salesreturn->profit_amount)}}</td>
                     <td>{{$salesreturn->created_at}}</td>
-                    <td><a href="/admin/salesreturn/details/{{ $salesreturn->id }}" class="btn btn-success"><i class="fa fa-eye"></i></a></td>
+                    <td><a href="{{ route('user.salesreturn.details', $salesreturn->id) }}" class="btn btn-success"><i class="fa fa-eye"></i></a></td>
 
                 </tr>
                 @endforeach

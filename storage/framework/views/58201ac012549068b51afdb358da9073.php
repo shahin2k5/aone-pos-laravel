@@ -1,11 +1,9 @@
-@extends('user.layouts.user')
-
-@section('title', __('Sales List'))
-@section('content-header', __('Sales List'))
-@section('content-actions')
-<a href="{{route('user.cart.index')}}" class="btn btn-primary"> <i class="nav-icon fas fa-cart-plus"></i> {{ __('POS') }}</a>
-@endsection
-@section('content')
+<?php $__env->startSection('title', __('Sales List')); ?>
+<?php $__env->startSection('content-header', __('Sales List')); ?>
+<?php $__env->startSection('content-actions'); ?>
+<a href="<?php echo e(route('user.cart.index')); ?>" class="btn btn-primary"> <i class="nav-icon fas fa-cart-plus"></i> <?php echo e(__('POS')); ?></a>
+<?php $__env->stopSection(); ?>
+<?php $__env->startSection('content'); ?>
 
 <div class="card">
 
@@ -13,16 +11,16 @@
         <div class="row">
             <div class="col-md-7"></div>
             <div class="col-md-5">
-                <form action="{{route('user.sales.index')}}">
+                <form action="<?php echo e(route('user.sales.index')); ?>">
                     <div class="row">
                         <div class="col-md-5">
-                            <input type="date" name="start_date" class="form-control" value="{{request('start_date')}}" />
+                            <input type="date" name="start_date" class="form-control" value="<?php echo e(request('start_date')); ?>" />
                         </div>
                         <div class="col-md-5">
-                            <input type="date" name="end_date" class="form-control" value="{{request('end_date')}}" />
+                            <input type="date" name="end_date" class="form-control" value="<?php echo e(request('end_date')); ?>" />
                         </div>
                         <div class="col-md-2">
-                            <button class="btn btn-outline-primary" type="submit">{{ __('order.submit') }}</button>
+                            <button class="btn btn-outline-primary" type="submit"><?php echo e(__('order.submit')); ?></button>
                         </div>
                     </div>
                 </form>
@@ -31,54 +29,54 @@
         <table class="table">
             <thead>
                 <tr>
-                    <th>{{ __('order.ID') }}</th>
-                    <th>{{ __('order.Customer_Name') }}</th>
-                    <th>{{ __('order.Total') }}</th>
-                    <th>{{ __('order.Received_Amount') }}</th>
-                    <th>{{ __('order.Status') }}</th>
-                    <th>{{ __('order.To_Pay') }}</th>
-                    <th>{{ __('order.Created_At') }}</th>
-                    <th>{{ __('order.Actions') }}</th>
+                    <th><?php echo e(__('order.ID')); ?></th>
+                    <th><?php echo e(__('order.Customer_Name')); ?></th>
+                    <th><?php echo e(__('order.Total')); ?></th>
+                    <th><?php echo e(__('order.Received_Amount')); ?></th>
+                    <th><?php echo e(__('order.Status')); ?></th>
+                    <th><?php echo e(__('order.To_Pay')); ?></th>
+                    <th><?php echo e(__('order.Created_At')); ?></th>
+                    <th><?php echo e(__('order.Actions')); ?></th>
                 </tr>
             </thead>
             <tbody>
-                @foreach ($sales as $order)
+                <?php $__currentLoopData = $sales; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $order): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                 <tr>
-                    <td>{{$order->id}}</td>
-                    <td>{{$order->getCustomerName()}}</td>
-                    <td>{{ config('settings.currency_symbol') }} {{$order->formattedTotal()}}</td>
-                    <td>{{ config('settings.currency_symbol') }} {{$order->formattedReceivedAmount()}}</td>
+                    <td><?php echo e($order->id); ?></td>
+                    <td><?php echo e($order->getCustomerName()); ?></td>
+                    <td><?php echo e(config('settings.currency_symbol')); ?> <?php echo e($order->formattedTotal()); ?></td>
+                    <td><?php echo e(config('settings.currency_symbol')); ?> <?php echo e($order->formattedReceivedAmount()); ?></td>
                     <td>
-                        @if($order->receivedAmount() == 0)
-                            <span class="badge badge-danger">{{ __('order.Not_Paid') }}</span>
-                        @elseif($order->receivedAmount() < $order->total())
-                            <span class="badge badge-warning">{{ __('order.Partial') }}</span>
-                        @elseif($order->receivedAmount() == $order->total())
-                            <span class="badge badge-success">{{ __('order.Paid') }}</span>
-                        @elseif($order->receivedAmount() > $order->total())
-                            <span class="badge badge-info">{{ __('order.Change') }}</span>
-                        @endif
+                        <?php if($order->receivedAmount() == 0): ?>
+                            <span class="badge badge-danger"><?php echo e(__('order.Not_Paid')); ?></span>
+                        <?php elseif($order->receivedAmount() < $order->total()): ?>
+                            <span class="badge badge-warning"><?php echo e(__('order.Partial')); ?></span>
+                        <?php elseif($order->receivedAmount() == $order->total()): ?>
+                            <span class="badge badge-success"><?php echo e(__('order.Paid')); ?></span>
+                        <?php elseif($order->receivedAmount() > $order->total()): ?>
+                            <span class="badge badge-info"><?php echo e(__('order.Change')); ?></span>
+                        <?php endif; ?>
                     </td>
-                    <td>{{config('settings.currency_symbol')}} {{number_format($order->total() - $order->receivedAmount(), 2)}}</td>
-                    <td>{{$order->created_at}}</td>
+                    <td><?php echo e(config('settings.currency_symbol')); ?> <?php echo e(number_format($order->total() - $order->receivedAmount(), 2)); ?></td>
+                    <td><?php echo e($order->created_at); ?></td>
                     <td>
                         <button
                             class="btn btn-sm btn-secondary btnShowInvoice"
                             data-toggle="modal"
                             data-target="#modalInvoice"
-                            data-order-id="{{ $order->id }}"
-                            data-customer-name="{{ $order->getCustomerName() }}"
-                            data-total="{{ $order->total() }}"
-                            data-received="{{ $order->receivedAmount() }}"
-                            data-items="{{ json_encode($order->items) }}"
-                            data-created-at="{{ $order->created_at }}"
-                            data-payment="{{ isset($order->payments) && count($order->payments) > 0 ? $order->payments[0]->amount : 0 }}">
+                            data-order-id="<?php echo e($order->id); ?>"
+                            data-customer-name="<?php echo e($order->getCustomerName()); ?>"
+                            data-total="<?php echo e($order->total()); ?>"
+                            data-received="<?php echo e($order->receivedAmount()); ?>"
+                            data-items="<?php echo e(json_encode($order->items)); ?>"
+                            data-created-at="<?php echo e($order->created_at); ?>"
+                            data-payment="<?php echo e(isset($order->payments) && count($order->payments) > 0 ? $order->payments[0]->amount : 0); ?>">
                             <ion-icon size="samll" name="eye"></ion-icon>
                         </button>
 
-                        @if($order->total() > $order->receivedAmount())
+                        <?php if($order->total() > $order->receivedAmount()): ?>
                             <!-- Button for Partial Payment -->
-                            <button class="btn btn-sm btn-primary" data-toggle="modal" data-target="#partialPaymentModal" data-orders-id="{{ $order->id }}" data-remaining-amount="{{ $order->total() - $order->receivedAmount() }}">
+                            <button class="btn btn-sm btn-primary" data-toggle="modal" data-target="#partialPaymentModal" data-orders-id="<?php echo e($order->id); ?>" data-remaining-amount="<?php echo e($order->total() - $order->receivedAmount()); ?>">
                                 Pay Partial Amount
                             </button>
                             <!-- Partial Payment Modal -->
@@ -92,12 +90,12 @@
                                             </button>
                                         </div>
                                         <div class="modal-body">
-                                            <form id="partialPaymentForm" method="POST" action="{{ route('user.sales.partial-payment') }}">
-                                                @csrf
+                                            <form id="partialPaymentForm" method="POST" action="<?php echo e(route('user.sales.partial-payment')); ?>">
+                                                <?php echo csrf_field(); ?>
                                                 <input type="hidden" name="order_id" id="modalOrderId" value="">
                                                 <div class="form-group">
                                                     <label for="partialAmount">Enter Amount to Pay</label>
-                                                    <input type="number" class="form-control" step="0.01" id="partialAmount" name="amount" value="{{ $order->total() - $order->receivedAmount() }}">
+                                                    <input type="number" class="form-control" step="0.01" id="partialAmount" name="amount" value="<?php echo e($order->total() - $order->receivedAmount()); ?>">
                                                 </div>
                                                 <button type="submit" class="btn btn-primary">Submit Payment</button>
                                             </form>
@@ -105,17 +103,17 @@
                                     </div>
                                 </div>
                             </div>
-                        @endif
+                        <?php endif; ?>
                     </td>
                 </tr>
-                @endforeach
+                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
             </tbody>
             <tfoot>
                 <tr>
                     <th></th>
                     <th></th>
-                    <th>{{ config('settings.currency_symbol') }} {{ number_format($total, 2) }}</th>
-                    <th>{{ config('settings.currency_symbol') }} {{ number_format($receivedAmount, 2) }}</th>
+                    <th><?php echo e(config('settings.currency_symbol')); ?> <?php echo e(number_format($total, 2)); ?></th>
+                    <th><?php echo e(config('settings.currency_symbol')); ?> <?php echo e(number_format($receivedAmount, 2)); ?></th>
                     <th></th>
                     <th></th>
                     <th></th>
@@ -123,11 +121,11 @@
             </tfoot>
         </table>
 
-        <div class="text-center">{{ $sales->render() }}</div>
+        <div class="text-center"><?php echo e($sales->render()); ?></div>
     </div>
 </div>
-@endsection
-@section('model')
+<?php $__env->stopSection(); ?>
+<?php $__env->startSection('model'); ?>
 <!-- Modal -->
 <div class="modal fade" id="modalInvoice" tabindex="-1" role="dialog" aria-labelledby="modalInvoiceLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
@@ -148,9 +146,9 @@
     </div>
 </div>
 
-@endsection
+<?php $__env->stopSection(); ?>
 
-@section('js')
+<?php $__env->startSection('js'); ?>
 <script src="https://unpkg.com/ionicons@4.5.10-0/dist/ionicons.js"></script>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
@@ -209,13 +207,13 @@
             <span class="float-right"> <strong>Status:</strong> ${
 
                         receivedAmount == 0?
-                            '<span class="badge badge-danger">{{ __('order.Not_Paid') }}</span>':
+                            '<span class="badge badge-danger"><?php echo e(__('order.Not_Paid')); ?></span>':
                         receivedAmount < totalAmount ?
-                            '<span class="badge badge-warning">{{ __('order.Partial') }}</span>':
+                            '<span class="badge badge-warning"><?php echo e(__('order.Partial')); ?></span>':
                         receivedAmount == totalAmount?
-                            '<span class="badge badge-success">{{ __('order.Paid') }}</span>':
+                            '<span class="badge badge-success"><?php echo e(__('order.Paid')); ?></span>':
                         receivedAmount > totalAmount?
-                            '<span class="badge badge-info">{{ __('order.Change') }}</span>':''
+                            '<span class="badge badge-info"><?php echo e(__('order.Change')); ?></span>':''
             }</span>
 
 
@@ -247,7 +245,7 @@
                           Total
                         </th>
                         <th class="right">
-                          <strong>{{config('settings.currency_symbol')}} ${totalAmount}</strong>
+                          <strong><?php echo e(config('settings.currency_symbol')); ?> ${totalAmount}</strong>
                         </th>
                       </tr>
 
@@ -256,7 +254,7 @@
                           Paid
                         </th>
                         <th class="right">
-                          <strong>{{config('settings.currency_symbol')}} ${receivedAmount}</strong>
+                          <strong><?php echo e(config('settings.currency_symbol')); ?> ${receivedAmount}</strong>
                         </th>
                       </tr>
                     </tfood>
@@ -285,4 +283,6 @@
 });
 
 </script>
-@endsection
+<?php $__env->stopSection(); ?>
+
+<?php echo $__env->make('user.layouts.user', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH /home/senpai/Work/laravel/aone-pos-laravel/resources/views/user/sales/index.blade.php ENDPATH**/ ?>

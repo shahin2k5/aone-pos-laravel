@@ -278,7 +278,13 @@ unset($__errorArgs, $__bag); ?>
                                         <th><?php echo e($user->role); ?></th>
                                         <th><?php echo e($user->branch->branch_name); ?></th>
                                         <th><a href="#" class="btn btn-success">Edit</a></th>
-                                        <th><a href="#" class="btn btn-danger">Delete</a></th>
+                                        <th>
+                                            <form action="<?php echo e(route('admin.user.delete', $user->id)); ?>" method="POST" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this user?');">
+                                                <?php echo csrf_field(); ?>
+                                                <?php echo method_field('DELETE'); ?>
+                                                <button type="submit" class="btn btn-danger">Delete</button>
+                                            </form>
+                                        </th>
                                     </tr>
                                 <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                             <?php endif; ?>
@@ -383,7 +389,13 @@ unset($__errorArgs, $__bag); ?>
                                         <th><?php echo e($branch->address); ?></th>
                                         <th><?php echo e($branch->mobile); ?></th>
                                         <th><a href="#" class="btn btn-success">Edit</a></th>
-                                        <th><a href="#" class="btn btn-danger">Delete</a></th>
+                                        <th>
+                                            <form action="<?php echo e(route('admin.branch.delete', $branch->id)); ?>" method="POST" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this branch?');">
+                                                <?php echo csrf_field(); ?>
+                                                <?php echo method_field('DELETE'); ?>
+                                                <button type="submit" class="btn btn-danger">Delete</button>
+                                            </form>
+                                        </th>
                                     </tr>
                                 <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                             <?php endif; ?>

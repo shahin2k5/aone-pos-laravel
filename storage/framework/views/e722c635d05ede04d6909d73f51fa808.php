@@ -1,7 +1,7 @@
 <?php $__env->startSection('title', __('Salesreturn')); ?>
 <?php $__env->startSection('content-header', __('Salesreturn')); ?>
 <?php $__env->startSection('content-actions'); ?>
-<a href="<?php echo e(route('admin.salesreturns.index')); ?>" class="btn btn-primary"><?php echo e(__('+ Salesreturn')); ?></a>
+<a href="<?php echo e(route('user.salesreturns.index')); ?>" class="btn btn-primary"><?php echo e(__('+ Salesreturn')); ?></a>
 <?php $__env->stopSection(); ?>
 <?php $__env->startSection('content'); ?>
 
@@ -11,7 +11,7 @@
         <div class="row">
             <div class="col-md-6"></div>
             <div class="col-md-6">
-                <form action="<?php echo e(route('admin.salesreturns.index')); ?>">
+                <form action="<?php echo e(route('user.salesreturns.index')); ?>">
                     <div class="row">
                         <div class="col-md-4">
                             <input type="date" name="start_date" class="form-control" value="<?php echo e(request('start_date')); ?>" />
@@ -51,7 +51,7 @@
                     <td><?php echo e(config('settings.currency_symbol')); ?> <?php echo e(number_format($salesreturn->return_amount)); ?></td>
                     <td><?php echo e(config('settings.currency_symbol')); ?> <?php echo e(number_format($salesreturn->profit_amount)); ?></td>
                     <td><?php echo e($salesreturn->created_at); ?></td>
-                    <td><a href="/admin/salesreturn/details/<?php echo e($salesreturn->id); ?>" class="btn btn-success"><i class="fa fa-eye"></i></a></td>
+                    <td><a href="<?php echo e(route('user.salesreturn.details', $salesreturn->id)); ?>" class="btn btn-success"><i class="fa fa-eye"></i></a></td>
 
                 </tr>
                 <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
@@ -233,4 +233,4 @@
 </script>
 <?php $__env->stopSection(); ?>
 
-<?php echo $__env->make('admin.layouts.admin', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH /home/senpai/Work/laravel/aone-pos-laravel/resources/views/admin/salesreturn/index.blade.php ENDPATH**/ ?>
+<?php echo $__env->make('user.layouts.user', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH /home/senpai/Work/laravel/aone-pos-laravel/resources/views/user/salesreturn/index.blade.php ENDPATH**/ ?>

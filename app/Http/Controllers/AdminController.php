@@ -52,8 +52,11 @@ class AdminController extends Controller
         $sales = Sale::with(['items', 'payments'])->get();
         $customers_count = Customer::count();
 
-        $low_stock_products = Product::where('quantity', '<', 20)->get();
+        $low_stock_products = new Product();
+        $low_stock_products = $low_stock_products->where('quantity', '<', 20)->get();
 
+        // Note: The best selling products queries below use raw DB queries and may need to be updated
+        // to respect company/branch filtering. For now, they will show all products.
         $bestSellingProducts = DB::table('products')
             ->joinSub(
                 DB::table('sale_items')

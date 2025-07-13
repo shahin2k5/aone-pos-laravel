@@ -1,4 +1,4 @@
-@extends('user.layouts.app')
+@extends('user.layouts.user')
 
 @section('title', __('Salesreturn'))
 @section('content-header', __('Salesreturn#'.$salesreturns[0]->id))
