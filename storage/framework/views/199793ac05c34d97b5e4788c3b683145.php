@@ -1,7 +1,7 @@
 <?php $__env->startSection('title', __('Supplier List')); ?>
 <?php $__env->startSection('content-header', __('Supplier List')); ?>
 <?php $__env->startSection('content-actions'); ?>
-<a href="<?php echo e(route('admin.suppliers.create')); ?>" class="btn btn-primary"><?php echo e(__('Add Supplier')); ?></a>
+<a href="<?php echo e(route('user.suppliers.create')); ?>" class="btn btn-primary"><?php echo e(__('Add Supplier')); ?></a>
 <?php $__env->stopSection(); ?>
 <?php $__env->startSection('css'); ?>
 <link rel="stylesheet" href="<?php echo e(asset('plugins/sweetalert2/sweetalert2.min.css')); ?>">
@@ -35,8 +35,8 @@
                     <td><?php echo e($supplier->address); ?></td>
                     <td><?php echo e($supplier->created_at); ?></td>
                     <td>
-                        <a href="<?php echo e(route('admin.suppliers.edit', $supplier)); ?>" class="btn btn-primary"><i class="fas fa-edit"></i></a>
-                        <button class="btn btn-danger btn-delete" data-url="<?php echo e(route('admin.suppliers.destroy', $supplier)); ?>"><i class="fas fa-trash"></i></button>
+                        <a href="<?php echo e(route('user.suppliers.edit', $supplier)); ?>" class="btn btn-primary"><i class="fas fa-edit"></i></a>
+                        <button class="btn btn-danger btn-delete" data-url="<?php echo e(route('user.suppliers.destroy', $supplier)); ?>"><i class="fas fa-trash"></i></button>
                     </td>
                 </tr>
                 <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
@@ -63,12 +63,12 @@
             })
 
             swalWithBootstrapButtons.fire({
-                title: 'Are you sure?',
-                text: 'Do you really want to delete this customer?',
+                title: <?php echo e(__('customer.sure')); ?>,
+                text: <?php echo e(__('customer.really_delete')); ?>,
                 icon: 'warning',
                 showCancelButton: true,
-                confirmButtonText: 'Yes, delete it!',
-                cancelButtonText: 'No',
+                confirmButtonText: <?php echo e(__('customer.yes_delete')); ?>,
+                cancelButtonText: <?php echo e(__('customer.No')); ?>,
                 reverseButtons: true
             }).then((result) => {
                 if (result.value) {
@@ -87,4 +87,4 @@
 </script>
 <?php $__env->stopSection(); ?>
 
-<?php echo $__env->make('admin.layouts.admin', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH /home/senpai/Work/laravel/aone-pos-laravel/resources/views/admin/suppliers/index.blade.php ENDPATH**/ ?>
+<?php echo $__env->make('user.layouts.user', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH /home/senpai/Work/laravel/aone-pos-laravel/resources/views/user/suppliers/index.blade.php ENDPATH**/ ?>

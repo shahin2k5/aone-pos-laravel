@@ -37,7 +37,8 @@ class DamageController extends Controller
 
     public function create(Request $request)
     {
-        $products = Product::all();
+        $products = new Product();
+        $products = $products->get();
         $viewPath = auth()->user()->role === 'admin' ? 'admin.damage.create' : 'user.damage.create';
         return view($viewPath, compact('products'));
     }

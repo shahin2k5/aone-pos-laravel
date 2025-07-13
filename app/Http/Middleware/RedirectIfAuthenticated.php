@@ -18,11 +18,16 @@ class RedirectIfAuthenticated
      */
     public function handle($request, Closure $next, $guard = null)
     {
-        dd(auth()->user());
         if (Auth::guard($guard)->check()) {
-            return redirect(RouteServiceProvider::HOME);
+            $user = Auth::guard($guard)->user();
+            if ($user->role === 'admin') {
+                return redirect()->route('admin.dashboard');
+            } elseif ($user->role === 'user') {
+                return redirect()->route('user.dashboard');
+            }
+            // Default fallback
+            return redirect('/login');
         }
-
         return $next($request);
     }
 }

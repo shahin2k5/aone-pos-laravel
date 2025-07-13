@@ -40,28 +40,9 @@
                 </li>
 
                 <li class="nav-item has-treeview">
-                    <a href="<?php echo e(route('user.purchase.index')); ?>" class="nav-link <?php echo e(activeSegment('purchase')); ?>">
-                        <i class="nav-icon fas fa-cart-plus"></i>
-                        <p><?php echo e(__('Purchase')); ?></p>
-                    </a>
-                </li>
-
-
-                <li class="nav-item item-separator">
-                     <hr style="border-top:1px solid #666">
-                </li>
-
-                <li class="nav-item has-treeview">
                     <a href="<?php echo e(route('user.salesreturn.index')); ?>" class="nav-link <?php echo e(activeSegment('sales-return')); ?>">
                         <i class="nav-icon fas fa-cart-plus"></i>
                         <p><?php echo e(__('Sales Return')); ?></p>
-                    </a>
-                </li>
-
-                <li class="nav-item has-treeview">
-                    <a href="<?php echo e(route('user.purchasereturn.index')); ?>" class="nav-link <?php echo e(activeSegment('purchase-return')); ?>">
-                        <i class="nav-icon fas fa-cart-plus"></i>
-                        <p><?php echo e(__('Purchase Return')); ?></p>
                     </a>
                 </li>
 
@@ -105,12 +86,6 @@
                     <a href="<?php echo e(route('user.suppliers.index')); ?>" class="nav-link <?php echo e(activeSegment('supplier')); ?>">
                         <i class="nav-icon fas fa-users"></i>
                         <p><?php echo e(__('Supplier')); ?></p>
-                    </a>
-                </li>
-                <li class="nav-item has-treeview">
-                    <a href="<?php echo e(route('user.settings.index')); ?>" class="nav-link <?php echo e(activeSegment('settings')); ?>">
-                        <i class="nav-icon fas fa-cogs"></i>
-                        <p><?php echo e(__('settings.title')); ?></p>
                     </a>
                 </li>
                 <li class="nav-item">

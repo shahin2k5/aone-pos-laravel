@@ -30,9 +30,17 @@ class Product extends Model
     protected static function booted()
     {
         static::addGlobalScope('branch', function (Builder $builder) {
-            if (Auth::check()) {
-                $company_id = Auth::user()->company_id;
+            $user = Auth::user();
+            if (!$user) {
+                return; // Don't apply scope if no user is authenticated
+            }
+            $company_id = $user->company_id;
+            $branch_id = $user->branch_id;
+            $role = $user->role;
+            if ($role == "admin") {
                 $builder->where('products.company_id', $company_id);
+            } else {
+                $builder->where('products.company_id', $company_id)->where('products.branch_id', $branch_id);
             }
         });
     }

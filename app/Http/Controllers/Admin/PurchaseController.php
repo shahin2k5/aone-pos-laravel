@@ -16,8 +16,10 @@ class PurchaseController extends Controller
 {
     public function index(Request $request)
     {
-        $products = Product::all();
-        $suppliers = Supplier::all();
+        $products = new Product();
+        $products = $products->get();
+        $suppliers = new Supplier();
+        $suppliers = $suppliers->get();
         $salesreturns = [];
         $total = 0;
         $purchases = new Purchase();

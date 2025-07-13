@@ -2,7 +2,7 @@
 <?php $__env->startSection('content-header', __('Add Expense')); ?>
 
 <?php $__env->startSection('content-actions'); ?>
-<a href="<?php echo e(route('admin.expense.index')); ?>" class="btn btn-primary"><i class="fa fa-chevron-left"></i> Expenses</a>
+<a href="<?php echo e(route('user.expense.index')); ?>" class="btn btn-primary"><i class="fa fa-chevron-left"></i> Expenses</a>
 <?php $__env->stopSection(); ?>
 
 <?php $__env->startSection('content'); ?>
@@ -12,7 +12,7 @@
         <div class="card">
             <div class="card-body">
 
-                <form action="<?php echo e(route('admin.expense.store')); ?>" method="POST" enctype="multipart/form-data">
+                <form action="<?php echo e(route('user.expense.store')); ?>" method="POST" enctype="multipart/form-data">
                     <?php echo csrf_field(); ?>
 
                     <div class="row">
@@ -45,7 +45,7 @@ unset($__errorArgs, $__bag); ?>
                         <div class="col-sm-3">
                             <label for="damage_notes">Expense Head</label><br>
 
-                            <a href="<?php echo e(route('admin.expense.head.create')); ?>" role="button" class="btn btn-success">+ Expense Item</a>
+                            <a href="<?php echo e(route('user.expense.head.create')); ?>" role="button" class="btn btn-success">+ Expense Item</a>
                         </div>
                     </div>
 
@@ -134,4 +134,4 @@ unset($__errorArgs, $__bag); ?>
 </script>
 <?php $__env->stopSection(); ?>
 
-<?php echo $__env->make('admin.layouts.admin', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH /home/senpai/Work/laravel/aone-pos-laravel/resources/views/admin/expense/create.blade.php ENDPATH**/ ?>
+<?php echo $__env->make('user.layouts.user', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH /home/senpai/Work/laravel/aone-pos-laravel/resources/views/user/expense/create.blade.php ENDPATH**/ ?>

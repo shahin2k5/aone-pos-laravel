@@ -1,7 +1,7 @@
-<?php $__env->startSection('title', __('Purchase Return')); ?>
-<?php $__env->startSection('content-header', __('Purchase Return #'.$purchase_return->id)); ?>
+<?php $__env->startSection('title', __('Damages')); ?>
+<?php $__env->startSection('content-header', __('Damages')); ?>
 <?php $__env->startSection('content-actions'); ?>
-<a href="/admin/purchasereturn" class="btn btn-primary"><?php echo e(__('<< Purchase Return')); ?></a>
+<a href="<?php echo e(route('user.damages.create')); ?>" class="btn btn-primary"><?php echo e(__('+ Damage')); ?></a>
 <?php $__env->stopSection(); ?>
 <?php $__env->startSection('content'); ?>
 
@@ -11,7 +11,7 @@
         <div class="row">
             <div class="col-md-6"></div>
             <div class="col-md-6">
-                <form action="<?php echo e(route('admin.purchasereturn.index')); ?>">
+                <form action="<?php echo e(route('user.salesreturns.index')); ?>">
                     <div class="row">
                         <div class="col-md-4">
                             <input type="date" name="start_date" class="form-control" value="<?php echo e(request('start_date')); ?>" />
@@ -20,50 +20,39 @@
                             <input type="date" name="end_date" class="form-control" value="<?php echo e(request('end_date')); ?>" />
                         </div>
                         <div class="col-md-4">
-                            <button class="btn btn-outline-primary" type="submit"><?php echo e(__('Purchase Return submit')); ?></button>
+                            <button class="btn btn-outline-primary" type="submit"><?php echo e(__('Damage submit')); ?></button>
                         </div>
                     </div>
                 </form>
             </div>
         </div>
-        <hr>
-
-        <?php if($purchase_return): ?>
-            <div class="row">
-                <div class="col-md-4"><b>Invoice No: </b> <?php echo e($purchase_return->purchase ? $purchase_return->purchase->invoice_no : ''); ?></div>
-                <div class="col-md-4"><b>Supplier: </b> <?php echo e($purchase_return->supplier ? $purchase_return->supplier->first_name . ' ' . $purchase_return->supplier->last_name : ''); ?></div>
-                <div class="col-md-4"><b>Total items:</b> <?php echo e(number_format($purchase_return->total_qnty,0)); ?></div>
-                <div class="col-md-4"><b>Total Amount:</b> <?php echo e($purchase_return->total_amount); ?></div>
-                <div class="col-md-4"><b>Return Amount:</b> <?php echo e($purchase_return->return_amount); ?></div>
-                <div class="col-md-4"></div>
-            </div>
-        <?php endif; ?>
-
-        <hr>
-
         <table class="table">
             <thead>
                 <tr>
                     <th><?php echo e('ID'); ?></th>
                     <th><?php echo e('Product'); ?></th>
-                    <th><?php echo e('Rate'); ?></th>
-                    <th><?php echo e('Return Qnty.'); ?></th>
+                    <th><?php echo e('Qnty.'); ?></th>
+                    <th><?php echo e('Purchase'); ?></th>
+                    <th><?php echo e('Sell'); ?></th>
                     <th><?php echo e('Total'); ?></th>
+                    <th><?php echo e('Notes'); ?></th>
                     <th><?php echo e('Created'); ?></th>
 
                 </tr>
             </thead>
             <tbody>
-                <?php $__currentLoopData = $purchase_return->items; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $item): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                <?php $__currentLoopData = $damages; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $damage): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                 <tr>
+                    <td> <?php echo e($damage->id); ?></td>
+                    <td><?php echo e($damage->product->name); ?></td>
 
-                    <td><?php echo e($item->id); ?></td>
-                    <td><img class="product-img" src="<?php echo e(Storage::url($item->product->image)); ?>" alt="" style="width:75px;height:75px"></td>
-                    <td><?php echo e($item->product->name); ?></td>
-                    <td><?php echo e($item->purchase_price); ?></td>
-                    <td><?php echo e(number_format($item->qnty)); ?></td>
-                    <td><?php echo e($item->total_price ?? ($item->purchase_price * $item->qnty)); ?></td>
-                    <td><?php echo e($item->created_at); ?></td>
+                    <td><?php echo e(number_format($damage->qnty,0)); ?></td>
+                    <td><?php echo e(config('settings.currency_symbol')); ?> <?php echo e(number_format($damage->purchase_price)); ?></td>
+                    <td><?php echo e(config('settings.currency_symbol')); ?> <?php echo e(number_format($damage->sell_price)); ?></td>
+                    <td><?php echo e(config('settings.currency_symbol')); ?> <?php echo e(number_format($damage->total_price)); ?></td>
+                    <td><?php echo e($damage->notes); ?></td>
+                    <td><?php echo e($damage->created_at); ?></td>
+                    <td><form action="/admin/damage/<?php echo e($damage->id); ?>" method="POST" onsubmit="return confirm('Are you sure you want to delete this?');"> <?php echo method_field('DELETE'); ?> <?php echo csrf_field(); ?> <button type="submit"><i class="fa fa-trash"></i></button></form></td>
 
                 </tr>
                 <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
@@ -81,7 +70,7 @@
             </tfoot>
         </table>
 
-        <div class="text-center"></div>
+        <div class="text-center"><?php echo e($damages->render()); ?></div>
     </div>
 </div>
 <?php $__env->stopSection(); ?>
@@ -245,4 +234,4 @@
 </script>
 <?php $__env->stopSection(); ?>
 
-<?php echo $__env->make('admin.layouts.admin', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH /home/senpai/Work/laravel/aone-pos-laravel/resources/views/admin/purchasereturn/details.blade.php ENDPATH**/ ?>
+<?php echo $__env->make('user.layouts.user', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH /home/senpai/Work/laravel/aone-pos-laravel/resources/views/user/damage/index.blade.php ENDPATH**/ ?>

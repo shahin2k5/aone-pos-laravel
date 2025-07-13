@@ -1,7 +1,7 @@
 <?php $__env->startSection('title', __('product.Product_List')); ?>
 <?php $__env->startSection('content-header', __('product.Product_List')); ?>
 <?php $__env->startSection('content-actions'); ?>
-<a href="<?php echo e(route('admin.products.create')); ?>" class="btn btn-primary"><?php echo e(__('product.Create_Product')); ?></a>
+<a href="<?php echo e(route('user.products.create')); ?>" class="btn btn-primary"><?php echo e(__('product.Create_Product')); ?></a>
 <?php $__env->stopSection(); ?>
 <?php $__env->startSection('css'); ?>
 <link rel="stylesheet" href="<?php echo e(asset('plugins/sweetalert2/sweetalert2.min.css')); ?>">
@@ -41,8 +41,8 @@
                     <td><?php echo e($product->created_at); ?></td>
                     <td><?php echo e($product->updated_at); ?></td>
                     <td>
-                        <a href="<?php echo e(route('admin.products.edit', $product)); ?>" class="btn btn-primary"><i class="fas fa-edit"></i></a>
-                        <button class="btn btn-danger btn-delete" data-url="<?php echo e(route('admin.products.destroy', $product)); ?>"><i class="fas fa-trash"></i></button>
+                        <a href="<?php echo e(route('user.products.edit', $product)); ?>" class="btn btn-primary"><i class="fas fa-edit"></i></a>
+                        <button class="btn btn-danger btn-delete" data-url="<?php echo e(route('user.products.destroy', $product)); ?>"><i class="fas fa-trash"></i></button>
                     </td>
                 </tr>
                 <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
@@ -93,4 +93,4 @@
 </script>
 <?php $__env->stopSection(); ?>
 
-<?php echo $__env->make('admin.layouts.admin', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH /home/senpai/Work/laravel/aone-pos-laravel/resources/views/admin/products/index.blade.php ENDPATH**/ ?>
+<?php echo $__env->make('user.layouts.user', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH /home/senpai/Work/laravel/aone-pos-laravel/resources/views/user/products/index.blade.php ENDPATH**/ ?>

@@ -18,18 +18,17 @@ class CustomerController extends Controller
     public function index(Request $request)
     {
         $user = Auth::user();
-        $company_id = $user->company_id;
 
-        // If it's a JSON request (from React component), return customers for the company
+        // If it's a JSON request (from React component), return customers using global scope
         if ($request->wantsJson()) {
-            $customers = Customer::where('company_id', $company_id)
-                ->select('id', 'first_name', 'last_name', 'address', 'phone', 'balance')
-                ->get();
+            $customers = new Customer();
+            $customers = $customers->select('id', 'first_name', 'last_name', 'address', 'phone', 'balance')->get();
             return response()->json($customers);
         }
 
-        // For regular view requests, return paginated customers
-        $customers = Customer::where('company_id', $company_id)->latest()->paginate(10);
+        // For regular view requests, return paginated customers using global scope
+        $customers = new Customer();
+        $customers = $customers->latest()->paginate(10);
         $viewPath = $user->role === 'admin' ? 'admin.customers.index' : 'user.customers.index';
         return view($viewPath, compact('customers'));
     }

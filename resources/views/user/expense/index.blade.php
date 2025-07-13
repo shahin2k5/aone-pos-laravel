@@ -1,9 +1,9 @@
-@extends('user.layouts.app')
+@extends('user.layouts.user')
 
 @section('title', __('Expense'))
 @section('content-header', __('Expense'))
 @section('content-actions')
-<a href="{{route('expense.create')}}" class="btn btn-primary"><i class="fa fa-plus"></i> Add Expenses</a>
+<a href="{{route('user.expense.create')}}" class="btn btn-primary"><i class="fa fa-plus"></i> Add Expenses</a>
 @endsection
 @section('content')
 
@@ -33,7 +33,7 @@
 
                     <div class="report-cards-row">
                         <div class="report-card mb-3">
-                            <a href="{{ route('expense.sales-details') }}" class="text-decoration-none">
+                            <a href="{{ route('user.expense.sales-details') }}" class="text-decoration-none">
                                 <div class="card shadow-sm border-0 text-center h-100">
                                     <div class="card-body d-flex flex-column justify-content-center" style="min-height: 150px;">
                                         <div class="mb-2" style="font-size:2rem; color:#007bff;"><i class="fa fa-shopping-cart"></i></div>
@@ -47,31 +47,7 @@
                             </a>
                         </div>
                         <div class="report-card mb-3">
-                            <a href="{{ route('expense.purchase-details') }}" class="text-decoration-none">
-                                <div class="card shadow-sm border-0 text-center h-100">
-                                    <div class="card-body d-flex flex-column justify-content-center" style="min-height: 150px;">
-                                        <div class="mb-2" style="font-size:2rem; color:#6f42c1;"><i class="fa fa-truck"></i></div>
-                                        <div class="font-weight-bold">Total Purchase</div>
-                                        <div class="h5 text-primary mt-1">{{ config('settings.currency_symbol') }} {{ number_format($totalPurchase, 2) }}</div>
-                                    </div>
-                                </div>
-                            </a>
-                        </div>
-                        <div class="report-card mb-3">
-                            <a href="{{ route('purchasereturn.index') }}" class="text-decoration-none">
-                                <div class="card shadow-sm border-0 text-center h-100">
-                                    <div class="card-body d-flex flex-column justify-content-center" style="min-height: 150px;">
-                                        <div class="mb-2" style="font-size:2rem; color:#fd7e14;"><i class="fa fa-undo-alt"></i></div>
-                                        <div class="font-weight-bold">Purchase Returns</div>
-                                        <div class="h5 text-warning mt-1">-{{ config('settings.currency_symbol') }} {{ number_format($purchaseReturnsTotal, 2) }}
-                                            <small class="text-muted d-block" style="font-size: 0.8em;">Profit Loss: -{{ config('settings.currency_symbol') }} {{ number_format($purchaseReturnsProfit, 2) }}</small>
-                                        </div>
-                                    </div>
-                                </div>
-                            </a>
-                        </div>
-                        <div class="report-card mb-3">
-                            <a href="{{ route('expense.expense-details') }}" class="text-decoration-none">
+                            <a href="{{ route('user.expense.expense-details') }}" class="text-decoration-none">
                                 <div class="card shadow-sm border-0 text-center h-100">
                                     <div class="card-body d-flex flex-column justify-content-center" style="min-height: 150px;">
                                         <div class="mb-2" style="font-size:2rem; color:#dc3545;"><i class="fa fa-credit-card"></i></div>
@@ -82,7 +58,7 @@
                             </a>
                         </div>
                         <div class="report-card mb-3">
-                            <a href="{{ route('damage.index') }}" class="text-decoration-none">
+                            <a href="{{ route('user.damage.index') }}" class="text-decoration-none">
                                 <div class="card shadow-sm border-0 text-center h-100">
                                     <div class="card-body d-flex flex-column justify-content-center" style="min-height: 150px;">
                                         <div class="mb-2" style="font-size:2rem; color:#343a40;"><i class="fa fa-exclamation-triangle"></i></div>
@@ -93,7 +69,7 @@
                             </a>
                         </div>
                         <div class="report-card mb-3">
-                            <a href="{{ route('expense.profit-details') }}" class="text-decoration-none">
+                            <a href="{{ route('user.expense.profit-details') }}" class="text-decoration-none">
                                 <div class="card shadow-sm border-0 text-center h-100">
                                     <div class="card-body d-flex flex-column justify-content-center" style="min-height: 150px;">
                                         <div class="mb-2" style="font-size:2rem; color:#28a745;"><i class="fa fa-chart-line"></i></div>
@@ -107,7 +83,7 @@
                             </a>
                         </div>
                         <div class="report-card mb-3">
-                            <a href="{{ route('expense.cash-details') }}" class="text-decoration-none">
+                            <a href="{{ route('user.expense.cash-details') }}" class="text-decoration-none">
                                 <div class="card shadow-sm border-0 text-center h-100">
                                     <div class="card-body d-flex flex-column justify-content-center" style="min-height: 150px;">
                                         <div class="mb-2" style="font-size:2rem; color:#ffc107;"><i class="fa fa-wallet"></i></div>
@@ -115,18 +91,6 @@
                                         <div class="h5 text-warning mt-1">{{ config('settings.currency_symbol') }} {{ number_format($cashInHand, 2) }}
                                             <small class="text-muted d-block" style="font-size: 0.8em;">Net (after all returns & damages)</small>
                                         </div>
-                                    </div>
-                                </div>
-                            </a>
-                        </div>
-                        <div class="report-card mb-3">
-                            <a href="{{ route('expense.purchase-details') }}" class="text-decoration-none">
-                                <div class="card shadow-sm border-0 text-center h-100">
-                                    <div class="card-body d-flex flex-column justify-content-center" style="min-height: 150px;">
-                                        <div class="mb-2" style="font-size:2rem; color:#e83e8c;"><i class="fa fa-exclamation-circle"></i></div>
-                                        <div class="font-weight-bold">Purchase Due</div>
-                                        <div class="h5 text-danger mt-1">{{ config('settings.currency_symbol') }} {{ number_format($totalPurchaseDue, 2) }}</div>
-                                        <small class="text-muted d-block" style="font-size: 0.8em;">Unpaid/Partially Paid Purchases</small>
                                     </div>
                                 </div>
                             </a>
@@ -140,7 +104,7 @@
                 <div class="row">
                     <div class="col-md-5"></div>
                     <div class="col-md-7">
-                        <form action="{{route('expense.index')}}">
+                        <form action="{{route('user.expense.index')}}">
                             <div class="row">
                                 <div class="col-md-3">
                                     <input type="date" name="start_date" class="form-control" value="{{request('start_date')}}" />

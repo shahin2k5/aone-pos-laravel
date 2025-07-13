@@ -51,10 +51,13 @@ class Cart extends Component {
     componentDidMount() {
         // load user cart
         this.loadTranslations();
-        this.loadBranch();
-        this.loadCustomers();
-        this.loadProducts();
-        this.loadCart();
+        // Set branch_id from window.APP
+        this.setState({ branch_id: window.APP.branch_id }, () => {
+            this.loadCustomers();
+            this.loadProducts();
+            this.loadCart();
+        });
+        // No need to load branches for user
 
         console.log('branch_id',this.state.branch_id)
 
@@ -63,7 +66,7 @@ class Cart extends Component {
     // load the transaltions for the react component
     loadTranslations() {
         axios
-            .get("/admin/locale/cart")
+            .get("/user/locale/cart")
             .then((res) => {
                 const translations = res.data;
                 this.setState({ translations });
@@ -74,7 +77,7 @@ class Cart extends Component {
     }
 
     loadCustomers() {
-        axios.get(`/admin/customers`).then((res) => {
+        axios.get(`/user/customers`).then((res) => {
             // Support both {data: [...]} and [...] responses
             const customers = Array.isArray(res.data) ? res.data : res.data.data || [];
             console.log('Customers loaded:', customers);
@@ -86,16 +89,19 @@ class Cart extends Component {
     }
 
     loadBranch() {
-        axios.get(`/admin/load-branches`).then((res) => {
+        axios.get(`/user/load-branches`).then((res) => {
             const branches = res.data;
             console.log('branches::', branches)
             this.setState({ branches });
+        }).catch((error) => {
+            console.error('Error loading branches:', error);
+            console.error('Error response:', error.response);
         });
     }
 
     loadProducts(search = "") {
         const query = !!search ? `?search=${search}` : "";
-        axios.get(`/admin/products${query}`).then((res) => {
+        axios.get(`/user/products${query}`).then((res) => {
             const products = res.data.data;
             console.log('Products loaded:', products);
             this.setState({ products });
@@ -112,7 +118,7 @@ class Cart extends Component {
     }
 
     loadCart() {
-        axios.get("/admin/cart").then((res) => {
+        axios.get("/user/user-cart").then((res) => {
             const cart = res.data;
             console.log('Cart loaded:', cart);
             if(cart.length){
@@ -157,7 +163,7 @@ class Cart extends Component {
             return false;
         }
         axios
-            .post("/admin/cart", { barcode, customer_id, branch_id })
+            .post("/user/user-cart", { barcode, customer_id, branch_id })
             .then((res) => {
                 this.loadCart();
                 this.setState({ barcode: "" });
@@ -178,7 +184,7 @@ class Cart extends Component {
         if (!qty) return;
         const {customer_id, branch_id} = this.state
         axios
-            .post("/admin/cart/change-qty", { product_id, quantity: qty,customer_id, branch_id })
+            .post("/user/user-cart/change-qty", { product_id, quantity: qty,customer_id, branch_id })
             .then((res) => {
                 const sub_total = this.getTotal(cart)
                 const gr_total = sub_total - this.state.discount_amount
@@ -201,7 +207,7 @@ class Cart extends Component {
     handleClickDelete(product_id) {
         const branch_id = this.state.branch_id;
         axios
-            .post("/admin/cart/delete", { product_id, _method: "DELETE", branch_id })
+            .post("/user/user-cart/delete", { product_id, _method: "DELETE", branch_id })
             .then((res) => {
                 const cart = this.state.cart.filter((c) => c.id !== product_id);
                 const sub_total = this.getTotal(cart)
@@ -220,7 +226,7 @@ class Cart extends Component {
     }
 
     handleEmptyCart() {
-        axios.post("/admin/cart/empty", { _method: "DELETE" }).then((res) => {
+        axios.post("/user/user-cart/empty", { _method: "DELETE" }).then((res) => {
             if(this.state.customer_id){
                 const last_balance = this.state.prev_balance
                 this.setState({ cart: [],sub_total:0, gr_total:0, new_balance:last_balance, last_balance, discount_amount:'', paid_amount:'' });
@@ -319,10 +325,8 @@ class Cart extends Component {
                 }
             }
 
-
-
             axios
-                .post("/admin/cart", { barcode, customer_id, branch_id })
+                .post("/user/user-cart", { barcode, customer_id, branch_id })
                 .then((res) => {
                     // this.loadCart();
                     console.log(res);
@@ -390,7 +394,7 @@ class Cart extends Component {
     }
 
     printInvoice = () => {
-        const invoiceUrl = `/admin/sales/print/${this.state.saleId}`;
+        const invoiceUrl = `/user/sales/print/${this.state.saleId}`;
         window.open(invoiceUrl, "_blank");
     };
 
@@ -413,7 +417,7 @@ class Cart extends Component {
             showLoaderOnConfirm: true,
             preConfirm: (amount) => {
                 return axios
-                    .post("/admin/sales", {
+                    .post("/user/sales", {
                         customer_id: this.state.customer_id,
                         branch_id: this.state.branch_id,
                         amount,
@@ -422,7 +426,7 @@ class Cart extends Component {
                     .then((res) => {
                         this.loadCart();
                         // Assuming the response includes an order ID or invoice URL
-                        const printUrl = `/admin/sales/print/${res.data.id}`;
+                        const printUrl = `/user/sales/print/${res.data.id}`;
                         this.setState({ printUrl, paid_amount:0 });
                         Swal.fire("Success", "Order has been saved!", "success");
                         return res.data;
@@ -476,7 +480,7 @@ class Cart extends Component {
     }
 
     render() {
-        const { cart, products, customers, branches, barcode, translations } = this.state;
+        const { cart, products, customers, barcode, translations } = this.state;
         const cartList = Array.isArray(cart) ? cart : [];
         const productList = Array.isArray(products) ? products : [];
         const customerList = Array.isArray(customers) ? customers : [];
@@ -490,7 +494,7 @@ class Cart extends Component {
                         <div className="col-md-4">
                             <select  onChange={this.setCustomerId}  id="sel-customer" className="form-control" value={this.state.customer_id} >
                                 <option value="">Select a customer</option>
-                                {customerList.map((cus) => (
+                                {customers.map((cus) => (
                                     <option
                                         key={cus.id}
                                         value={cus.id} >
@@ -498,33 +502,6 @@ class Cart extends Component {
                                     </option>
                                 ))}
                             </select>
-                        </div>
-
-                        <div className="col-md-4">
-                            <select onChange={this.setBranchId} id="sel-branch" className="form-control" value={this.state.branch_id} >
-                                <option value="">Select a branch</option>
-                                {branches.map((branch) => (
-                                    <option
-                                        key={branch.id}
-                                        value={branch.id} >
-                                        {`${branch.branch_name} `}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-
-                        <div className="col">
-                            <input type="hidden" onChange={this.setCustomerId} value={this.state.customer_id} name="customer-input" id="customer-input" className="form-control"></input>
-                            <datalist  id="sel-customer"  >
-
-                                {customers.map((cus) => (
-                                    <option
-                                        key={cus.id}
-                                        value={`${cus.id}-${cus.first_name} ${cus.last_name}`} >
-                                        {`${cus.address} - ${cus.phone} - ${cus.balance}`}
-                                    </option>
-                                ))}
-                            </datalist>
                         </div>
                     </div>
                     <div className="row">

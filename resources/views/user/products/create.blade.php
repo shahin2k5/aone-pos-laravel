@@ -1,4 +1,4 @@
-@extends('user.layouts.app')
+@extends('user.layouts.user')
 
 @section('title', __('product.Create_Product'))
 @section('content-header', __('product.Create_Product'))

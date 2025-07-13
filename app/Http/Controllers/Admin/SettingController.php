@@ -74,4 +74,22 @@ class SettingController extends Controller
 
         return redirect()->route('admin.settings.index', ['tab' => 'user'])->with('success', 'User added successfully!');
     }
+
+    public function deleteUser($userId)
+    {
+        $user = User::where('id', $userId)
+            ->where('company_id', Auth::user()->company_id)
+            ->firstOrFail();
+        $user->delete();
+        return redirect()->route('admin.settings.index', ['tab' => 'user'])->with('success', 'User deleted successfully!');
+    }
+
+    public function deleteBranch($branchId)
+    {
+        $branch = Branch::where('id', $branchId)
+            ->where('company_id', Auth::user()->company_id)
+            ->firstOrFail();
+        $branch->delete();
+        return redirect()->route('admin.settings.index', ['tab' => 'branch'])->with('success', 'Branch deleted successfully!');
+    }
 }
