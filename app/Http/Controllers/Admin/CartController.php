@@ -21,7 +21,8 @@ class CartController extends Controller
                 })
             );
         }
-        return view('admin.cart.index');
+        $branch_id = auth()->user()->branch_id;
+        return view('admin.cart.index', compact('branch_id'));
     }
 
     public function store(Request $request)

@@ -32,6 +32,12 @@ Route::get('/', function () {
     return redirect('/login');
 });
 
+Route::get('/clear-cache', function () {
+    Artisan::call('config:clear');
+    Artisan::call('cache:clear');
+    return 'Cache cleared';
+});
+
 Auth::routes();
 
 // User Routes

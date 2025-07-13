@@ -5,6 +5,8 @@
 
 @section('content')
 
+<div class="row">
+<div class="col-sm-6">
 <div class="card">
     <div class="card-body">
 
@@ -144,6 +146,8 @@
             <button class="btn btn-primary" type="submit">{{ __('common.Create') }}</button>
         </form>
     </div>
+</div>
+</div>
 </div>
 @endsection
 
