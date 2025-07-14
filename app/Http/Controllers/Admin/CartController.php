@@ -7,6 +7,7 @@ use App\Models\Customer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\Controller;
+use App\Models\BranchProductStock;
 
 class CartController extends Controller
 {
@@ -52,23 +53,38 @@ class CartController extends Controller
             ->where('user_cart.company_id', $company_id)
             ->first();
 
+        $stock = BranchProductStock::where('product_id', $product->id)
+            ->where('branch_id', $branch_id)
+            ->first();
+
         if ($cart) {
-            // check product quantity
-            if ($product->quantity <= $cart->pivot->quantity) {
+            // check branch stock quantity
+            if ($stock && $stock->quantity <= $cart->pivot->quantity) {
                 return response([
-                    'message' => __('cart.available', ['quantity' => $product->quantity]),
+                    'message' => __('cart.available', ['quantity' => $stock->quantity]),
                 ], 400);
             }
             // update only quantity
             $cart->pivot->quantity = $cart->pivot->quantity + 1;
             $cart->pivot->save();
-        } else {
-            if ($product->quantity < 1) {
+            if (!$stock || $stock->quantity < 1) {
                 return response([
                     'message' => __('cart.outstock'),
                 ], 400);
             }
-
+            $request->user()->cart()->attach($product->id, [
+                'quantity' => 1,
+                'customer_id' => $customer_id,
+                'branch_id' => $branch_id,
+                'company_id' => $company_id,
+                'user_id' => $user_id,
+            ]);
+        } else {
+            if (!$stock || $stock->quantity < 1) {
+                return response([
+                    'message' => __('cart.outstock'),
+                ], 400);
+            }
             $request->user()->cart()->attach($product->id, [
                 'quantity' => 1,
                 'customer_id' => $customer_id,
@@ -101,11 +117,15 @@ class CartController extends Controller
             ->where('user_cart.branch_id', $branch_id)
             ->first();
 
+        $stock = BranchProductStock::where('product_id', $product->id)
+            ->where('branch_id', $branch_id)
+            ->first();
+
         if ($cart) {
-            // check product quantity
-            if ($product->quantity < $request->quantity) {
+            // check branch stock quantity
+            if ($stock && $stock->quantity < $request->quantity) {
                 return response([
-                    'message' => __('cart.available', ['quantity' => $product->quantity]),
+                    'message' => __('cart.available', ['quantity' => $stock->quantity]),
                 ], 400);
             }
             $cart->pivot->quantity = $request->quantity;

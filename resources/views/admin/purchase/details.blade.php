@@ -39,6 +39,7 @@
                 <tr>
                     <th>{{ 'ID' }}</th>
                     <th>{{ 'Product' }}</th>
+                    <th>{{ 'Branch' }}</th>
                     <th>{{ 'Purchase Rate' }}</th>
                     <th>{{ 'Qnty.' }}</th>
                     <th>{{ 'Total' }}</th>
@@ -50,15 +51,16 @@
                 @if($purchase && $purchase->items)
                 @foreach ($purchase->items as $purchase_item)
                 <tr>
-
                     <td>{{$loop->index+1}}</td>
-                    <td><img class="product-img" src="{{ Storage::url($purchase_item->product->image) }}" alt="" style="width:55px;height:55px"></td>
-                    <td>{{$purchase_item->product->name}}</td>
-                    <td>{{number_format($purchase_item->purchase_price,2)}}</td>
-                    <td>{{number_format($purchase_item->qnty ?? $purchase_item->quantity,0)}}</td>
-                    <td>{{number_format($purchase_item->purchase_price * ($purchase_item->qnty ?? $purchase_item->quantity),2) }}</td>
+                    <td>
+                        <img class="product-img" src="{{ $purchase_item->product ? $purchase_item->product->image_url : asset('images/img-placeholder.jpg') }}" alt="" style="width:55px;height:55px">
+                        {{$purchase_item->product->name ?? '-'}}
+                    </td>
+                    <td>{{$purchase_item->branch ? $purchase_item->branch->branch_name : '-'}}</td>
+                    <td>{{ number_format($purchase_item->purchase_price, 2) }}</td>
+                    <td>{{ number_format($purchase_item->quantity, 0) }}</td>
+                    <td>{{ number_format($purchase_item->purchase_price * $purchase_item->quantity, 2) }}</td>
                     <td>{{$purchase_item->created_at}}</td>
-
                 </tr>
                 @endforeach
                 @endif

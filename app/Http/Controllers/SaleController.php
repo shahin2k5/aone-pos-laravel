@@ -8,6 +8,7 @@ use App\Models\Customer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use App\Models\BranchProductStock;
 
 class SaleController extends Controller
 {
@@ -86,11 +87,14 @@ class SaleController extends Controller
             // Calculate subtotal
             $subTotal += $item->sell_price * $item->pivot->quantity;
 
-            $item->quantity = $item->quantity - $item->pivot->quantity;
-            $item->user_id = $user->id;
-            $item->branch_id = $branch_id;
-            $item->company_id = $company_id;
-            $item->save();
+            // Update branch stock
+            $stock = BranchProductStock::where('product_id', $item->id)
+                ->where('branch_id', $branch_id)
+                ->first();
+            if ($stock) {
+                $stock->quantity -= $item->pivot->quantity;
+                $stock->save();
+            }
         }
 
         // Update the order with calculated values

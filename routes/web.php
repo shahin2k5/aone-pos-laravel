@@ -16,6 +16,7 @@ use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\UserExpenseReportController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 
@@ -124,7 +125,16 @@ Route::prefix('user', 'user_guard')->middleware(['auth'])->group(function () {
     Route::get('/damage/details/{salesreturn_id}', [DamageController::class, 'damage.details']);
     Route::post('/damage/finalsave', [DamageController::class, 'finalSave']);
 
-    // User Expense
+    // User expense routes
+    Route::get('/expense/sales-details', [UserExpenseReportController::class, 'salesDetails'])->name('user.expense.sales-details');
+    Route::get('/expense/expense-details', [ExpenseController::class, 'expenseDetails'])->name('user.expense.expense-details');
+    Route::get('/expense/profit-details', [UserExpenseReportController::class, 'profitDetails'])->name('user.expense.profit-details');
+    Route::get('/expense/cash-details', [UserExpenseReportController::class, 'cashDetails'])->name('user.expense.cash-details');
+    Route::get('/expense/damage-details', [UserExpenseReportController::class, 'damageDetails'])->name('user.expense.damage-details');
+    Route::get('/expense-head-create', [ExpenseController::class, 'createExpenseHead'])->name('user.expense.head.create');
+    Route::post('/expense-head-store', [ExpenseController::class, 'storeExpenseHead'])->name('user.expense.head.store');
+    Route::delete('/expense-head/{exp_head_id}', [ExpenseController::class, 'deleteExpenseHead'])->name('user.expense.head.delete');
+    // Resource route LAST
     Route::resource('expense', ExpenseController::class)->names([
         'index' => 'user.expense.index',
         'create' => 'user.expense.create',
@@ -134,14 +144,6 @@ Route::prefix('user', 'user_guard')->middleware(['auth'])->group(function () {
         'update' => 'user.expense.update',
         'destroy' => 'user.expense.destroy',
     ]);
-    Route::get('/expense-head-create', [ExpenseController::class, 'createExpenseHead'])->name('user.expense.head.create');
-    Route::post('/expense-head-store', [ExpenseController::class, 'storeExpenseHead'])->name('user.expense.head.store');
-    Route::delete('/expense-head/{exp_head_id}', [ExpenseController::class, 'deleteExpenseHead'])->name('user.expense.head.delete');
-    Route::get('/expense/sales-details', [ExpenseController::class, 'salesDetails'])->name('user.expense.sales-details');
-    Route::get('/expense/purchase-details', [ExpenseController::class, 'purchaseDetails'])->name('user.expense.purchase-details');
-    Route::get('/expense/expense-details', [ExpenseController::class, 'expenseDetails'])->name('user.expense.expense-details');
-    Route::get('/expense/profit-details', [ExpenseController::class, 'profitDetails'])->name('user.expense.profit-details');
-    Route::get('/expense/cash-details', [ExpenseController::class, 'cashDetails'])->name('user.expense.cash-details');
 
     // User Cart (POS)
     Route::get('/cart', [App\Http\Controllers\UserCartController::class, 'index'])->name('user.cart.index');
@@ -168,12 +170,13 @@ Route::middleware(['auth', 'admin_guard'])->prefix('admin')->group(function () {
     // Admin Settings
     Route::get('/settings', [SettingController::class, 'index'])->name('admin.settings.index');
     Route::post('/settings', [SettingController::class, 'store'])->name('admin.settings.store');
-    Route::get('/load-branches', [SettingController::class, 'loadBranches'])->name('admin.load.branches');
     Route::get('/branch/list', [SettingController::class, 'branchList'])->name('admin.branch.list');
+    Route::get('/load-branches', [SettingController::class, 'loadBranches'])->name('adminload.branches');
     Route::post('/branch/store', [SettingController::class, 'branchStore'])->name('admin.branch.store');
     Route::post('/user/store', [SettingController::class, 'userStore'])->name('admin.user.store');
-    Route::delete('/admin/user/delete/{user}', [App\Http\Controllers\Admin\SettingController::class, 'deleteUser'])->name('admin.user.delete');
-    Route::delete('/admin/branch/delete/{branch}', [App\Http\Controllers\Admin\SettingController::class, 'deleteBranch'])->name('admin.branch.delete');
+    Route::delete('/admin/user/delete/{user}', [SettingController::class, 'deleteUser'])->name('admin.user.delete');
+    Route::delete('/admin/branch/delete/{branch}', [SettingController::class, 'deleteBranch'])->name('admin.branch.delete');
+    Route::get('/branches', [SettingController::class, 'loadBranches'])->name('admin.branches');
 
     // Admin Products
     Route::resource('products', ProductController::class)->names([
@@ -314,6 +317,12 @@ Route::middleware(['auth', 'admin_guard'])->prefix('admin')->group(function () {
     Route::get('/damage/details/{salesreturn_id}', [DamageController::class, 'damage.details']);
     Route::post('/damage/finalsave', [DamageController::class, 'finalSave']);
 
+    // Admin Expense Reports (move these above the resource route)
+    Route::get('/expense/sales-details', [ExpenseController::class, 'salesDetails'])->name('admin.expense.sales-details');
+    Route::get('/expense/purchase-details', [ExpenseController::class, 'purchaseDetails'])->name('admin.expense.purchase-details');
+    Route::get('/expense/expense-details', [ExpenseController::class, 'expenseDetails'])->name('admin.expense.expense-details');
+    Route::get('/expense/profit-details', [ExpenseController::class, 'profitDetails'])->name('admin.expense.profit-details');
+    Route::get('/expense/cash-details', [ExpenseController::class, 'cashDetails'])->name('admin.expense.cash-details');
     // Admin Expense
     Route::resource('expense', ExpenseController::class)->names([
         'index' => 'admin.expense.index',
@@ -327,17 +336,15 @@ Route::middleware(['auth', 'admin_guard'])->prefix('admin')->group(function () {
     Route::get('/expense-head-create', [ExpenseController::class, 'createExpenseHead'])->name('admin.expense.head.create');
     Route::post('/expense-head-store', [ExpenseController::class, 'storeExpenseHead'])->name('admin.expense.head.store');
     Route::delete('/expense-head/{exp_head_id}', [ExpenseController::class, 'deleteExpenseHead'])->name('admin.expense.head.delete');
-    Route::get('/expense/sales-details', [ExpenseController::class, 'salesDetails'])->name('admin.expense.sales-details');
-    Route::get('/expense/purchase-details', [ExpenseController::class, 'purchaseDetails'])->name('admin.expense.purchase-details');
-    Route::get('/expense/expense-details', [ExpenseController::class, 'expenseDetails'])->name('admin.expense.expense-details');
-    Route::get('/expense/profit-details', [ExpenseController::class, 'profitDetails'])->name('admin.expense.profit-details');
-    Route::get('/expense/cash-details', [ExpenseController::class, 'cashDetails'])->name('admin.expense.cash-details');
 
     // Translations route for React component
     Route::get('/locale/{type}', function ($type) {
         $translations = trans($type);
         return response()->json($translations);
     });
+
+    Route::get('admin/suppliers/{supplier}/pay', [App\Http\Controllers\SupplierController::class, 'showPayForm'])->name('admin.suppliers.pay');
+    Route::post('admin/suppliers/{supplier}/pay', [App\Http\Controllers\SupplierController::class, 'pay'])->name('admin.suppliers.pay.submit');
 });
 
 // Temporary test route for sales return

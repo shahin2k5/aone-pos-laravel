@@ -11,6 +11,16 @@
         <form action="{{ route('admin.products.store') }}" method="POST" enctype="multipart/form-data">
             @csrf
 
+            @if ($errors->any())
+                <div class="alert alert-danger">
+                    <ul class="mb-0">
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+
             <div class="form-group">
                 <label for="name">{{ __('product.Name') }}</label>
                 <input type="text" name="name" class="form-control @error('name') is-invalid @enderror" id="name"
@@ -80,6 +90,32 @@
                 @enderror
             </div>
 
+            {{-- Branch-wise Stock Table for Admins --}}
+            @if(isset($branches))
+            <div class="form-group">
+                <label>{{ __('product.Quantity') }} ({{ __('product.Branch_wise') }})</label>
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>{{ __('product.Branch') }}</th>
+                            <th>{{ __('product.Quantity') }}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($branches as $branch)
+                        <tr>
+                            <td>{{ $branch->branch_name }}</td>
+                            <td>
+                                <input type="number" name="branch_stock[{{ $branch->id }}]" class="form-control" min="0"
+                                    value="{{ old('branch_stock.' . $branch->id, 0) }}">
+                            </td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+            @else
+            {{-- Fallback if branch data not available --}}
             <div class="form-group">
                 <label for="quantity">{{ __('product.Quantity') }}</label>
                 <input type="text" name="quantity" class="form-control @error('quantity') is-invalid @enderror"
@@ -90,6 +126,7 @@
                 </span>
                 @enderror
             </div>
+            @endif
 
             <div class="form-group">
                 <label for="status">{{ __('product.Status') }}</label>

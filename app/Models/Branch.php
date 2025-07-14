@@ -28,4 +28,9 @@ class Branch extends Model
             $builder->where('company_id', $company_id);
         });
     }
+
+    public function productStocks()
+    {
+        return $this->hasMany(\App\Models\BranchProductStock::class);
+    }
 }

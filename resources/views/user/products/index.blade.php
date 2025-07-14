@@ -36,7 +36,7 @@
                     <td>{{$product->barcode}}</td>
                     <td>{{$product->purchase_price}}</td>
                     <td>{{$product->sell_price}}</td>
-                    <td>{{$product->quantity}}</td>
+                    <td>{{ optional($product->branchStocks->firstWhere('branch_id', auth()->user()->branch_id))->quantity ?? 0 }}</td>
                     <td>
                         <span class="right badge badge-{{ $product->status ? 'success' : 'danger' }}">{{$product->status ? __('common.Active') : __('common.Inactive') }}</span>
                     </td>

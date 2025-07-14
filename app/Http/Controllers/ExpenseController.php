@@ -236,7 +236,7 @@ class ExpenseController extends Controller
 
     public function show(DamageItem $damage)
     {
-        dd('show');
+        // Removed dd('show') debug statement
     }
 
     public function destroy(DamageItem $damage)
@@ -248,6 +248,7 @@ class ExpenseController extends Controller
     // Sales Details Page
     public function salesDetails(Request $request)
     {
+        dd('controller hit');
         if ($request->start_date && $request->end_date) {
             $startDate = $request->start_date . ' 00:00:00';
             $endDate = $request->end_date . ' 23:59:59';
@@ -271,7 +272,8 @@ class ExpenseController extends Controller
         $returnsTotal = Salesreturn::whereBetween('created_at', [$startDate, $endDate])
             ->sum('total_amount');
         $netSales = $totalSales - $returnsTotal;
-        return view('expense.sales-details', compact('sales', 'totalSales', 'returnsTotal', 'netSales', 'startDate', 'endDate'));
+        $viewPath = Auth::user()->role === 'admin' ? 'admin.expense.sales-details' : 'user.expense.sales-details';
+        return view($viewPath, compact('sales', 'totalSales', 'returnsTotal', 'netSales', 'startDate', 'endDate'));
     }
 
     // Purchase Details Page
@@ -290,7 +292,7 @@ class ExpenseController extends Controller
             ->paginate(15);
         $totalPurchase = Purchase::whereBetween('created_at', [$startDate, $endDate])
             ->sum('gr_total');
-        return view('expense.purchase-details', compact('purchases', 'totalPurchase', 'startDate', 'endDate'));
+        return view('admin.expense.purchase-details', compact('purchases', 'totalPurchase', 'startDate', 'endDate'));
     }
 
     // Expense Details Page
@@ -308,7 +310,8 @@ class ExpenseController extends Controller
             ->paginate(15);
         $totalExpenses = Expense::whereBetween('created_at', [$startDate, $endDate])
             ->sum('expense_amount');
-        return view('expense.expense-details', compact('expenses', 'totalExpenses', 'startDate', 'endDate'));
+        $viewPath = Auth::user()->role === 'admin' ? 'admin.expense.expense-details' : 'user.expense.expense-details';
+        return view($viewPath, compact('expenses', 'totalExpenses', 'startDate', 'endDate'));
     }
 
     // Profit Details Page
@@ -334,7 +337,7 @@ class ExpenseController extends Controller
         $damagesTotal = DamageItem::whereBetween('created_at', [$startDate, $endDate])
             ->sum(DB::raw('purchase_price * qnty'));
         $netProfit = $totalProfit - $returnsProfit - $purchaseReturnsProfit - $damagesTotal;
-        return view('expense.profit-details', compact('sales', 'totalProfit', 'returnsProfit', 'purchaseReturnsProfit', 'damagesTotal', 'netProfit', 'startDate', 'endDate'));
+        return view('admin.expense.profit-details', compact('sales', 'totalProfit', 'returnsProfit', 'purchaseReturnsProfit', 'damagesTotal', 'netProfit', 'startDate', 'endDate'));
     }
 
     // Cash Details Page
@@ -376,7 +379,7 @@ class ExpenseController extends Controller
             ->with(['purchase.supplier'])
             ->latest()
             ->paginate(15);
-        return view('expense.cash-details', compact(
+        return view('admin.expense.cash-details', compact(
             'totalSales',
             'totalPurchase',
             'totalExpenses',

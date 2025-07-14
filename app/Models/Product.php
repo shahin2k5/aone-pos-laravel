@@ -57,4 +57,9 @@ class Product extends Model
     {
         return $this->getImageUrl();
     }
+
+    public function branchStocks()
+    {
+        return $this->hasMany(\App\Models\BranchProductStock::class);
+    }
 }

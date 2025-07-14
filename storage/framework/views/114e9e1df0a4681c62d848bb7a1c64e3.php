@@ -34,7 +34,7 @@
                     <td><?php echo e($product->barcode); ?></td>
                     <td><?php echo e($product->purchase_price); ?></td>
                     <td><?php echo e($product->sell_price); ?></td>
-                    <td><?php echo e($product->quantity); ?></td>
+                    <td><?php echo e(optional($product->branchStocks->firstWhere('branch_id', auth()->user()->branch_id))->quantity ?? 0); ?></td>
                     <td>
                         <span class="right badge badge-<?php echo e($product->status ? 'success' : 'danger'); ?>"><?php echo e($product->status ? __('common.Active') : __('common.Inactive')); ?></span>
                     </td>

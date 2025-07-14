@@ -12,6 +12,7 @@ use App\Models\Sale;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use App\Models\BranchProductStock;
 
 class SalesreturnController extends Controller
 {
@@ -140,10 +141,13 @@ class SalesreturnController extends Controller
                         'company_id' => Auth::user()->company_id,
                     ];
                     SalesreturnItems::create($data);
-
-                    $product = Product::where('id', $item->product_id)->first();
-                    $product->quantity = $product->quantity + $item->qnty;
-                    $product->save();
+                    // Update branch stock
+                    $stock = BranchProductStock::firstOrCreate([
+                        'product_id' => $item->product_id,
+                        'branch_id' => Auth::user()->branch_id,
+                    ]);
+                    $stock->quantity += $item->qnty;
+                    $stock->save();
                 }
 
                 if ($request->customer_id) {

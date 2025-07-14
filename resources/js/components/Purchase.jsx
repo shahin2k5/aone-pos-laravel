@@ -29,7 +29,11 @@ class PurchaseCart extends Component {
             selCustomerPhone:'',
             selCustomerBalance:'',
             printUrl:'',
-            supplier_invoice_no:''
+            supplier_invoice_no:'',
+            branches: [],
+            branch_id: '',
+            branch_quantities: {}, // { product_id: { branch_id: quantity, ... }, ... }
+            error: '',
         };
 
         this.loadCart = this.loadCart.bind(this);
@@ -45,6 +49,8 @@ class PurchaseCart extends Component {
         this.setSupplierInvoiceNo = this.setSupplierInvoiceNo.bind(this);
         this.handleClickSubmit = this.handleClickSubmit.bind(this);
         this.loadTranslations = this.loadTranslations.bind(this);
+        this.setBranchId = this.setBranchId.bind(this);
+        this.setBranchQuantity = this.setBranchQuantity.bind(this);
     }
 
     componentDidMount() {
@@ -53,6 +59,7 @@ class PurchaseCart extends Component {
         this.loadCart();
         this.loadProducts();
         this.loadsuppliers();
+        this.loadBranches();
 
     }
 
@@ -81,6 +88,19 @@ class PurchaseCart extends Component {
         axios.get(`/admin/products${query}`).then((res) => {
             const products = res.data.data;
             this.setState({ products });
+        });
+    }
+
+    loadBranches() {
+        axios.get(`/admin/branches`).then((res) => {
+            console.log('API /admin/branches response:', res.data);
+            const branches = res.data;
+            this.setState({ branches, error: '' }, () => {
+                console.log('Branches in state:', this.state.branches);
+            });
+        }).catch((error) => {
+            console.error('Error loading branches:', error);
+            this.setState({ error: 'Failed to load branches: ' + (error.response?.status || error.message) });
         });
     }
 
@@ -136,7 +156,7 @@ class PurchaseCart extends Component {
         const { barcode, supplier_id, supplier_invoice_no } = this.state;
         if (!!barcode && !!supplier_id) {
             axios
-                .post("/admin/purchase-cart", { barcode, supplier_id,supplier_invoice_no })
+                .post("/admin/purchase-cart", { barcode, supplier_id,supplier_invoice_no, branch_id: this.state.branch_id })
                 .then((res) => {
                     this.loadCart();
                     this.setState({ barcode: "" });
@@ -325,14 +345,18 @@ class PurchaseCart extends Component {
 
 
 
+            const branch_quantities = this.state.branch_quantities[product.id] || {};
             axios
-                .post("/admin/purchase-cart", { barcode, supplier_id, supplier_invoice_no })
+                .post("/admin/purchase-cart", { barcode, supplier_id, supplier_invoice_no, branch_quantities })
                 .then((res) => {
-                    // this.loadCart();
+                    this.loadCart(); // Ensure cart is reloaded after adding
                     console.log(res);
+                    this.setState({ error: '' });
                 })
                 .catch((err) => {
-                    Swal.fire("Error!", err.response.data.message, "error");
+                    console.error('Error adding product to cart:', err);
+                    this.setState({ error: 'Failed to add product to cart: ' + (err.response?.data?.message || err.message) });
+                    Swal.fire("Error!", err.response?.data?.message || err.message, "error");
                 });
         }
 
@@ -382,6 +406,20 @@ class PurchaseCart extends Component {
         }
 
 
+    }
+
+    setBranchId(event) {
+        const branch_id = event.target.value;
+        this.setState({ branch_id });
+    }
+
+    setBranchQuantity(product_id, branch_id, value) {
+        this.setState((prevState) => {
+            const branch_quantities = { ...prevState.branch_quantities };
+            if (!branch_quantities[product_id]) branch_quantities[product_id] = {};
+            branch_quantities[product_id][branch_id] = Number(value);
+            return { branch_quantities };
+        });
     }
 
     printInvoice = () => {
@@ -486,6 +524,7 @@ class PurchaseCart extends Component {
         // Remove suppliers from destructuring
         const { cart, products, barcode, translations } = this.state;
         const suppliers = Array.isArray(this.state.suppliers) ? this.state.suppliers : [];
+        console.log('Rendering branches:', this.state.branches);
         return (
             <div className="row">
 
@@ -527,83 +566,77 @@ class PurchaseCart extends Component {
                     </div>
                     <div className="user-cart mt-1">
                         <div className="card">
-                            <table className="table table-striped">
-                                <thead>
-                                    <tr>
-                                        <th>{translations["product_name"]}</th>
-                                        <th>{translations["quantity"]}</th>
-                                        <th className="text-right">
-                                            Purchase Rate
-                                        </th>
-                                         <th className="text-right">
-                                            Total
-                                        </th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {cart.map((c) => (
-                                        <tr key={c.id}>
-                                            <td>{c.name}</td>
-                                            <td>
-                                                <input
-                                                    type="text"
-                                                    className="form-control form-control-sm qty product-input"
-                                                    value={c.pivot.qnty}
-                                                    onChange={(event) =>
-                                                        this.handleChangeQty(
-                                                            c.id,
-                                                            event.target.value
-                                                        )
-                                                    }
-
-                                                    id={'prodinput-'+c.id}
-                                                />
-                                                <button
-                                                    className="btn btn-danger btn-sm"
-                                                    onClick={() =>
-                                                        this.handleClickDelete(
-                                                            c.id
-                                                        )
-                                                    }
-                                                >
-                                                    <i className="fas fa-trash"></i>
-                                                </button>
-                                            </td>
-                                            <td width={'120px'}>
-                                                <div class="input-group input-group-sm mb-1">
-                                                    <div class="input-group-prepend">
-                                                        <span class="input-group-text" id="basic-addon1">{window.APP.currency_symbol}{" "}</span>
-                                                    </div>
-                                                    <input type="text" class="form-control input-sm"
-                                                        placeholder="Purchase Price"
-                                                        onChange={(event) =>
-                                                        this.handlePurchasePrice(
-                                                                c.id,
-                                                                event.target.value
-                                                            )
-                                                        }
-
-                                                        value= {(  c.purchase_price )}/>
-
-                                                </div>
-
-                                            </td>
-
-                                            <td className="text-right">
-
-                                                 {window.APP.currency_symbol}{" "}
-
-                                                     {(  c.purchase_price * c.pivot.qnty ).toFixed(2)}
-
-
-                                            </td>
-
-
-
+                            <div style={{overflowX: 'auto'}}>
+                                <table className="table table-striped" style={{tableLayout: 'fixed', width: '100%'}}>
+                                    <thead>
+                                        <tr>
+                                            <th style={{width: '25%'}}>{translations["product_name"]}</th>
+                                            <th style={{width: '20%'}}>Branch</th>
+                                            <th style={{width: '15%'}}>{translations["quantity"]}</th>
+                                            <th className="text-right" style={{width: '20%'}}>Purchase Rate</th>
+                                            <th className="text-right" style={{width: '20%'}}>Total</th>
                                         </tr>
-                                    ))}
-                                </tbody>
-                            </table>
+                                    </thead>
+                                    <tbody>
+                                        {cart.map((c, idx) => {
+                                            // Ensure both IDs are strings for comparison
+                                            const branch = this.state.branches.find(b => String(b.id) === String(c.pivot.branch_id));
+                                            if (!branch) return null; // Only render if branch is found
+                                            return (
+                                                <tr key={c.id + '-' + c.pivot.branch_id}>
+                                                    <td>{c.name}</td>
+                                                    <td>{branch.branch_name}</td>
+                                                    <td>
+                                                        <input
+                                                            type="text"
+                                                            className="form-control form-control-sm qty product-input"
+                                                            value={c.pivot.qnty}
+                                                            onChange={(event) =>
+                                                                this.handleChangeQty(
+                                                                    c.id,
+                                                                    event.target.value
+                                                                )
+                                                            }
+                                                            id={'prodinput-'+c.id+'-'+c.pivot.branch_id}
+                                                        />
+                                                        <button
+                                                            className="btn btn-danger btn-sm"
+                                                            onClick={() =>
+                                                                this.handleClickDelete(
+                                                                    c.id
+                                                                )
+                                                            }
+                                                        >
+                                                            <i className="fas fa-trash"></i>
+                                                        </button>
+                                                    </td>
+                                                    <td width={'120px'}>
+                                                        <div className="input-group input-group-sm mb-1">
+                                                            <div className="input-group-prepend">
+                                                                <span className="input-group-text" id="basic-addon1">{window.APP.currency_symbol}{" "}</span>
+                                                            </div>
+                                                            <input type="text" className="form-control input-sm"
+                                                                placeholder="Purchase Price"
+                                                                onChange={(event) =>
+                                                                    this.handlePurchasePrice(
+                                                                        c.id,
+                                                                        event.target.value
+                                                                    )
+                                                                }
+                                                                value={c.purchase_price}
+                                                            />
+                                                        </div>
+                                                    </td>
+                                                    <td className="text-right">
+                                                        {window.APP.currency_symbol}{" "}
+                                                        {(c.purchase_price * c.pivot.qnty).toFixed(2)}
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })}
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
 
@@ -717,30 +750,30 @@ class PurchaseCart extends Component {
 
                     <div className="order-product">
                         {products.map((p) => (
-                            <div
-                                onClick={() => this.addProductToCart(p.barcode)}
-                                key={p.id}
-                                className="item product-div"
-                                id={'product-'+p.barcode}
-                                style={{ width:'100px', overflow:'hidden',height:'140px' }}
-                                title={p.name}
-                            >
-                                <img src={ p.image_url }
-                                     alt=""
-                                     onError={e => { e.target.onerror = null; e.target.src = '/images/img-placeholder.jpg'; }}
-                                />
-                                <h5
-                                    style={
-                                        window.APP.warning_quantity > p.quantity
-                                            ? { color: "red" }
-                                            : {}
-                                    }
-                                >
-                                    {p.name}({p.quantity})
-                                </h5>
+                            <div key={p.id} className="item product-div" id={'product-'+p.barcode}>
+                                <img src={p.image_url} alt="" onError={e => { e.target.onerror = null; e.target.src = '/images/img-placeholder.jpg'; }} />
+                                <h5>{p.name}({p.quantity})</h5>
+                                <div>
+                                    {this.state.branches.map((branch) => (
+                                        <div key={branch.id} style={{marginBottom: '4px'}}>
+                                            <label>{branch.branch_name}</label>
+                                            <input
+                                                type="number"
+                                                min="0"
+                                                value={this.state.branch_quantities[p.id]?.[branch.id] || ''}
+                                                onChange={e => this.setBranchQuantity(p.id, branch.id, e.target.value)}
+                                                style={{width: '60px', marginLeft: '8px'}}
+                                            />
+                                        </div>
+                                    ))}
+                                </div>
+                                <button onClick={() => this.addProductToCart(p.barcode)} className="btn btn-primary btn-sm mt-2">Add to Cart</button>
                             </div>
                         ))}
                     </div>
+                    {this.state.error && (
+                        <div className="alert alert-danger">{this.state.error}</div>
+                    )}
                 </div>
 
 
