@@ -16,6 +16,7 @@ use App\Models\Purchase;
 use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use App\Models\BranchProductStock;
 
 class PurchasereturnController extends Controller
 {
@@ -167,10 +168,13 @@ class PurchasereturnController extends Controller
                         'user_id' => $request->user()->id,
                     ];
                     PurchaseReturnItems::create($data);
-
-                    $product = Product::where('id', $item->product_id)->first();
-                    $product->quantity = $product->quantity - $item->qnty;
-                    $product->save();
+                    // Update branch stock
+                    $stock = BranchProductStock::firstOrCreate([
+                        'product_id' => $item->product_id,
+                        'branch_id' => $item->branch_id,
+                    ]);
+                    $stock->quantity -= $item->qnty;
+                    $stock->save();
                 }
 
 

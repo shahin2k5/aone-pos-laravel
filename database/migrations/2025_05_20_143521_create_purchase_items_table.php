@@ -17,7 +17,8 @@ return new class extends Migration
             $table->integer('quantity')->default(1);
             $table->foreignId('purchase_id');
             $table->foreignId('product_id');
-      
+            $table->foreignId('branch_id')->constrained('branches')->onDelete('cascade');
+
 
             $table->foreign('purchase_id')->references('id')->on('purchases')->onDelete('cascade');
             $table->foreign('product_id')->references('id')->on('products')->onDelete('cascade');

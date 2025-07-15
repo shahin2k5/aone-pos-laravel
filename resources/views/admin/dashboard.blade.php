@@ -14,7 +14,7 @@
             <div class="icon">
                <i class="ion ion-pie-graph"></i>
             </div>
-            <a href="{{route('admin.sales.index')}}" class="small-box-footer">{{ __('common.More_info') }} <i class="fas fa-arrow-circle-right"></i></a>
+            <a href="{{ route('admin.expense.sales-details') }}" class="small-box-footer">{{ __('common.More_info') }} <i class="fas fa-arrow-circle-right"></i></a>
          </div>
       </div>
 
@@ -58,7 +58,7 @@
             <div class="icon">
                <i class="fa fa-exclamation-circle"></i>
             </div>
-            <a href="{{route('admin.purchases.index')}}" class="small-box-footer">More info <i class="fas fa-arrow-circle-right"></i></a>
+            <a href="{{ route('admin.expense.purchase-details') }}" class="small-box-footer">{{ __('common.More_info') }} <i class="fas fa-arrow-circle-right"></i></a>
          </div>
       </div>
       <!-- ./col -->

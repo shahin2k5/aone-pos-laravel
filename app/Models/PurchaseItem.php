@@ -10,27 +10,22 @@ class PurchaseItem extends Model
     protected $fillable = [
         'purchase_id',
         'product_id',
-        'purchase_price'
+        'purchase_price',
+        'quantity',
+        'branch_id',
     ];
 
 
-    protected static function booted() {
-        static::addGlobalScope('branch', function (Builder $builder) {
-              $user = auth()->user();
-            $company_id = $user->company_id;
-            $branch_id = $user->branch_id;
-            $role = $user->role;
-            if($role=="admin"){
-                $builder->where('company_id', $company_id);
-            }else{
-                $builder->where('company_id', $company_id)->where('branch_id', $branch_id);
-            }
-        });
-    }
+    // Removed global scope for company_id and branch_id as these columns do not exist in purchase_items
 
 
     public function product()
     {
-        return $this->belongsTo(Product::class,'product_id');
+        return $this->belongsTo(Product::class, 'product_id');
+    }
+
+    public function branch()
+    {
+        return $this->belongsTo(Branch::class, 'branch_id');
     }
 }

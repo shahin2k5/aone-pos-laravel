@@ -7,6 +7,7 @@ use App\Models\Supplier;
 use App\Models\Purchase;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Models\BranchProductStock;
 
 class PurchaseCartController extends Controller
 {
@@ -54,9 +55,13 @@ class PurchaseCartController extends Controller
                 'qnty' => $item->pivot->quantity,
                 'product_id' => $item->id,
             ]);
-            $item->purchase_price = $item->pivot->purchase_price;
-            $item->quantity = $item->quantity + $item->pivot->quantity;
-            $item->save();
+            // Update branch stock
+            $stock = BranchProductStock::firstOrCreate([
+                'product_id' => $item->id,
+                'branch_id' => $item->pivot->branch_id,
+            ]);
+            $stock->quantity += $item->pivot->quantity;
+            $stock->save();
         }
         $request->user()->purchaseCart()->detach();
         $purchase->supplierPayments()->create([
@@ -100,14 +105,31 @@ class PurchaseCartController extends Controller
 
         $user = $request->user();
         $company_id = $user->company_id;
-        $branch_id = $user->role == 'admin' ? $request->branch_id : $user->branch_id;
-
         $product = Product::where('barcode', $barcode)->first();
-        $cart = $request->user()->purchaseCart()->where('barcode', $barcode)->first();
 
+        // Multi-branch support
+        if ($request->has('branch_quantities') && is_array($request->branch_quantities)) {
+            foreach ($request->branch_quantities as $branch_id => $quantity) {
+                if ((int)$quantity > 0) {
+                    $user->purchaseCart()->attach($product->id, [
+                        'qnty' => (int)$quantity,
+                        'supplier_id' => $request->supplier_id,
+                        'supplier_invoice_id' => $request->supplier_invoice_no,
+                        'purchase_price' => $product->purchase_price,
+                        'sell_price' => $product->sell_price,
+                        'user_id' => $user->id,
+                        'branch_id' => $branch_id,
+                        'company_id' => $company_id,
+                    ]);
+                }
+            }
+            return response('cart added', 204);
+        }
+
+        // Fallback: single branch (legacy)
+        $branch_id = $user->role == 'admin' ? ($request->branch_id ?? $user->branch_id) : $user->branch_id;
+        $cart = $request->user()->purchaseCart()->where('barcode', $barcode)->first();
         if ($cart) {
-            // check product quantity
-            // update only quantity
             $cart->pivot->qnty = $cart->pivot->qnty + 1;
             $cart->pivot->save();
         } else {
@@ -122,7 +144,6 @@ class PurchaseCartController extends Controller
                 'company_id' => $company_id,
             ]);
         }
-
         return response('cart added', 204);
     }
 

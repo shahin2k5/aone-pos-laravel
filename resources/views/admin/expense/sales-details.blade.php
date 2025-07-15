@@ -93,7 +93,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @forelse($orders as $order)
+                        @forelse($sales as $order)
                         <tr>
                             <td>#{{ $order->id }}</td>
                             <td>{{ $order->created_at->format('M d, Y H:i') }}</td>
@@ -101,7 +101,7 @@
                             <td>
                                 @foreach($order->items as $item)
                                     <div class="small">
-                                        {{ $item->product->name }} x {{ $item->quantity }} = {{ config('settings.currency_symbol') }} {{ number_format($item->sell_price, 2) }}
+                                        {{ $item->product ? $item->product->name : 'Product Deleted' }} x {{ $item->quantity }} = {{ config('settings.currency_symbol') }} {{ number_format($item->sell_price, 2) }}
                                     </div>
                                 @endforeach
                             </td>
@@ -125,7 +125,7 @@
 
             <!-- Pagination -->
             <div class="d-flex justify-content-center mt-3">
-                {{ $orders->appends(request()->query())->links() }}
+                {{ $sales->appends(request()->query())->links() }}
             </div>
         </div>
     </div>

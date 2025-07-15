@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use App\Models\BranchProductStock;
 
 class PurchaseController extends Controller
 {
@@ -45,7 +46,7 @@ class PurchaseController extends Controller
 
     public function purchaseDetails($purchase_id)
     {
-        $purchase = Purchase::with(['items.product', 'supplier'])->find($purchase_id);
+        $purchase = Purchase::with(['items.product', 'items.branch', 'supplier'])->find($purchase_id);
         $total = 0;
         return view('admin.purchase.details', compact('purchase', 'total'));
     }
@@ -67,6 +68,9 @@ class PurchaseController extends Controller
 
         $cart = $request->user()->purchaseCart()->get();
 
+        // Get supplier_id from the first cart item
+        $supplier_id = isset($cart[0]) ? ($cart[0]->pivot->supplier_id ?? $request->supplier_id) : $request->supplier_id;
+
         if (isset($cart[0]->pivot)) {
 
             $invoice_no = $cart[0]->pivot ? $cart[0]->pivot->supplier_invoice_id : '';
@@ -74,7 +78,7 @@ class PurchaseController extends Controller
 
         $user = Auth::user();
         $purchase = Purchase::create([
-            'supplier_id' => $request->supplier_id,
+            'supplier_id' => $supplier_id,
             'invoice_no' => $invoice_no,
             'paid_amount' => $request->paid_amount,
             'user_id' => $user->id,
@@ -90,12 +94,18 @@ class PurchaseController extends Controller
         foreach ($cart as $item) {
             $product = Product::where('id', $item->product_id)->first();
             $purchase->items()->create([
-                'purchase_price' => $item->purchase_price ? $item->purchase_price : $item->pivot->purchase_price,
+                'purchase_price' => $item->pivot->purchase_price,
                 'quantity' => $item->pivot->qnty,
                 'product_id' => $item->id,
+                'branch_id' => $item->pivot->branch_id, // Save branch_id
             ]);
-            $item->quantity = $item->quantity + $item->pivot->qnty;
-            $item->save();
+            // Update branch stock
+            $stock = BranchProductStock::firstOrCreate([
+                'product_id' => $item->id,
+                'branch_id' => $item->pivot->branch_id,
+            ]);
+            $stock->quantity += $item->pivot->qnty;
+            $stock->save();
             $sub_total += $item->pivot->qnty * $item->pivot->purchase_price;
         }
 
@@ -111,9 +121,13 @@ class PurchaseController extends Controller
 
         $request->user()->purchaseCart()->detach();
 
-        $supplier = Supplier::where('id', $request->supplier_id)->first();
-        $supplier->balance = ($supplier->balance + $purchase->gr_total) - $paid_amount;
-        $supplier->save();
+        // Update supplier balance without global scope
+        $supplier = \App\Models\Supplier::withoutGlobalScopes()->find($supplier_id);
+        if ($supplier) {
+            // Decrease balance by unpaid amount (debt increases)
+            $supplier->balance -= ($purchase->gr_total - $paid_amount);
+            $supplier->save();
+        }
         if ($request->paid_amount > 0) {
             $purchase->supplierPayments()->create([
                 'amount' => $request->paid_amount,

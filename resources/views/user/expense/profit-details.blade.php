@@ -115,7 +115,7 @@
                             <td>
                                 @foreach($order->items as $item)
                                     <div class="small">
-                                        {{ $item->product->name }} x {{ $item->quantity }}
+                                        {{ $item->product->name ?? 'N/A' }} x {{ $item->quantity }}
                                     </div>
                                 @endforeach
                             </td>

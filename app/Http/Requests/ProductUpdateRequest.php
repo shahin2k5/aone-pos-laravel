@@ -24,15 +24,23 @@ class ProductUpdateRequest extends FormRequest
     public function rules()
     {
         $product_id = $this->route('product')->id;
-        return [
+        $rules = [
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'image' => 'nullable|image',
             'barcode' => 'nullable|string|max:50|unique:products,barcode,' . $product_id,
             'product_price' => 'nullable|regex:/^\d+(\.\d{1,2})?$/',
             'sell_price' => 'required|regex:/^\d+(\.\d{1,2})?$/',
-            'quantity' => 'required|integer',
             'status' => 'required|boolean',
         ];
+
+        if ($this->user() && $this->user()->role === 'admin') {
+            $rules['branch_stock'] = 'required|array|min:1';
+            $rules['branch_stock.*'] = 'required|integer|min:0';
+        } else {
+            $rules['quantity'] = 'required|integer|min:0';
+        }
+
+        return $rules;
     }
 }

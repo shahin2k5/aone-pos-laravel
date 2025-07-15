@@ -3,6 +3,11 @@
 /public/hot
 /public/storage
 /storage/*.key
+/storage/*.txt
+/storage/*.log
+/storage/app/*
+/storage/framework/*
+/storage/logs/*
 /vendor
 .env
 .env.backup
@@ -15,3 +20,4 @@ npm-debug.log
 yarn-error.log
 /.idea
 /.vscode
+/storage/framework/

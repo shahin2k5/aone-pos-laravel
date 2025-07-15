@@ -36,7 +36,19 @@
                     <td>{{$product->barcode}}</td>
                     <td>{{$product->purchase_price}}</td>
                     <td>{{$product->sell_price}}</td>
-                    <td>{{$product->quantity}}</td>
+                    <td>
+                        <table class="table table-sm mb-0">
+                            <thead><tr><th>Branch</th><th>Stock</th></tr></thead>
+                            <tbody>
+                            @foreach ($product->branchStocks as $stock)
+                                <tr>
+                                    <td>{{ optional($stock->branch)->branch_name ?? $stock->branch_id }}</td>
+                                    <td>{{ $stock->quantity }}</td>
+                                </tr>
+                            @endforeach
+                            </tbody>
+                        </table>
+                    </td>
                     <td>
                         <span class="right badge badge-{{ $product->status ? 'success' : 'danger' }}">{{$product->status ? __('common.Active') : __('common.Inactive') }}</span>
                     </td>

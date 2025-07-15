@@ -7,6 +7,7 @@ use App\Models\Customer;
 use App\Models\Branch;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Models\BranchProductStock;
 
 class UserCartController extends Controller
 {
@@ -75,15 +76,30 @@ class UserCartController extends Controller
             ->first();
 
         if ($cart) {
-            // check product quantity
-            if ($product->quantity <= $cart->pivot->quantity) {
+            // check branch stock quantity
+            $stock = BranchProductStock::where('product_id', $product->id)
+                ->where('branch_id', $branch_id)
+                ->first();
+            if ($stock && $stock->quantity <= $cart->pivot->quantity) {
                 return response([
-                    'message' => __('cart.available', ['quantity' => $product->quantity]),
+                    'message' => __('cart.available', ['quantity' => $stock->quantity]),
                 ], 400);
             }
             // update only quantity
             $cart->pivot->quantity = $cart->pivot->quantity + 1;
             $cart->pivot->save();
+            if (!$stock || $stock->quantity < 1) {
+                return response([
+                    'message' => __('cart.outstock'),
+                ], 400);
+            }
+            $user->cart()->attach($product->id, [
+                'quantity' => 1,
+                'customer_id' => $customer_id,
+                'branch_id' => $branch_id,
+                'company_id' => $company_id,
+                'user_id' => $user_id,
+            ]);
         } else {
             if ($product->quantity < 1) {
                 return response([
@@ -133,10 +149,13 @@ class UserCartController extends Controller
             ->first();
 
         if ($cart) {
-            // check product quantity
-            if ($product->quantity < $request->quantity) {
+            // check branch stock quantity
+            $stock = BranchProductStock::where('product_id', $product->id)
+                ->where('branch_id', $branch_id)
+                ->first();
+            if ($stock && $stock->quantity < $request->quantity) {
                 return response([
-                    'message' => __('cart.available', ['quantity' => $product->quantity]),
+                    'message' => __('cart.available', ['quantity' => $stock->quantity]),
                 ], 400);
             }
             $cart->pivot->quantity = $request->quantity;

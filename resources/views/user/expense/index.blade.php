@@ -58,7 +58,7 @@
                             </a>
                         </div>
                         <div class="report-card mb-3">
-                            <a href="{{ route('user.damage.index') }}" class="text-decoration-none">
+                            <a href="{{ route('user.expense.damage-details') }}" class="text-decoration-none">
                                 <div class="card shadow-sm border-0 text-center h-100">
                                     <div class="card-body d-flex flex-column justify-content-center" style="min-height: 150px;">
                                         <div class="mb-2" style="font-size:2rem; color:#343a40;"><i class="fa fa-exclamation-triangle"></i></div>

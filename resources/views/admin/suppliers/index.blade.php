@@ -21,6 +21,7 @@
                     <th>{{ __('Email') }}</th>
                     <th>{{ __('Phone') }}</th>
                     <th>{{ __('Address') }}</th>
+                    <th>{{ __('Balance') }}</th>
                     <th>{{ __('Created At') }}</th>
                     <th>{{ __('Actions') }}</th>
                 </tr>
@@ -37,9 +38,11 @@
                     <td>{{$supplier->email}}</td>
                     <td>{{$supplier->phone}}</td>
                     <td>{{$supplier->address}}</td>
+                    <td>{{ config('settings.currency_symbol') }} {{ number_format($supplier->balance ?? 0, 2) }}</td>
                     <td>{{$supplier->created_at}}</td>
                     <td>
                         <a href="{{ route('admin.suppliers.edit', $supplier) }}" class="btn btn-primary"><i class="fas fa-edit"></i></a>
+                        <a href="{{ route('admin.suppliers.pay', $supplier) }}" class="btn btn-success">Pay</a>
                         <button class="btn btn-danger btn-delete" data-url="{{route('admin.suppliers.destroy', $supplier)}}"><i class="fas fa-trash"></i></button>
                     </td>
                 </tr>

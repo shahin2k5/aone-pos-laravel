@@ -103,4 +103,21 @@ class SupplierController extends Controller
         $routeName = Auth::user()->role === 'admin' ? 'admin.suppliers.index' : 'user.suppliers.index';
         return redirect()->route($routeName)->with('success', 'Supplier deleted successfully!');
     }
+
+    public function showPayForm(Supplier $supplier)
+    {
+        $viewPath = Auth::user()->role === 'admin' ? 'admin.suppliers.pay' : 'user.suppliers.pay';
+        return view($viewPath, compact('supplier'));
+    }
+
+    public function pay(Request $request, Supplier $supplier)
+    {
+        $request->validate(['amount' => 'required|numeric|min:1']);
+        // Paying a supplier increases the balance (debt decreases)
+        $supplier->balance = $supplier->balance + $request->amount;
+        $supplier->save();
+        // Optionally, log the payment in SupplierPayment model
+        $routeName = Auth::user()->role === 'admin' ? 'admin.suppliers.index' : 'user.suppliers.index';
+        return redirect()->route($routeName)->with('success', 'Payment successful!');
+    }
 }

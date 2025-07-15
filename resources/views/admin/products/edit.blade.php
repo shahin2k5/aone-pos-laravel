@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+@extends('admin.layouts.admin')
 
 @section('title', __('product.Edit_Product'))
 @section('content-header', __('product.Edit_Product'))
@@ -12,6 +12,16 @@
             @csrf
             @method('PUT')
 
+            @if ($errors->any())
+                <div class="alert alert-danger">
+                    <ul class="mb-0">
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+
             <div class="form-group">
                 <label for="name">{{ __('product.Name') }}</label>
                 <input type="text" name="name" class="form-control @error('name') is-invalid @enderror" id="name"
@@ -22,7 +32,6 @@
                 </span>
                 @enderror
             </div>
-
 
             <div class="form-group">
                 <label for="description">{{ __('product.Description') }}</label>
@@ -60,10 +69,10 @@
                 @enderror
             </div>
 
-             <div class="form-group">
-                <label for="price">{{ __('Purchase Price') }}</label>
+            <div class="form-group">
+                <label for="purchase_price">{{ __('Purchase Price') }}</label>
                 <input type="text" name="purchase_price" class="form-control @error('purchase_price') is-invalid @enderror" id="purchase_price"
-                    placeholder="{{ __('product.Price') }}" value="{{ old('price') }}">
+                    placeholder="{{ __('product.Price') }}" value="{{ old('purchase_price', $product->purchase_price) }}">
                 @error('purchase_price')
                 <span class="invalid-feedback" role="alert">
                     <strong>{{ $message }}</strong>
@@ -82,22 +91,49 @@
                 @enderror
             </div>
 
+            {{-- Branch-wise Stock Table for Admins --}}
+            @if(isset($branches) && isset($branchStocks))
+            <div class="form-group">
+                <label>{{ __('product.Quantity') }} ({{ __('product.Branch_wise') }})</label>
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>{{ __('product.Branch') }}</th>
+                            <th>{{ __('product.Quantity') }}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($branches as $branch)
+                        <tr>
+                            <td>{{ $branch->branch_name }}</td>
+                            <td>
+                                <input type="number" name="branch_stock[{{ $branch->id }}]" class="form-control" min="0"
+                                    value="{{ old('branch_stock.' . $branch->id, $branchStocks[$branch->id]->quantity ?? 0) }}">
+                            </td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+            @else
+            {{-- Fallback for non-admins or if branch data not available --}}
             <div class="form-group">
                 <label for="quantity">{{ __('product.Quantity') }}</label>
                 <input type="text" name="quantity" class="form-control @error('quantity') is-invalid @enderror"
-                    id="quantity" placeholder="{{ __('product.Quantity') }}" value="{{ old('quantity', $product->quantity) }}">
+                    id="quantity" placeholder="{{ __('product.Quantity') }}" value="{{ old('quantity', optional($product->branchStocks->firstWhere('branch_id', auth()->user()->branch_id))->quantity ?? 0) }}">
                 @error('quantity')
                 <span class="invalid-feedback" role="alert">
                     <strong>{{ $message }}</strong>
                 </span>
                 @enderror
             </div>
+            @endif
 
             <div class="form-group">
                 <label for="status">{{ __('product.Status') }}</label>
                 <select name="status" class="form-control @error('status') is-invalid @enderror" id="status">
-                    <option value="1" {{ old('status', $product->status) === 1 ? 'selected' : ''}}>{{ __('common.Active') }}</option>
-                    <option value="0" {{ old('status', $product->status) === 0 ? 'selected' : ''}}>{{ __('common.Inactive') }}</option>
+                    <option value="1" {{ old('status', $product->status) == 1 ? 'selected' : ''}}>{{ __('common.Active') }}</option>
+                    <option value="0" {{ old('status', $product->status) == 0 ? 'selected' : ''}}>{{ __('common.Inactive') }}</option>
                 </select>
                 @error('status')
                 <span class="invalid-feedback" role="alert">

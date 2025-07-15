@@ -10,6 +10,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
+use App\Models\BranchProductStock;
+use App\Models\Branch;
 
 class ProductController extends Controller
 {
@@ -54,7 +56,12 @@ class ProductController extends Controller
      */
     public function create()
     {
-        $viewPath = Auth::user()->role === 'admin' ? 'admin.products.create' : 'user.products.create';
+        $user = Auth::user();
+        $viewPath = $user->role === 'admin' ? 'admin.products.create' : 'user.products.create';
+        if ($user->role === 'admin') {
+            $branches = \App\Models\Branch::all();
+            return view($viewPath, compact('branches'));
+        }
         return view($viewPath);
     }
 
@@ -71,7 +78,25 @@ class ProductController extends Controller
         $data['branch_id'] = Auth::user()->branch_id;
         $data['user_id'] = Auth::id();
         $product = Product::create($data);
-        $routeName = Auth::user()->role === 'admin' ? 'admin.products.index' : 'user.products.index';
+        $user = Auth::user();
+        if ($user->role === 'admin' && $request->has('branch_stock')) {
+            foreach ($request->input('branch_stock') as $branch_id => $quantity) {
+                \App\Models\BranchProductStock::create([
+                    'product_id' => $product->id,
+                    'branch_id' => $branch_id,
+                    'quantity' => $quantity,
+                ]);
+            }
+        } else {
+            // User: only their branch
+            $initialQuantity = $data['quantity'] ?? 0;
+            \App\Models\BranchProductStock::create([
+                'product_id' => $product->id,
+                'branch_id' => $data['branch_id'],
+                'quantity' => $initialQuantity,
+            ]);
+        }
+        $routeName = $user->role === 'admin' ? 'admin.products.index' : 'user.products.index';
         return redirect()->route($routeName)->with('success', 'Product saved successfully!');
     }
 
@@ -95,7 +120,15 @@ class ProductController extends Controller
      */
     public function edit(Product $product)
     {
-        $viewPath = Auth::user()->role === 'admin' ? 'admin.products.edit' : 'user.products.edit';
+        $user = Auth::user();
+        $viewPath = $user->role === 'admin' ? 'admin.products.edit' : 'user.products.edit';
+        if ($user->role === 'admin') {
+            // Get all branches for the company
+            $branches = Branch::all();
+            // Get all branch stocks for this product, keyed by branch_id
+            $branchStocks = $product->branchStocks()->get()->keyBy('branch_id');
+            return view($viewPath, compact('product', 'branches', 'branchStocks'));
+        }
         return view($viewPath, compact('product'));
     }
 
@@ -108,8 +141,30 @@ class ProductController extends Controller
      */
     public function update(ProductUpdateRequest $request, Product $product)
     {
-        $product->update($request->validated());
-        $routeName = Auth::user()->role === 'admin' ? 'admin.products.index' : 'user.products.index';
+        $data = $request->validated();
+        $product->update($data);
+        $user = Auth::user();
+        // Admin: update all branch stocks
+        if ($user->role === 'admin' && $request->has('branch_stock')) {
+            foreach ($request->input('branch_stock') as $branch_id => $quantity) {
+                $stock = \App\Models\BranchProductStock::firstOrCreate([
+                    'product_id' => $product->id,
+                    'branch_id' => $branch_id,
+                ]);
+                $stock->quantity = $quantity;
+                $stock->save();
+            }
+        } else if (isset($data['quantity'])) {
+            // User: update only their branch stock
+            $branch_id = $user->branch_id;
+            $stock = \App\Models\BranchProductStock::firstOrCreate([
+                'product_id' => $product->id,
+                'branch_id' => $branch_id,
+            ]);
+            $stock->quantity = $data['quantity'];
+            $stock->save();
+        }
+        $routeName = $user->role === 'admin' ? 'admin.products.index' : 'user.products.index';
         return redirect()->route($routeName)->with('success', 'Product updated successfully!');
     }
 

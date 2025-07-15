@@ -9,6 +9,7 @@ use App\Models\Payment;
 use App\Models\SupplierPayment;
 use App\Models\Purchase;
 use Illuminate\Support\Facades\DB;
+use App\Models\BranchProductStock;
 
 class AdminController extends Controller
 {
@@ -52,23 +53,23 @@ class AdminController extends Controller
         $sales = Sale::with(['items', 'payments'])->get();
         $customers_count = Customer::count();
 
-        $low_stock_products = new Product();
-        $low_stock_products = $low_stock_products->where('quantity', '<', 20)->get();
+        $branch_id = auth()->user()->branch_id;
+        $company_id = auth()->user()->company_id;
+        $low_stock_products = BranchProductStock::where('branch_id', $branch_id)
+            ->where('quantity', '<', 20)
+            ->with('product')
+            ->get();
 
         // Note: The best selling products queries below use raw DB queries and may need to be updated
         // to respect company/branch filtering. For now, they will show all products.
-        $bestSellingProducts = DB::table('products')
-            ->joinSub(
-                DB::table('sale_items')
-                    ->select('product_id', DB::raw('SUM(quantity) as total_sold'))
-                    ->groupBy('product_id')
-                    ->having('total_sold', '>', 10),
-                'totals',
-                'products.id',
-                '=',
-                'totals.product_id'
-            )
-            ->select('products.*', 'totals.total_sold')
+        $bestSellingProducts = DB::table('branch_product_stock')
+            ->join('products', 'branch_product_stock.product_id', '=', 'products.id')
+            ->join('branches', 'branch_product_stock.branch_id', '=', 'branches.id')
+            ->where('branch_product_stock.branch_id', $branch_id)
+            ->where('branches.company_id', $company_id)
+            ->orderByDesc('branch_product_stock.quantity')
+            ->limit(10)
+            ->select('products.*', 'branch_product_stock.quantity as branch_quantity')
             ->get();
 
         $currentMonthBestSelling = DB::table('products')
