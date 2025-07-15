@@ -96,6 +96,13 @@
                 </li>
 
                 <li class="nav-item has-treeview">
+                    <a href="{{ route('admin.branch-transfer.index') }}" class="nav-link">
+                        <i class="nav-icon fas fa-random"></i>
+                        <p>Branch Transfer</p>
+                    </a>
+                </li>
+
+                <li class="nav-item has-treeview">
                     <a href="{{ route('admin.customers.index') }}" class="nav-link {{ activeSegment('customers') }}">
                         <i class="nav-icon fas fa-users"></i>
                         <p>{{ __('customer.title') }}</p>

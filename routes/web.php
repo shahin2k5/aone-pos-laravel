@@ -351,6 +351,10 @@ Route::middleware(['auth', 'admin_guard'])->prefix('admin')->group(function () {
 
     Route::get('admin/suppliers/{supplier}/pay', [App\Http\Controllers\SupplierController::class, 'showPayForm'])->name('admin.suppliers.pay');
     Route::post('admin/suppliers/{supplier}/pay', [App\Http\Controllers\SupplierController::class, 'pay'])->name('admin.suppliers.pay.submit');
+
+    Route::get('/branch-transfer', [\App\Http\Controllers\Admin\BranchTransferController::class, 'index'])->name('admin.branch-transfer.index');
+    Route::get('/branch-transfer/create', [\App\Http\Controllers\Admin\BranchTransferController::class, 'create'])->name('admin.branch-transfer.create');
+    Route::post('/branch-transfer', [\App\Http\Controllers\Admin\BranchTransferController::class, 'store'])->name('admin.branch-transfer.store');
 });
 
 // Temporary test route for sales return
