@@ -4,6 +4,7 @@
 @section('content-header', __('product.Product_List'))
 @section('content-actions')
 <a href="{{route('admin.products.create')}}" class="btn btn-primary">{{ __('product.Create_Product') }}</a>
+<a href="{{ route('admin.branch-transfer.create') }}" class="btn btn-warning ml-2">Branch Transfer</a>
 @endsection
 @section('css')
 <link rel="stylesheet" href="{{ asset('plugins/sweetalert2/sweetalert2.min.css') }}">

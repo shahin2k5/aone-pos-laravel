@@ -4,20 +4,22 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
-    public function up(): void
+return new class extends Migration {
+    public function up()
     {
         Schema::table('purchase_cart', function (Blueprint $table) {
-            $table->foreignId('supplier_id')->nullable()->constrained('suppliers')->onDelete('cascade');
+            if (!Schema::hasColumn('purchase_cart', 'supplier_id')) {
+                $table->unsignedBigInteger('supplier_id')->nullable();
+            }
         });
     }
 
-    public function down(): void
+    public function down()
     {
         Schema::table('purchase_cart', function (Blueprint $table) {
-            $table->dropForeign(['supplier_id']);
-            $table->dropColumn('supplier_id');
+            if (Schema::hasColumn('purchase_cart', 'supplier_id')) {
+                $table->dropColumn('supplier_id');
+            }
         });
     }
 };
