@@ -71,7 +71,7 @@
          <h3>Best Selling Products</h3>
          <section class="content">
             <div class="card product-list">
-               <div class="card-body">
+               <div class="card-body" style="height:250px">
                   <table class="table">
                      <thead>
                         <tr>
@@ -110,7 +110,7 @@
          <h3>Low Stock Product</h3>
          <section class="content">
             <div class="card product-list">
-               <div class="card-body">
+               <div class="card-body" style="height:250px">
                   <table class="table">
                      <thead>
                         <tr>
