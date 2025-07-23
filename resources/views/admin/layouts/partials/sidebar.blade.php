@@ -27,21 +27,21 @@
 
                 <li class="nav-item has-treeview">
                     <a href="{{ route('admin.cart.index') }}" class="nav-link {{ activeSegment('cart') }}">
-                        <i class="nav-icon fas fa-cart-plus"></i>
+                        <i class="nav-icon fas fa-shopping-cart"></i>
                         <p>{{ __('POS') }}</p>
                     </a>
                 </li>
 
                 <li class="nav-item has-treeview">
                     <a href="{{ route('admin.sales.index') }}" class="nav-link {{ activeSegment('orders') }}">
-                        <i class="nav-icon fas fa-cart-plus"></i>
+                        <i class="nav-icon fas fa-receipt"></i>
                         <p>Sales list</p>
                     </a>
                 </li>
 
                 <li class="nav-item has-treeview">
                     <a href="{{ route('admin.purchase.index') }}" class="nav-link {{ activeSegment('purchase') }}">
-                        <i class="nav-icon fas fa-cart-plus"></i>
+                        <i class="nav-icon fas fa-truck"></i>
                         <p>{{ __('Purchase') }}</p>
                     </a>
                 </li>
@@ -53,21 +53,21 @@
 
                 <li class="nav-item has-treeview">
                     <a href="{{ route('admin.salesreturn.index') }}" class="nav-link {{ activeSegment('sales-return') }}">
-                        <i class="nav-icon fas fa-cart-plus"></i>
+                        <i class="nav-icon fas fa-undo"></i>
                         <p>{{ __('Sales Return') }}</p>
                     </a>
                 </li>
 
                 <li class="nav-item has-treeview">
                     <a href="{{ route('admin.purchasereturn.index') }}" class="nav-link {{ activeSegment('purchase-return') }}">
-                        <i class="nav-icon fas fa-cart-plus"></i>
+                        <i class="nav-icon fas fa-reply"></i>
                         <p>{{ __('Purchase Return') }}</p>
                     </a>
                 </li>
 
                 <li class="nav-item has-treeview">
                     <a href="{{ route('admin.damage.index') }}" class="nav-link {{ activeSegment('damage') }}">
-                        <i class="nav-icon fas fa-cart-plus"></i>
+                        <i class="nav-icon fas fa-exclamation-triangle"></i>
                         <p>{{ __('Damage') }}</p>
                     </a>
                 </li>
@@ -78,7 +78,7 @@
 
                  <li class="nav-item has-treeview">
                     <a href="{{ route('admin.expense.index') }}" class="nav-link {{ activeSegment('expense') }}">
-                        <i class="nav-icon fas fa-cart-plus"></i>
+                        <i class="nav-icon fas fa-chart-line"></i>
                         <p>Report & Expenses</p>
                     </a>
                 </li>
@@ -90,14 +90,14 @@
 
                 <li class="nav-item has-treeview">
                     <a href="{{ route('admin.products.index') }}" class="nav-link {{ activeSegment('products') }}">
-                        <i class="nav-icon fas fa-th-large"></i>
+                        <i class="nav-icon fas fa-boxes"></i>
                         <p>{{ __('product.title') }}</p>
                     </a>
                 </li>
 
                 <li class="nav-item has-treeview">
                     <a href="{{ route('admin.branch-transfer.index') }}" class="nav-link">
-                        <i class="nav-icon fas fa-random"></i>
+                        <i class="nav-icon fas fa-exchange-alt"></i>
                         <p>Branch Transfer</p>
                     </a>
                 </li>
@@ -110,7 +110,7 @@
                 </li>
                 <li class="nav-item has-treeview">
                     <a href="{{ route('admin.suppliers.index') }}" class="nav-link {{ activeSegment('supplier') }}">
-                        <i class="nav-icon fas fa-users"></i>
+                        <i class="nav-icon fas fa-handshake"></i>
                         <p>{{ __('Supplier') }}</p>
                     </a>
                 </li>

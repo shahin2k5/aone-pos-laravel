@@ -180,8 +180,10 @@ Route::middleware(['auth', 'admin_guard'])->prefix('admin')->group(function () {
     Route::get('/load-branches', [SettingController::class, 'loadBranches'])->name('adminload.branches');
     Route::post('/branch/store', [SettingController::class, 'branchStore'])->name('admin.branch.store');
     Route::post('/user/store', [SettingController::class, 'userStore'])->name('admin.user.store');
+    Route::patch('/user/update/{user}', [SettingController::class, 'updateUser'])->name('admin.user.update');
     Route::delete('/admin/user/delete/{user}', [SettingController::class, 'deleteUser'])->name('admin.user.delete');
     Route::delete('/admin/branch/delete/{branch}', [SettingController::class, 'deleteBranch'])->name('admin.branch.delete');
+    Route::patch('/branch/update/{branch}', [SettingController::class, 'updateBranch'])->name('admin.branch.update');
     Route::get('/branches', [SettingController::class, 'loadBranches'])->name('admin.branches');
 
     // Admin Products
