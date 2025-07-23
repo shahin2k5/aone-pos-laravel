@@ -248,7 +248,6 @@ class ExpenseController extends Controller
     // Sales Details Page
     public function salesDetails(Request $request)
     {
-        dd('controller hit');
         if ($request->start_date && $request->end_date) {
             $startDate = $request->start_date . ' 00:00:00';
             $endDate = $request->end_date . ' 23:59:59';
