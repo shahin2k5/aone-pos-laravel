@@ -77,6 +77,12 @@ class ProductController extends Controller
         $data['company_id'] = Auth::user()->company_id;
         $data['branch_id'] = Auth::user()->branch_id;
         $data['user_id'] = Auth::id();
+
+        // Handle image upload
+        if ($request->hasFile('image')) {
+            $data['image'] = $request->file('image')->store('products', 'public');
+        }
+
         $product = Product::create($data);
         $user = Auth::user();
         if ($user->role === 'admin' && $request->has('branch_stock')) {
@@ -142,6 +148,12 @@ class ProductController extends Controller
     public function update(ProductUpdateRequest $request, Product $product)
     {
         $data = $request->validated();
+
+        // Handle image upload
+        if ($request->hasFile('image')) {
+            $data['image'] = $request->file('image')->store('products', 'public');
+        }
+
         $product->update($data);
         $user = Auth::user();
         // Admin: update all branch stocks

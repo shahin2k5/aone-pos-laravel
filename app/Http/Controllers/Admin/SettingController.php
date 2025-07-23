@@ -75,12 +75,60 @@ class SettingController extends Controller
         return redirect()->route('admin.settings.index', ['tab' => 'user'])->with('success', 'User added successfully!');
     }
 
+    public function updateUser(Request $request, $userId)
+    {
+        $user = User::where('id', $userId)
+            ->where('company_id', Auth::user()->company_id)
+            ->firstOrFail();
+
+        $validate = $request->validate([
+            'first_name' => 'required|string',
+            'last_name' => 'required|string',
+            'role' => 'required|string',
+            'email' => 'required|email|unique:users,email,' . $user->id,
+            'branch_id' => 'required|exists:branches,id',
+        ]);
+
+        // Check branch belongs to company
+        $branch = Branch::where('id', $validate['branch_id'])
+            ->where('company_id', Auth::user()->company_id)
+            ->firstOrFail();
+
+        $user->first_name = $validate['first_name'];
+        $user->last_name = $validate['last_name'];
+        $user->role = $validate['role'];
+        $user->email = $validate['email'];
+        $user->branch_id = $validate['branch_id'];
+        $user->save();
+
+        // For AJAX, return JSON
+        if ($request->wantsJson()) {
+            return response()->json(['success' => true, 'message' => 'User updated successfully.']);
+        }
+        // Fallback for non-AJAX
+        return redirect()->route('admin.settings.index', ['tab' => 'user'])->with('success', 'User updated successfully!');
+    }
+
     public function deleteUser($userId)
     {
         $user = User::where('id', $userId)
             ->where('company_id', Auth::user()->company_id)
             ->firstOrFail();
+        // Check for related records (sales, purchases, etc.)
+        $hasSales = \App\Models\Sale::where('user_id', $user->id)->exists();
+        $hasPurchases = \App\Models\Purchase::where('user_id', $user->id)->exists();
+        // Add more checks as needed for other relations
+        if ($hasSales || $hasPurchases) {
+            $msg = 'Cannot delete user: user has related sales or purchases.';
+            if (request()->wantsJson()) {
+                return response()->json(['success' => false, 'message' => $msg], 400);
+            }
+            return redirect()->route('admin.settings.index', ['tab' => 'user'])->withErrors($msg);
+        }
         $user->delete();
+        if (request()->wantsJson()) {
+            return response()->json(['success' => true, 'message' => 'User deleted successfully!']);
+        }
         return redirect()->route('admin.settings.index', ['tab' => 'user'])->with('success', 'User deleted successfully!');
     }
 
@@ -89,7 +137,41 @@ class SettingController extends Controller
         $branch = Branch::where('id', $branchId)
             ->where('company_id', Auth::user()->company_id)
             ->firstOrFail();
+        $userCount = \App\Models\User::where('branch_id', $branch->id)->count();
+        if ($userCount > 0) {
+            $msg = 'Cannot delete branch: users are assigned to this branch.';
+            if (request()->wantsJson()) {
+                return response()->json(['success' => false, 'message' => $msg], 400);
+            }
+            return redirect()->route('admin.settings.index', ['tab' => 'branch'])->withErrors($msg);
+        }
         $branch->delete();
+        if (request()->wantsJson()) {
+            return response()->json(['success' => true, 'message' => 'Branch deleted successfully!']);
+        }
         return redirect()->route('admin.settings.index', ['tab' => 'branch'])->with('success', 'Branch deleted successfully!');
+    }
+
+    public function updateBranch(Request $request, $branchId)
+    {
+        $branch = Branch::where('id', $branchId)
+            ->where('company_id', Auth::user()->company_id)
+            ->firstOrFail();
+
+        $validate = $request->validate([
+            'branch_name' => 'required|string|unique:branches,branch_name,' . $branch->id,
+            'address' => 'required|string',
+            'mobile' => 'required|string',
+        ]);
+
+        $branch->branch_name = $validate['branch_name'];
+        $branch->address = $validate['address'];
+        $branch->mobile = $validate['mobile'];
+        $branch->save();
+
+        if ($request->wantsJson()) {
+            return response()->json(['success' => true, 'message' => 'Branch updated successfully.']);
+        }
+        return redirect()->route('admin.settings.index', ['tab' => 'branch'])->with('success', 'Branch updated successfully!');
     }
 }
