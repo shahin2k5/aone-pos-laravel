@@ -50,6 +50,8 @@ class Cart extends Component {
         this.setCustomerId = this.setCustomerId.bind(this);
         this.setBranchId = this.setBranchId.bind(this);
         this.setSelectedBranchId = this.setSelectedBranchId.bind(this); // New method for POS branch selection
+        this.canAddToCart = this.canAddToCart.bind(this); // Helper method to check if can add to cart
+        this.validateCartForNewBranch = this.validateCartForNewBranch.bind(this); // Validate cart for new branch
         this.handleClickSubmit = this.handleClickSubmit.bind(this);
         this.loadTranslations = this.loadTranslations.bind(this);
     }
@@ -68,8 +70,6 @@ class Cart extends Component {
             }
         });
         // No need to load branches for user
-
-        console.log('branch_id',this.state.branch_id)
 
     }
 
@@ -90,22 +90,18 @@ class Cart extends Component {
         axios.get(`/user/customers`).then((res) => {
             // Support both {data: [...]} and [...] responses
             const customers = Array.isArray(res.data) ? res.data : res.data.data || [];
-            console.log('Customers loaded:', customers);
             this.setState({ customers });
         }).catch((error) => {
             console.error('Error loading customers:', error);
-            console.error('Error response:', error.response);
         });
     }
 
     loadBranches() {
         axios.get(`/admin/load-branches`).then((res) => {
             const branches = res.data;
-            console.log('branches::', branches)
             this.setState({ branches });
         }).catch((error) => {
             console.error('Error loading branches:', error);
-            console.error('Error response:', error.response);
         });
     }
 
@@ -113,7 +109,6 @@ class Cart extends Component {
     loadBranchStocks() {
         axios.get(`/admin/branch-stocks`).then((res) => {
             const branchStocks = res.data;
-            console.log('Branch stocks loaded:', branchStocks);
             this.setState({ branchStocks });
         }).catch((error) => {
             console.error('Error loading branch stocks:', error);
@@ -124,17 +119,14 @@ class Cart extends Component {
         const query = !!search ? `?search=${search}` : "";
         axios.get(`/user/products${query}`).then((res) => {
             const products = res.data.data;
-            console.log('Products loaded:', products);
             this.setState({ products });
         }).catch((error) => {
             console.error('Error loading products:', error);
-            console.error('Error response:', error.response);
         });
     }
 
     handleOnChangeBarcode(event) {
         const barcode = event.target.value;
-        console.log(barcode);
         this.setState({ barcode });
     }
 
@@ -142,7 +134,6 @@ class Cart extends Component {
         const endpoint = this.state.isAdmin ? "/admin/cart" : "/user/user-cart";
         axios.get(endpoint).then((res) => {
             const cart = res.data;
-            console.log('Cart loaded:', cart);
             if(cart.length){
                 const sub_total = this.getTotal(cart)
                 const gr_total = sub_total - this.state.discount_amount
@@ -152,12 +143,6 @@ class Cart extends Component {
                 const new_balance = cart[0].pivot.user_balance+gr_total
                 const last_balance = cart[0].pivot.user_balance+gr_total
                 this.setState({ cart, sub_total, gr_total,customer_id,branch_id, prev_balance, new_balance,last_balance });
-
-                // Debug: Log each cart item quantity
-                cart.forEach(item => {
-                    console.log(`Product: ${item.name}, Quantity: ${item.pivot.quantity}`);
-                });
-
             }else{
                 const sub_total = 0
                 const gr_total = 0
@@ -176,22 +161,22 @@ class Cart extends Component {
 
     handleScanBarcode(event) {
         event.preventDefault();
-        const { barcode, customer_id, branch_id } = this.state;
+        const { barcode } = this.state;
+
         if (!barcode) {
             Swal.fire('Please enter a barcode', 'warning');
             return false;
         }
-        if (!customer_id) {
-            Swal.fire('Please select a customer', 'warning');
+
+        if (!this.canAddToCart()) {
             return false;
         }
-        if (!branch_id) {
-            Swal.fire('Please select a branch', 'warning');
-            return false;
-        }
-                    const endpoint = this.state.isAdmin ? "/admin/cart" : "/user/user-cart";
-            axios
-                .post(endpoint, { barcode, customer_id, branch_id })
+
+        // For admin, use selectedBranchId if available, otherwise use branch_id
+        const branchToUse = this.state.isAdmin && this.state.selectedBranchId ? this.state.selectedBranchId : this.state.branch_id;
+        const endpoint = this.state.isAdmin ? "/admin/cart" : "/user/user-cart";
+        axios
+            .post(endpoint, { barcode, customer_id, branch_id: branchToUse })
                 .then((res) => {
                     this.loadCart();
                     this.setState({ barcode: "" });
@@ -202,13 +187,10 @@ class Cart extends Component {
     }
 
         handleChangeQty(product_id, qty) {
-        console.log(`Changing quantity for product ${product_id} to ${qty}`);
-
         // Update local state immediately for responsive UI
         const cart = this.state.cart.map((c) => {
             if (c.id === product_id) {
                 c.pivot.quantity = qty;
-                console.log(`Updated local cart: ${c.name} quantity = ${qty}`);
             }
             return c;
         });
@@ -222,22 +204,20 @@ class Cart extends Component {
 
         // Only send to server if quantity is valid
         if (!qty || qty <= 0) {
-            console.log('Quantity invalid, not sending to server');
             return;
         }
 
-        const {customer_id, branch_id} = this.state
+        // For admin, use selectedBranchId if available, otherwise use branch_id
+        const branchToUse = this.state.isAdmin && this.state.selectedBranchId ? this.state.selectedBranchId : this.state.branch_id;
+        const {customer_id} = this.state
         const endpoint = this.state.isAdmin ? "/admin/cart/change-qty" : "/user/user-cart/change-qty";
-        console.log(`Sending quantity update to: ${endpoint}`);
         axios
-            .post(endpoint, { product_id, quantity: qty, customer_id, branch_id })
+            .post(endpoint, { product_id, quantity: qty, customer_id, branch_id: branchToUse })
             .then((res) => {
                 // Success - state already updated
-                console.log('Quantity updated successfully on server');
             })
             .catch((err) => {
                 // Revert on error
-                console.error('Error updating quantity:', err);
                 this.loadCart();
                 Swal.fire("Error!", err.response.data.message, "error");
             });
@@ -251,25 +231,55 @@ class Cart extends Component {
     }
 
     handleClickDelete(product_id) {
-        const branch_id = this.state.branch_id;
+        // For admin, use selectedBranchId if available, otherwise use branch_id
+        const branchToUse = this.state.isAdmin && this.state.selectedBranchId ? this.state.selectedBranchId : this.state.branch_id;
         const endpoint = this.state.isAdmin ? "/admin/cart/delete" : "/user/user-cart/delete";
-        axios
-            .post(endpoint, { product_id, _method: "DELETE", branch_id })
-            .then((res) => {
-                const cart = this.state.cart.filter((c) => c.id !== product_id);
-                const sub_total = this.getTotal(cart)
-                const gr_total = sub_total - this.state.discount_amount
-                const new_balance = this.state.prev_balance + gr_total
-                const last_balance = new_balance - this.state.discount_amount
 
-                this.setState({
-                    cart,
-                    sub_total,
-                    gr_total,
-                    new_balance,
-                    last_balance
+        if (this.state.isAdmin) {
+            // For admin, use DELETE method
+            axios
+                .delete(endpoint, { data: { product_id, branch_id: branchToUse } })
+                .then((res) => {
+                    const cart = this.state.cart.filter((c) => c.id !== product_id);
+                    const sub_total = this.getTotal(cart)
+                    const gr_total = sub_total - this.state.discount_amount
+                    const new_balance = this.state.prev_balance + gr_total
+                    const last_balance = new_balance - this.state.paid_amount
+
+                    this.setState({
+                        cart,
+                        sub_total,
+                        gr_total,
+                        new_balance,
+                        last_balance
+                    });
+                })
+                .catch((err) => {
+                    Swal.fire("Error!", "Failed to delete item from cart", "error");
                 });
-            });
+        } else {
+            // For user, use POST with _method DELETE (Laravel form method spoofing)
+            axios
+                .post(endpoint, { product_id, _method: "DELETE", branch_id: branchToUse })
+                .then((res) => {
+                    const cart = this.state.cart.filter((c) => c.id !== product_id);
+                    const sub_total = this.getTotal(cart)
+                    const gr_total = sub_total - this.state.discount_amount
+                    const new_balance = this.state.prev_balance + gr_total
+                    const last_balance = new_balance - this.state.paid_amount
+
+                    this.setState({
+                        cart,
+                        sub_total,
+                        gr_total,
+                        new_balance,
+                        last_balance
+                    });
+                })
+                .catch((err) => {
+                    Swal.fire("Error!", "Failed to delete item from cart", "error");
+                });
+        }
     }
 
     handleEmptyCart() {
@@ -296,22 +306,12 @@ class Cart extends Component {
     }
 
     addProductToCart(barcode) {
-        if(!this.state.customer_id){
-            Swal.fire('Please select a customer', 'warning');
-            return false
+        if (!this.canAddToCart()) {
+            return false;
         }
 
         // For admin, use selectedBranchId if available, otherwise use branch_id
         const branchToUse = this.state.isAdmin && this.state.selectedBranchId ? this.state.selectedBranchId : this.state.branch_id;
-
-        if(!branchToUse){
-            if (this.state.isAdmin) {
-                Swal.fire('Please select a branch for POS', 'warning');
-            } else {
-                Swal.fire('Please select a branch', 'warning');
-            }
-            return false
-        }
         const customer_id = this.state.customer_id
         const branch_id = branchToUse
         let product = this.state.products.find((p) => p.barcode === barcode);
@@ -331,62 +331,60 @@ class Cart extends Component {
         }
 
         if (!!product) {
-            // if product is already in cart
-            let cart = this.state.cart.find((c) => c.id === product.id);
-            if (!!cart) {
-                // update quantity
-                const carts = this.state.cart.map((c) => {
-                        if (
-                            c.id === product.id &&
-                            product.quantity > c.pivot.quantity
-                        ) {
-                            c.pivot.quantity = c.pivot.quantity + 1;
-                        }
-                        return c;
-                    })
-                const sub_total = this.getTotal(carts)
-                const gr_total = sub_total - this.state.discount_amount
-                const new_balance = this.state.prev_balance + this.state.gr_total
-                const last_balance = new_balance - this.state.discount_amount
-
-                this.setState({
-                    cart: carts,
-                    sub_total,
-                    gr_total,
-                    new_balance,
-                    last_balance
-                });
-            } else {
-                if (product.quantity > 0) {
-                    product = {
-                        ...product,
-                        pivot: {
-                            quantity: 1,
-                            product_id: product.id,
-                            user_id: 1,
-                        },
-                    };
-                    const productList = [...this.state.cart, product]
-                    const sub_totals = this.getTotal(productList)
-                    const gr_total = sub_totals - this.state.discount_amount
-                    const new_balance = this.state.prev_balance + gr_total
-                    const last_balance = new_balance - this.state.discount_amount
-                    this.setState({
-                        cart: productList,
-                        sub_total: sub_totals,
-                        gr_total,
-                        new_balance,
-                        last_balance
-                    });
-                }
-            }
-
             const endpoint = this.state.isAdmin ? "/admin/cart" : "/user/user-cart";
             axios
                 .post(endpoint, { barcode, customer_id, branch_id })
                 .then((res) => {
-                    // this.loadCart();
-                    console.log(res);
+                    // Only update local state after successful backend response
+                    // if product is already in cart
+                    let cart = this.state.cart.find((c) => c.id === product.id);
+                    if (!!cart) {
+                        // update quantity
+                        const carts = this.state.cart.map((c) => {
+                                if (
+                                    c.id === product.id &&
+                                    product.quantity > c.pivot.quantity
+                                ) {
+                                    c.pivot.quantity = c.pivot.quantity + 1;
+                                }
+                                return c;
+                            })
+                        const sub_total = this.getTotal(carts)
+                        const gr_total = sub_total - this.state.discount_amount
+                        const new_balance = this.state.prev_balance + this.state.gr_total
+                        const last_balance = new_balance - this.state.discount_amount
+
+                        this.setState({
+                            cart: carts,
+                            sub_total,
+                            gr_total,
+                            new_balance,
+                            last_balance
+                        });
+                    } else {
+                        if (product.quantity > 0) {
+                            const newProduct = {
+                                ...product,
+                                pivot: {
+                                    quantity: 1,
+                                    product_id: product.id,
+                                    user_id: 1,
+                                },
+                            };
+                            const productList = [...this.state.cart, newProduct]
+                            const sub_totals = this.getTotal(productList)
+                            const gr_total = sub_totals - this.state.discount_amount
+                            const new_balance = this.state.prev_balance + gr_total
+                            const last_balance = new_balance - this.state.discount_amount
+                            this.setState({
+                                cart: productList,
+                                sub_total: sub_totals,
+                                gr_total,
+                                new_balance,
+                                last_balance
+                            });
+                        }
+                    }
                 })
                 .catch((err) => {
                     Swal.fire("Error!", err.response.data.message, "error");
@@ -416,7 +414,7 @@ class Cart extends Component {
                 last_balance
             });
 
-            console.log('customerData',customerInfo)
+
         }else{
             this.setState({
                 customer_id: '',
@@ -446,15 +444,64 @@ class Cart extends Component {
                 branch_id: '',
             });
         }
-        console.log('branch id:::', branchData)
+
 
     }
 
-    setSelectedBranchId(event) {
+            setSelectedBranchId(event) {
         const selectedBranchId = event.target.value;
         this.setState({ selectedBranchId });
-        console.log('Selected branch for POS:', selectedBranchId);
+
+        // If admin changes branch and has items in cart, validate stock
+        if (this.state.isAdmin && selectedBranchId && this.state.cart.length > 0) {
+            this.validateCartForNewBranch(selectedBranchId);
+        }
     }
+
+    canAddToCart() {
+        if (!this.state.customer_id) {
+            Swal.fire('Please select a customer first', 'warning');
+            return false;
+        }
+
+        if (this.state.isAdmin) {
+            if (!this.state.selectedBranchId) {
+                Swal.fire('Please select a branch for POS first', 'warning');
+                return false;
+            }
+        } else {
+            if (!this.state.branch_id) {
+                Swal.fire('Please select a branch first', 'warning');
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    validateCartForNewBranch(newBranchId) {
+        const cart = this.state.cart;
+        const branchStocks = this.state.branchStocks;
+
+        for (let item of cart) {
+            const productStocks = branchStocks[item.id];
+            if (productStocks) {
+                const branchStock = productStocks.find(stock => stock.branch_id == newBranchId);
+                if (branchStock && branchStock.quantity < item.pivot.quantity) {
+                    Swal.fire({
+                        title: 'Insufficient Stock',
+                        text: `Product "${item.name}" has only ${branchStock.quantity} stock in the selected branch, but cart has ${item.pivot.quantity}. Please reduce quantity or select a different branch.`,
+                        icon: 'warning',
+                        confirmButtonText: 'OK'
+                    });
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+
 
     printInvoice = () => {
         const invoiceUrl = `/user/sales/print/${this.state.saleId}`;
@@ -462,21 +509,16 @@ class Cart extends Component {
     };
 
     handleClickSubmit() {
-        if(!this.state.customer_id){
-            Swal.fire('Please select a customer', 'warning');
-            return false
+        if (!this.canAddToCart()) {
+            return false;
         }
 
         // For admin, use selectedBranchId if available, otherwise use branch_id
         const branchToUse = this.state.isAdmin && this.state.selectedBranchId ? this.state.selectedBranchId : this.state.branch_id;
 
-        if(!branchToUse){
-            if (this.state.isAdmin) {
-                Swal.fire('Please select a branch for POS', 'warning');
-            } else {
-                Swal.fire('Please select a branch', 'warning');
-            }
-            return false
+        // Validate cart stock before checkout
+        if (this.state.isAdmin && !this.validateCartForNewBranch(branchToUse)) {
+            return false;
         }
         Swal.fire({
             title: 'Save POS',
@@ -504,7 +546,11 @@ class Cart extends Component {
                         return res.data;
                     })
                     .catch((err) => {
-                        Swal.showValidationMessage(err.response.data.message);
+                        if (err.response && err.response.data && err.response.data.message) {
+                            Swal.showValidationMessage(err.response.data.message);
+                        } else {
+                            Swal.showValidationMessage('An error occurred while processing the sale');
+                        }
                     });
             },
             allowOutsideClick: () => !Swal.isLoading(),
@@ -732,7 +778,7 @@ class Cart extends Component {
                                 <label htmlFor="pos-branch-select" style={{ fontWeight: 'bold', marginBottom: '5px', display: 'block' }}>
                                     Select Branch for POS:
                                 </label>
-                                <select
+                                                                <select
                                     id="pos-branch-select"
                                     className="form-control"
                                     value={this.state.selectedBranchId}
@@ -774,6 +820,8 @@ class Cart extends Component {
                         </div>
 
                     </div>
+
+
 
                     <div className="order-product">
                         {productList.map((p) => {
@@ -820,26 +868,18 @@ class Cart extends Component {
                                                 let textColor = 'green'; // Default: green for sufficient stock
                                                 let fontWeight = 'normal';
 
-                                                                                                // Debug logging
                                                 const warningQty = 15; // Fixed warning threshold to 15
                                                 const stockQty = parseInt(stock.quantity);
                                                 const isOutOfStock = stockQty === 0;
                                                 const isLowStock = stockQty > 0 && stockQty < warningQty;
 
-                                                console.log('Branch:', stock.branch_name, 'ID:', stock.branch_id, 'Quantity:', stockQty, 'Warning Qty:', warningQty, 'Is Out of Stock:', isOutOfStock, 'Is Low Stock:', isLowStock, 'Selected:', this.state.selectedBranchId);
-
                                                 if (this.state.selectedBranchId && parseInt(stock.branch_id) === parseInt(this.state.selectedBranchId)) {
                                                     textColor = '#007bff'; // Blue for selected branch
                                                     fontWeight = 'bold';
-                                                    console.log('Setting blue for selected branch:', stock.branch_name);
                                                 } else if (isOutOfStock) {
                                                     textColor = 'red'; // Red for out of stock (0)
-                                                    console.log('Setting red for out of stock:', stock.branch_name, 'Qty:', stockQty);
                                                 } else if (isLowStock) {
                                                     textColor = '#ff8c00'; // Orange/warning for low stock (1-14)
-                                                    console.log('Setting orange for low stock:', stock.branch_name, 'Qty:', stockQty, '<', warningQty);
-                                                } else {
-                                                    console.log('Setting green for good stock:', stock.branch_name, 'Qty:', stockQty, '>=', warningQty);
                                                 }
 
                                                 return (

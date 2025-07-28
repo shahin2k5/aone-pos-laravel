@@ -6,6 +6,7 @@ use App\Models\Product;
 use App\Models\Customer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use App\Models\BranchProductStock;
 
@@ -21,7 +22,7 @@ class CartController extends Controller
                 })
             );
         }
-        $branch_id = auth()->user()->branch_id;
+        $branch_id = Auth::user()->branch_id;
         return view('admin.cart.index', compact('branch_id'));
     }
 
@@ -112,15 +113,17 @@ class CartController extends Controller
         $user_id = Auth::id();
 
         $product = Product::find($request->product_id);
+        // For admins, find cart item regardless of branch_id to allow branch switching
         $cart = $request->user()->cart()
             ->where('id', $request->product_id)
             ->where('user_cart.company_id', $company_id)
-            ->where('user_cart.branch_id', $branch_id)
             ->first();
 
         $stock = BranchProductStock::where('product_id', $product->id)
             ->where('branch_id', $branch_id)
             ->first();
+
+
 
         if ($cart) {
             // check branch stock quantity
@@ -130,6 +133,8 @@ class CartController extends Controller
                 ], 400);
             }
             $cart->pivot->quantity = $request->quantity;
+            // Update the branch_id to reflect the current selected branch
+            $cart->pivot->branch_id = $branch_id;
             $cart->pivot->save();
         }
 
@@ -137,6 +142,8 @@ class CartController extends Controller
             'success' => true
         ]);
     }
+
+
 
     public function delete(Request $request)
     {

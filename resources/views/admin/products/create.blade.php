@@ -10,7 +10,7 @@
 <div class="card">
     <div class="card-body">
 
-        <form action="{{ route('admin.products.store') }}" method="POST" enctype="multipart/form-data">
+        <form action="{{ route('admin.products.store') }}" method="POST" enctype="multipart/form-data" id="product-form">
             @csrf
 
             @if ($errors->any())
@@ -49,8 +49,11 @@
             <div class="form-group">
                 <label for="image">{{ __('product.Image') }}</label>
                 <div class="custom-file">
-                    <input type="file" class="custom-file-input" name="image" id="image">
-                    <label class="custom-file-label" for="image">{{ __('product.Choose_file') }}</label>
+                    <input type="file" class="custom-file-input" name="image" id="image" accept="image/*" style="display: none;">
+                    <label class="custom-file-label" for="image" id="file-label" style="cursor: pointer; padding: 8px 12px; border: 1px solid #ced4da; border-radius: 4px; background-color: #fff; display: inline-block; min-width: 200px;">{{ __('product.Choose_file') }}</label>
+                </div>
+                <div id="image-preview" class="mt-2" style="display: none;">
+                    <img id="preview-img" src="" alt="Preview" style="max-width: 200px; max-height: 200px; border: 1px solid #ddd; border-radius: 4px;">
                 </div>
                 @error('image')
                 <span class="invalid-feedback" role="alert">
@@ -152,10 +155,44 @@
 @endsection
 
 @section('js')
-<script src="{{ asset('plugins/bs-custom-file-input/bs-custom-file-input.min.js') }}"></script>
 <script>
     $(document).ready(function () {
-        bsCustomFileInput.init();
+        console.log('Document ready, jQuery version:', $.fn.jquery);
+        console.log('Image input found:', $('#image').length);
+
+                        // Handle file input change - simple and reliable
+        $('#image').on('change', function() {
+            console.log('File input changed');
+            const file = this.files[0];
+            const label = $('#file-label'); // Use the specific ID
+            const preview = $('#image-preview');
+            const previewImg = $('#preview-img');
+
+            console.log('File:', file);
+            console.log('Label element:', label.length);
+            console.log('Preview element:', preview.length);
+
+            if (file) {
+                console.log('File selected:', file.name);
+                // Update the label with the filename
+                label.text(file.name);
+                console.log('Label text updated to:', file.name);
+
+                // Show image preview
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    previewImg.attr('src', e.target.result);
+                    preview.show();
+                    console.log('Image preview loaded');
+                };
+                reader.readAsDataURL(file);
+            } else {
+                console.log('No file selected');
+                // Reset if no file selected
+                label.text('{{ __("product.Choose_file") }}');
+                preview.hide();
+            }
+        });
     });
 </script>
 @endsection

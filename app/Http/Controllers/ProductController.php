@@ -80,7 +80,15 @@ class ProductController extends Controller
 
         // Handle image upload
         if ($request->hasFile('image')) {
+            Log::info('Image upload detected', [
+                'original_name' => $request->file('image')->getClientOriginalName(),
+                'size' => $request->file('image')->getSize(),
+                'mime_type' => $request->file('image')->getMimeType()
+            ]);
             $data['image'] = $request->file('image')->store('products', 'public');
+            Log::info('Image stored at: ' . $data['image']);
+        } else {
+            Log::info('No image file in request');
         }
 
         $product = Product::create($data);
@@ -151,7 +159,15 @@ class ProductController extends Controller
 
         // Handle image upload
         if ($request->hasFile('image')) {
+            Log::info('Image upload detected in update', [
+                'original_name' => $request->file('image')->getClientOriginalName(),
+                'size' => $request->file('image')->getSize(),
+                'mime_type' => $request->file('image')->getMimeType()
+            ]);
             $data['image'] = $request->file('image')->store('products', 'public');
+            Log::info('Image stored at: ' . $data['image']);
+        } else {
+            Log::info('No image file in update request');
         }
 
         $product->update($data);
