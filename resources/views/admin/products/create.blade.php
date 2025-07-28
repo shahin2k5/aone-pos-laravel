@@ -156,65 +156,81 @@
 
 @section('js')
 <script>
-    $(document).ready(function () {
-        console.log('Document ready');
+    // Use vanilla JavaScript to avoid jQuery dependency issues
+    document.addEventListener('DOMContentLoaded', function() {
+        var fileInput = document.getElementById('image');
+        var fileLabel = document.getElementById('file-label');
+        var imagePreview = document.getElementById('image-preview');
+        var previewImg = document.getElementById('preview-img');
 
-        // Handle file input change - simple and reliable
-        $('#image').on('change', function() {
-            console.log('Image input changed');
-            const file = this.files[0];
-            const label = $('#file-label'); // Use the specific ID
-            const preview = $('#image-preview');
-            const previewImg = $('#preview-img');
+        if (fileInput && fileLabel) {
+            fileInput.addEventListener('change', function() {
+                var file = this.files[0];
 
-            console.log('File:', file);
-            console.log('Label found:', label.length);
+                if (file) {
+                    // Update the label with the filename
+                    fileLabel.textContent = file.name;
 
-            if (file) {
-                console.log('File selected:', file.name);
-                // Update the label with the filename
-                label.text(file.name);
-                console.log('Label updated to:', file.name);
+                    // Show image preview
+                    if (imagePreview && previewImg) {
+                        var reader = new FileReader();
+                        reader.onload = function(e) {
+                            previewImg.src = e.target.result;
+                            imagePreview.style.display = 'block';
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                } else {
+                    // Reset if no file selected
+                    fileLabel.textContent = '{{ __("product.Choose_file") }}';
+                    if (imagePreview) {
+                        imagePreview.style.display = 'none';
+                    }
+                }
+            });
+        } else {
+            console.error('File input or label not found');
+        }
 
-                // Show image preview
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    previewImg.attr('src', e.target.result);
-                    preview.show();
-                    console.log('Preview shown');
-                };
-                reader.readAsDataURL(file);
-            } else {
-                console.log('No file selected');
-                // Reset if no file selected
-                label.text('{{ __("product.Choose_file") }}');
-                preview.hide();
-            }
+                // Handle leading zeros in quantity inputs
+        var numberInputs = document.querySelectorAll('input[type="number"]');
+        numberInputs.forEach(function(input) {
+            input.addEventListener('input', function() {
+                var value = this.value;
+                // Remove leading zeros but keep single zero
+                if (value.length > 1 && value.startsWith('0')) {
+                    this.value = value.replace(/^0+/, '');
+                }
+            });
+
+            input.addEventListener('blur', function() {
+                var value = this.value;
+                // If empty or just zeros, set to 0
+                if (value === '' || value === '0') {
+                    this.value = '0';
+                }
+            });
         });
 
-        // Handle leading zeros in quantity inputs
-        $('input[type="number"]').on('input', function() {
-            console.log('Number input changed:', this.value);
-            var value = this.value;
-            // Remove leading zeros but keep single zero
-            if (value.length > 1 && value.startsWith('0')) {
-                var newValue = value.replace(/^0+/, '');
-                console.log('Removing leading zeros:', value, '->', newValue);
-                this.value = newValue;
-            }
-        });
-
-        $('input[type="number"]').on('blur', function() {
-            console.log('Number input blur:', this.value);
-            var value = this.value;
-            // If empty or just zeros, set to 0
-            if (value === '' || value === '0') {
-                console.log('Setting to 0');
-                this.value = '0';
-            }
-        });
-
-        console.log('Event handlers attached');
+        // Handle form submission to clean up values before sending
+        var form = document.getElementById('product-form');
+        if (form) {
+            form.addEventListener('submit', function(e) {
+                // Clean up all number inputs before submission
+                var numberInputs = document.querySelectorAll('input[type="number"]');
+                numberInputs.forEach(function(input) {
+                    var value = input.value;
+                    // Remove leading zeros but keep single zero
+                    if (value.length > 1 && value.startsWith('0')) {
+                        input.value = value.replace(/^0+/, '');
+                    }
+                    // If empty, set to 0
+                    if (value === '') {
+                        input.value = '0';
+                    }
+                });
+            });
+        }
     });
 </script>
 @endsection
