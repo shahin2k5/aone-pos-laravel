@@ -157,33 +157,31 @@
 @section('js')
 <script>
     $(document).ready(function () {
-        console.log('Document ready, jQuery version:', $.fn.jquery);
-        console.log('Image input found:', $('#image').length);
+        console.log('Document ready');
 
-                        // Handle file input change - simple and reliable
+        // Handle file input change - simple and reliable
         $('#image').on('change', function() {
-            console.log('File input changed');
+            console.log('Image input changed');
             const file = this.files[0];
             const label = $('#file-label'); // Use the specific ID
             const preview = $('#image-preview');
             const previewImg = $('#preview-img');
 
             console.log('File:', file);
-            console.log('Label element:', label.length);
-            console.log('Preview element:', preview.length);
+            console.log('Label found:', label.length);
 
             if (file) {
                 console.log('File selected:', file.name);
                 // Update the label with the filename
                 label.text(file.name);
-                console.log('Label text updated to:', file.name);
+                console.log('Label updated to:', file.name);
 
                 // Show image preview
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     previewImg.attr('src', e.target.result);
                     preview.show();
-                    console.log('Image preview loaded');
+                    console.log('Preview shown');
                 };
                 reader.readAsDataURL(file);
             } else {
@@ -193,6 +191,30 @@
                 preview.hide();
             }
         });
+
+        // Handle leading zeros in quantity inputs
+        $('input[type="number"]').on('input', function() {
+            console.log('Number input changed:', this.value);
+            var value = this.value;
+            // Remove leading zeros but keep single zero
+            if (value.length > 1 && value.startsWith('0')) {
+                var newValue = value.replace(/^0+/, '');
+                console.log('Removing leading zeros:', value, '->', newValue);
+                this.value = newValue;
+            }
+        });
+
+        $('input[type="number"]').on('blur', function() {
+            console.log('Number input blur:', this.value);
+            var value = this.value;
+            // If empty or just zeros, set to 0
+            if (value === '' || value === '0') {
+                console.log('Setting to 0');
+                this.value = '0';
+            }
+        });
+
+        console.log('Event handlers attached');
     });
 </script>
 @endsection
