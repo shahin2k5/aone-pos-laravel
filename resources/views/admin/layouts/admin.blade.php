@@ -23,6 +23,7 @@
                             'currency_symbol' => config('settings.currency_symbol'),
                             'warning_quantity' => config('settings.warning_quantity'),
                             'branch_id' => auth()->user()->branch_id,
+                            'user_role' => auth()->user()->role,
                         ]) ?>
     </script>
 </head>

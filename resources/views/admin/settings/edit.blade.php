@@ -272,7 +272,7 @@
           <input type="hidden" id="edit_user_id">
           <div class="form-group">
             <label for="edit_email">Email</label>
-            <input type="email" class="form-control" id="edit_email">
+             <input type="email" class="form-control" id="edit_email">
             <div class="text-danger edit-error" id="edit_error_email"></div>
           </div>
           <div class="form-group">

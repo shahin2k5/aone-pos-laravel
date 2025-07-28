@@ -3,7 +3,7 @@
 @section('title', __('Purchase Return'))
 @section('content-header', __('Purchase Return'))
 @section('content-actions')
-<a href="{{route('admin.purchasereturns.index')}}" class="btn btn-primary">{{ __('+ Purchase Return') }}</a>
+<a href="{{route('admin.purchasereturn.cart')}}" class="btn btn-primary">{{ __('+ Purchase Return') }}</a>
 @endsection
 @section('content')
 
