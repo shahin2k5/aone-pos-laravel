@@ -222,8 +222,9 @@ Route::middleware(['auth', 'admin_guard'])->prefix('admin')->group(function () {
     // Admin Cart
     Route::get('/cart', [CartController::class, 'index'])->name('admin.cart.index');
     Route::post('/cart', [CartController::class, 'store'])->name('admin.cart.store');
-    Route::post('/cart/change-qty', [CartController::class, 'changeQty']);
-    Route::delete('/cart/delete', [CartController::class, 'delete']);
+    Route::post('/cart/change-qty', [CartController::class, 'changeQty'])->name('admin.cart.change-qty');
+    Route::post('/cart/delete', [CartController::class, 'delete'])->name('admin.cart.delete');
+    Route::post('/cart/empty', [CartController::class, 'empty'])->name('admin.cart.empty');
     Route::delete('/cart/empty', [CartController::class, 'empty']);
 
     // Admin Sales
@@ -294,8 +295,8 @@ Route::middleware(['auth', 'admin_guard'])->prefix('admin')->group(function () {
         'update' => 'admin.purchasereturn.update',
         'destroy' => 'admin.purchasereturn.destroy',
     ]);
-    Route::get('/purchasereturn-cart', [PurchasereturnCartController::class, 'index'])->name('admin.purchasereturns.index');
-    Route::post('/purchasereturn-cart', [PurchasereturnCartController::class, 'store'])->name('admin.purchasereturns.store');
+    Route::get('/purchasereturn-cart', [PurchasereturnCartController::class, 'index'])->name('admin.purchasereturn.cart');
+    Route::post('/purchasereturn-cart', [PurchasereturnCartController::class, 'store'])->name('admin.purchasereturn.cart.store');
     Route::post('/purchasereturn-cart/change-qty', [PurchasereturnCartController::class, 'changeQty']);
     Route::delete('/purchasereturn-cart/delete', [PurchasereturnCartController::class, 'delete']);
     Route::delete('/purchasereturn-cart/empty', [PurchasereturnCartController::class, 'empty']);
@@ -357,6 +358,12 @@ Route::middleware(['auth', 'admin_guard'])->prefix('admin')->group(function () {
     Route::get('/branch-transfer', [\App\Http\Controllers\Admin\BranchTransferController::class, 'index'])->name('admin.branch-transfer.index');
     Route::get('/branch-transfer/create', [\App\Http\Controllers\Admin\BranchTransferController::class, 'create'])->name('admin.branch-transfer.create');
     Route::post('/branch-transfer', [\App\Http\Controllers\Admin\BranchTransferController::class, 'store'])->name('admin.branch-transfer.store');
+
+    // Admin Cart - Branch Stocks API
+    Route::get('/branch-stocks', [\App\Http\Controllers\Admin\CartController::class, 'getBranchStocks'])->name('admin.branch-stocks');
+
+    // Admin Cart - Load Branches API
+    Route::get('/load-branches', [\App\Http\Controllers\Admin\CartController::class, 'loadBranches'])->name('admin.load-branches');
 });
 
 // Temporary test route for sales return

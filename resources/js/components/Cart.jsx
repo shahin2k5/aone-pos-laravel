@@ -12,10 +12,12 @@ class Cart extends Component {
             products: [],
             customers: [],
             branches: [],
+            branchStocks: {}, // New state for branch stocks
             barcode: "",
             search: "",
             customer_id: "",
             branch_id: "",
+            selectedBranchId: "", // New state for selected branch in POS
             translations: {},
             sub_total:0,
             discount_amount:0,
@@ -30,7 +32,8 @@ class Cart extends Component {
             selCustomerAddress:'',
             selCustomerPhone:'',
             selCustomerBalance:'',
-            printUrl:''
+            printUrl:'',
+            isAdmin: window.APP && window.APP.user_role === 'admin' // Check if user is admin
         };
 
         this.loadCart = this.loadCart.bind(this);
@@ -40,10 +43,13 @@ class Cart extends Component {
         this.handleEmptyCart = this.handleEmptyCart.bind(this);
 
         this.loadProducts = this.loadProducts.bind(this);
+        this.loadBranchStocks = this.loadBranchStocks.bind(this); // New method
+        this.loadBranches = this.loadBranches.bind(this); // Load branches for admin
         this.handleChangeSearch = this.handleChangeSearch.bind(this);
         this.handleSeach = this.handleSeach.bind(this);
         this.setCustomerId = this.setCustomerId.bind(this);
         this.setBranchId = this.setBranchId.bind(this);
+        this.setSelectedBranchId = this.setSelectedBranchId.bind(this); // New method for POS branch selection
         this.handleClickSubmit = this.handleClickSubmit.bind(this);
         this.loadTranslations = this.loadTranslations.bind(this);
     }
@@ -56,6 +62,10 @@ class Cart extends Component {
             this.loadCustomers();
             this.loadProducts();
             this.loadCart();
+            if (this.state.isAdmin) {
+                this.loadBranchStocks(); // Load branch stocks for admin
+                this.loadBranches(); // Load branches for admin
+            }
         });
         // No need to load branches for user
 
@@ -88,14 +98,25 @@ class Cart extends Component {
         });
     }
 
-    loadBranch() {
-        axios.get(`/user/load-branches`).then((res) => {
+    loadBranches() {
+        axios.get(`/admin/load-branches`).then((res) => {
             const branches = res.data;
             console.log('branches::', branches)
             this.setState({ branches });
         }).catch((error) => {
             console.error('Error loading branches:', error);
             console.error('Error response:', error.response);
+        });
+    }
+
+    // New method to load branch stocks for admin
+    loadBranchStocks() {
+        axios.get(`/admin/branch-stocks`).then((res) => {
+            const branchStocks = res.data;
+            console.log('Branch stocks loaded:', branchStocks);
+            this.setState({ branchStocks });
+        }).catch((error) => {
+            console.error('Error loading branch stocks:', error);
         });
     }
 
@@ -118,7 +139,8 @@ class Cart extends Component {
     }
 
     loadCart() {
-        axios.get("/user/user-cart").then((res) => {
+        const endpoint = this.state.isAdmin ? "/admin/cart" : "/user/user-cart";
+        axios.get(endpoint).then((res) => {
             const cart = res.data;
             console.log('Cart loaded:', cart);
             if(cart.length){
@@ -130,6 +152,11 @@ class Cart extends Component {
                 const new_balance = cart[0].pivot.user_balance+gr_total
                 const last_balance = cart[0].pivot.user_balance+gr_total
                 this.setState({ cart, sub_total, gr_total,customer_id,branch_id, prev_balance, new_balance,last_balance });
+
+                // Debug: Log each cart item quantity
+                cart.forEach(item => {
+                    console.log(`Product: ${item.name}, Quantity: ${item.pivot.quantity}`);
+                });
 
             }else{
                 const sub_total = 0
@@ -162,37 +189,56 @@ class Cart extends Component {
             Swal.fire('Please select a branch', 'warning');
             return false;
         }
-        axios
-            .post("/user/user-cart", { barcode, customer_id, branch_id })
-            .then((res) => {
-                this.loadCart();
-                this.setState({ barcode: "" });
-            })
-            .catch((err) => {
-                Swal.fire("Error!", err.response.data.message, "error");
-            });
+                    const endpoint = this.state.isAdmin ? "/admin/cart" : "/user/user-cart";
+            axios
+                .post(endpoint, { barcode, customer_id, branch_id })
+                .then((res) => {
+                    this.loadCart();
+                    this.setState({ barcode: "" });
+                })
+                .catch((err) => {
+                    Swal.fire("Error!", err.response.data.message, "error");
+                });
     }
 
-    handleChangeQty(product_id, qty) {
+        handleChangeQty(product_id, qty) {
+        console.log(`Changing quantity for product ${product_id} to ${qty}`);
+
+        // Update local state immediately for responsive UI
         const cart = this.state.cart.map((c) => {
             if (c.id === product_id) {
                 c.pivot.quantity = qty;
+                console.log(`Updated local cart: ${c.name} quantity = ${qty}`);
             }
             return c;
         });
 
-        if (!qty) return;
+        // Update totals immediately
+        const sub_total = this.getTotal(cart)
+        const gr_total = sub_total - this.state.discount_amount
+        const new_balance = this.state.prev_balance + gr_total
+        const last_balance = new_balance - this.state.paid_amount
+        this.setState({ cart, sub_total, gr_total, new_balance, last_balance });
+
+        // Only send to server if quantity is valid
+        if (!qty || qty <= 0) {
+            console.log('Quantity invalid, not sending to server');
+            return;
+        }
+
         const {customer_id, branch_id} = this.state
+        const endpoint = this.state.isAdmin ? "/admin/cart/change-qty" : "/user/user-cart/change-qty";
+        console.log(`Sending quantity update to: ${endpoint}`);
         axios
-            .post("/user/user-cart/change-qty", { product_id, quantity: qty,customer_id, branch_id })
+            .post(endpoint, { product_id, quantity: qty, customer_id, branch_id })
             .then((res) => {
-                const sub_total = this.getTotal(cart)
-                const gr_total = sub_total - this.state.discount_amount
-                const new_balance = this.state.prev_balance+gr_total
-                const last_balance = new_balance - this.state.paid_amount
-                this.setState({ cart, sub_total, gr_total, new_balance, last_balance });
+                // Success - state already updated
+                console.log('Quantity updated successfully on server');
             })
             .catch((err) => {
+                // Revert on error
+                console.error('Error updating quantity:', err);
+                this.loadCart();
                 Swal.fire("Error!", err.response.data.message, "error");
             });
     }
@@ -206,8 +252,9 @@ class Cart extends Component {
 
     handleClickDelete(product_id) {
         const branch_id = this.state.branch_id;
+        const endpoint = this.state.isAdmin ? "/admin/cart/delete" : "/user/user-cart/delete";
         axios
-            .post("/user/user-cart/delete", { product_id, _method: "DELETE", branch_id })
+            .post(endpoint, { product_id, _method: "DELETE", branch_id })
             .then((res) => {
                 const cart = this.state.cart.filter((c) => c.id !== product_id);
                 const sub_total = this.getTotal(cart)
@@ -226,7 +273,8 @@ class Cart extends Component {
     }
 
     handleEmptyCart() {
-        axios.post("/user/user-cart/empty", { _method: "DELETE" }).then((res) => {
+        const endpoint = this.state.isAdmin ? "/admin/cart/empty" : "/user/user-cart/empty";
+        axios.post(endpoint, { _method: "DELETE" }).then((res) => {
             if(this.state.customer_id){
                 const last_balance = this.state.prev_balance
                 this.setState({ cart: [],sub_total:0, gr_total:0, new_balance:last_balance, last_balance, discount_amount:'', paid_amount:'' });
@@ -252,12 +300,20 @@ class Cart extends Component {
             Swal.fire('Please select a customer', 'warning');
             return false
         }
-        if(!this.state.branch_id){
-            Swal.fire('Please select a branch', 'warning');
+
+        // For admin, use selectedBranchId if available, otherwise use branch_id
+        const branchToUse = this.state.isAdmin && this.state.selectedBranchId ? this.state.selectedBranchId : this.state.branch_id;
+
+        if(!branchToUse){
+            if (this.state.isAdmin) {
+                Swal.fire('Please select a branch for POS', 'warning');
+            } else {
+                Swal.fire('Please select a branch', 'warning');
+            }
             return false
         }
         const customer_id = this.state.customer_id
-        const branch_id = this.state.branch_id
+        const branch_id = branchToUse
         let product = this.state.products.find((p) => p.barcode === barcode);
         const elements = document.querySelectorAll('[class*="product-"]');
 
@@ -325,8 +381,9 @@ class Cart extends Component {
                 }
             }
 
+            const endpoint = this.state.isAdmin ? "/admin/cart" : "/user/user-cart";
             axios
-                .post("/user/user-cart", { barcode, customer_id, branch_id })
+                .post(endpoint, { barcode, customer_id, branch_id })
                 .then((res) => {
                     // this.loadCart();
                     console.log(res);
@@ -393,6 +450,12 @@ class Cart extends Component {
 
     }
 
+    setSelectedBranchId(event) {
+        const selectedBranchId = event.target.value;
+        this.setState({ selectedBranchId });
+        console.log('Selected branch for POS:', selectedBranchId);
+    }
+
     printInvoice = () => {
         const invoiceUrl = `/user/sales/print/${this.state.saleId}`;
         window.open(invoiceUrl, "_blank");
@@ -403,8 +466,16 @@ class Cart extends Component {
             Swal.fire('Please select a customer', 'warning');
             return false
         }
-        if(!this.state.branch_id){
-            Swal.fire('Please select a branch', 'warning');
+
+        // For admin, use selectedBranchId if available, otherwise use branch_id
+        const branchToUse = this.state.isAdmin && this.state.selectedBranchId ? this.state.selectedBranchId : this.state.branch_id;
+
+        if(!branchToUse){
+            if (this.state.isAdmin) {
+                Swal.fire('Please select a branch for POS', 'warning');
+            } else {
+                Swal.fire('Please select a branch', 'warning');
+            }
             return false
         }
         Swal.fire({
@@ -416,17 +487,18 @@ class Cart extends Component {
             cancelButtonText: this.state.translations["cancel_pay"],
             showLoaderOnConfirm: true,
             preConfirm: (amount) => {
+                const salesEndpoint = this.state.isAdmin ? "/admin/sales" : "/user/sales";
                 return axios
-                    .post("/user/sales", {
+                    .post(salesEndpoint, {
                         customer_id: this.state.customer_id,
-                        branch_id: this.state.branch_id,
+                        branch_id: branchToUse,
                         amount,
                         discount_amount: this.state.discount_amount,
                     })
                     .then((res) => {
                         this.loadCart();
                         // Assuming the response includes an order ID or invoice URL
-                        const printUrl = `/user/sales/print/${res.data.id}`;
+                        const printUrl = this.state.isAdmin ? `/admin/sales/print/${res.data.id}` : `/user/sales/print/${res.data.id}`;
                         this.setState({ printUrl, paid_amount:0 });
                         Swal.fire("Success", "Order has been saved!", "success");
                         return res.data;
@@ -530,13 +602,21 @@ class Cart extends Component {
                                                 <input
                                                     type="text"
                                                     className="form-control form-control-sm qty product-input"
-                                                    value={c.pivot.quantity}
-                                                    onChange={(event) =>
+                                                    defaultValue={c.pivot.quantity}
+                                                    onBlur={(event) =>
                                                         this.handleChangeQty(
                                                             c.id,
                                                             event.target.value
                                                         )
                                                     }
+                                                    onKeyPress={(event) => {
+                                                        if (event.key === 'Enter') {
+                                                            this.handleChangeQty(
+                                                                c.id,
+                                                                event.target.value
+                                                            );
+                                                        }
+                                                    }}
 
                                                     id={'prodinput-'+c.id}
                                                 />
@@ -645,6 +725,31 @@ class Cart extends Component {
 
 
                 <div className="col-md-6 col-lg-6">
+                    {/* Branch Selection for Admin */}
+                    {this.state.isAdmin && (
+                        <div className="row mb-3">
+                            <div className="col-12">
+                                <label htmlFor="pos-branch-select" style={{ fontWeight: 'bold', marginBottom: '5px', display: 'block' }}>
+                                    Select Branch for POS:
+                                </label>
+                                <select
+                                    id="pos-branch-select"
+                                    className="form-control"
+                                    value={this.state.selectedBranchId}
+                                    onChange={this.setSelectedBranchId}
+                                    style={{ marginBottom: '10px' }}
+                                >
+                                    <option value="">-- Select Branch for POS --</option>
+                                    {this.state.branches.map((branch) => (
+                                        <option key={branch.id} value={branch.id}>
+                                            {branch.branch_name}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                        </div>
+                    )}
+
                     <div className="row">
                         <div className="col">
                             <form onSubmit={this.handleScanBarcode}>
@@ -671,27 +776,99 @@ class Cart extends Component {
                     </div>
 
                     <div className="order-product">
-                        {productList.map((p) => (
-                            <div
-                                onClick={() => this.addProductToCart(p.barcode)}
-                                key={p.id}
-                                className="item product-div"
-                                id={'product-'+p.barcode}
-                                style={{ width:'100px', overflow:'hidden',height:'140px' }}
-                                title={p.name}
-                            >
-                                <img src={ p.image_url} alt="" />
-                                <h5
-                                    style={
-                                        window.APP.warning_quantity > p.quantity
-                                            ? { color: "red" }
-                                            : {}
-                                    }
+                        {productList.map((p) => {
+                            // Get branch stocks for this product if admin
+                            const productBranchStocks = this.state.isAdmin && this.state.branchStocks[p.id] ? this.state.branchStocks[p.id] : [];
+
+                            return (
+                                <div
+                                    onClick={() => this.addProductToCart(p.barcode)}
+                                    key={p.id}
+                                    className="item product-div"
+                                    id={'product-'+p.barcode}
+                                    style={{
+                                        width: this.state.isAdmin ? '150px' : '100px',
+                                        overflow:'hidden',
+                                        height: this.state.isAdmin ? '180px' : '140px',
+                                        border: '1px solid #ddd',
+                                        borderRadius: '8px',
+                                        padding: '8px',
+                                        margin: '5px',
+                                        cursor: 'pointer',
+                                        backgroundColor: '#fff'
+                                    }}
+                                    title={p.name}
                                 >
-                                    {p.name}({p.quantity})
-                                </h5>
-                            </div>
-                        ))}
+                                    <img src={p.image_url} alt="" style={{ width: '100%', height: '60px', objectFit: 'cover' }} />
+                                                                        <h6
+                                        style={{
+                                            fontSize: '14px',
+                                            margin: '5px 0',
+                                            color: window.APP.warning_quantity > p.quantity ? "red" : "black",
+                                            fontWeight: 'bold',
+                                            lineHeight: '1.2'
+                                        }}
+                                    >
+                                        {p.name}
+                                    </h6>
+
+                                    {this.state.isAdmin && productBranchStocks.length > 0 ? (
+                                        <div style={{ fontSize: '12px', color: '#666' }}>
+                                            <div style={{ fontWeight: 'bold', marginBottom: '4px', fontSize: '13px' }}>Branch Stock:</div>
+                                                                                                                                    {productBranchStocks.map((stock, index) => {
+                                                // Determine color: blue for selected branch, red for low stock, green for good stock
+                                                let textColor = 'green'; // Default: green for sufficient stock
+                                                let fontWeight = 'normal';
+
+                                                                                                // Debug logging
+                                                const warningQty = 15; // Fixed warning threshold to 15
+                                                const stockQty = parseInt(stock.quantity);
+                                                const isOutOfStock = stockQty === 0;
+                                                const isLowStock = stockQty > 0 && stockQty < warningQty;
+
+                                                console.log('Branch:', stock.branch_name, 'ID:', stock.branch_id, 'Quantity:', stockQty, 'Warning Qty:', warningQty, 'Is Out of Stock:', isOutOfStock, 'Is Low Stock:', isLowStock, 'Selected:', this.state.selectedBranchId);
+
+                                                if (this.state.selectedBranchId && parseInt(stock.branch_id) === parseInt(this.state.selectedBranchId)) {
+                                                    textColor = '#007bff'; // Blue for selected branch
+                                                    fontWeight = 'bold';
+                                                    console.log('Setting blue for selected branch:', stock.branch_name);
+                                                } else if (isOutOfStock) {
+                                                    textColor = 'red'; // Red for out of stock (0)
+                                                    console.log('Setting red for out of stock:', stock.branch_name, 'Qty:', stockQty);
+                                                } else if (isLowStock) {
+                                                    textColor = '#ff8c00'; // Orange/warning for low stock (1-14)
+                                                    console.log('Setting orange for low stock:', stock.branch_name, 'Qty:', stockQty, '<', warningQty);
+                                                } else {
+                                                    console.log('Setting green for good stock:', stock.branch_name, 'Qty:', stockQty, '>=', warningQty);
+                                                }
+
+                                                return (
+                                                    <div key={index} style={{
+                                                        display: 'flex',
+                                                        justifyContent: 'space-between',
+                                                        marginBottom: '3px',
+                                                        color: textColor,
+                                                        fontSize: '12px',
+                                                        fontWeight: fontWeight
+                                                    }}>
+                                                        <span>{stock.branch_name}:</span>
+                                                        <span style={{ fontWeight: 'bold' }}>{stock.quantity}</span>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    ) : (
+                                        <div style={{
+                                            fontSize: '14px',
+                                            color: window.APP.warning_quantity > p.quantity ? "red" : "green",
+                                            fontWeight: 'bold'
+                                        }}>
+                                            Stock: {p.quantity}
+                                        </div>
+                                    )}
+                                </div>
+                            );
+                        })}
                     </div>
                 </div>
 

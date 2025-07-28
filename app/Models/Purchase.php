@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Builder;
 
 class Purchase extends Model
 {
-     protected $fillable = [
+    protected $fillable = [
         'supplier_id',
         'invoice_no',
         'sub_total',
@@ -19,15 +19,16 @@ class Purchase extends Model
         'company_id',
     ];
 
-    protected static function booted() {
+    protected static function booted()
+    {
         static::addGlobalScope('branch', function (Builder $builder) {
-             $user = auth()->user();
+            $user = auth()->user();
             $company_id = $user->company_id;
             $branch_id = $user->branch_id;
             $role = $user->role;
-            if($role=="admin"){
+            if ($role == "admin") {
                 $builder->where('company_id', $company_id);
-            }else{
+            } else {
                 $builder->where('company_id', $company_id)->where('branch_id', $branch_id);
             }
         });
@@ -45,6 +46,6 @@ class Purchase extends Model
 
     public function supplier()
     {
-        return $this->belongsTo(Supplier::class,'supplier_id');
+        return $this->belongsTo(Supplier::class, 'supplier_id');
     }
 }

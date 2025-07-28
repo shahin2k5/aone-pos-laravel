@@ -15,7 +15,7 @@ class CartController extends Controller
     {
         if ($request->wantsJson()) {
             return response(
-                $request->user()->cart->each(function ($product) {
+                Auth::user()->cart->each(function ($product) {
                     $customer = Customer::find($product->pivot->customer_id);
                     $product->pivot->user_balance = $customer?->balance ?? 0;
                 })
@@ -164,5 +164,40 @@ class CartController extends Controller
             ->detach();
 
         return response('', 204);
+    }
+
+    public function getBranchStocks(Request $request)
+    {
+        $company_id = Auth::user()->company_id;
+
+        $branchStocks = BranchProductStock::with(['branch', 'product'])
+            ->whereHas('product', function ($query) use ($company_id) {
+                $query->where('company_id', $company_id);
+            })
+            ->get()
+            ->groupBy('product_id')
+            ->map(function ($stocks) {
+                return $stocks->map(function ($stock) {
+                    return [
+                        'branch_id' => $stock->branch_id,
+                        'branch_name' => $stock->branch->branch_name,
+                        'quantity' => $stock->quantity,
+                        'product_id' => $stock->product_id
+                    ];
+                });
+            });
+
+        return response()->json($branchStocks);
+    }
+
+    public function loadBranches(Request $request)
+    {
+        $company_id = Auth::user()->company_id;
+
+        $branches = \App\Models\Branch::where('company_id', $company_id)
+            ->select('id', 'branch_name')
+            ->get();
+
+        return response()->json($branches);
     }
 }
