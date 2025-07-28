@@ -223,7 +223,7 @@ Route::middleware(['auth', 'admin_guard'])->prefix('admin')->group(function () {
     Route::get('/cart', [CartController::class, 'index'])->name('admin.cart.index');
     Route::post('/cart', [CartController::class, 'store'])->name('admin.cart.store');
     Route::post('/cart/change-qty', [CartController::class, 'changeQty'])->name('admin.cart.change-qty');
-    Route::post('/cart/delete', [CartController::class, 'delete'])->name('admin.cart.delete');
+    Route::delete('/cart/delete', [CartController::class, 'delete'])->name('admin.cart.delete');
     Route::post('/cart/empty', [CartController::class, 'empty'])->name('admin.cart.empty');
     Route::delete('/cart/empty', [CartController::class, 'empty']);
 

@@ -46,80 +46,88 @@ class SaleController extends Controller
 
     public function store(SaleStoreRequest $request)
     {
-        $user = Auth::user();
-        $company_id = $user->company_id;
-        $branch_id = $user->role == 'admin' ? $request->branch_id : $user->branch_id;
-        $sale = Sale::create([
-            'customer_id' => $request->customer_id,
-            'sub_total' => 0,
-            'discount_amount' => 0,
-            'gr_total' => 0,
-            'paid_amount' => 0,
-            'profit_amount' => 0,
-            'user_id' => $user->id,
-            'branch_id' => $branch_id,
-            'company_id' => $company_id,
-        ]);
-
-        $cart = Auth::user()->cart()->get();
-        $sum_cart = $cart->sum('sell_price');
-
-        $totalProfit = 0; // Initialize profit calculation
-        $subTotal = 0; // Initialize subtotal calculation
-
-        foreach ($cart as $item) {
-            $product = \App\Models\Product::find($item->id);
-            $purchasePrice = $product && $product->purchase_price !== null ? $product->purchase_price : 0;
-            $sale->items()->create([
-                'purchase_price' => $purchasePrice,
-                'sell_price' => $item->sell_price * $item->pivot->quantity,
-                'quantity' => $item->pivot->quantity,
-                'product_id' => $item->id,
+        return DB::transaction(function () use ($request) {
+            $user = Auth::user();
+            $company_id = $user->company_id;
+            $branch_id = $user->role == 'admin' ? $request->branch_id : $user->branch_id;
+            $sale = Sale::create([
+                'customer_id' => $request->customer_id,
+                'sub_total' => 0,
+                'discount_amount' => 0,
+                'gr_total' => 0,
+                'paid_amount' => 0,
+                'profit_amount' => 0,
                 'user_id' => $user->id,
                 'branch_id' => $branch_id,
                 'company_id' => $company_id,
             ]);
 
-            // Calculate profit for this item: (sell_price - purchase_price) * quantity
-            $itemProfit = ($item->sell_price - $purchasePrice) * $item->pivot->quantity;
-            $totalProfit += $itemProfit;
+            $cart = Auth::user()->cart()->get();
+            $sum_cart = $cart->sum('sell_price');
 
-            // Calculate subtotal
-            $subTotal += $item->sell_price * $item->pivot->quantity;
+            $totalProfit = 0; // Initialize profit calculation
+            $subTotal = 0; // Initialize subtotal calculation
 
-            // Update branch stock
-            $stock = BranchProductStock::where('product_id', $item->id)
-                ->where('branch_id', $branch_id)
-                ->first();
-            if ($stock) {
-                $stock->quantity -= $item->pivot->quantity;
-                $stock->save();
+            foreach ($cart as $item) {
+                $product = \App\Models\Product::find($item->id);
+                $purchasePrice = $product && $product->purchase_price !== null ? $product->purchase_price : 0;
+                $sale->items()->create([
+                    'purchase_price' => $purchasePrice,
+                    'sell_price' => $item->sell_price * $item->pivot->quantity,
+                    'quantity' => $item->pivot->quantity,
+                    'product_id' => $item->id,
+                    'user_id' => $user->id,
+                    'branch_id' => $branch_id,
+                    'company_id' => $company_id,
+                ]);
+
+                // Calculate profit for this item: (sell_price - purchase_price) * quantity
+                $itemProfit = ($item->sell_price - $purchasePrice) * $item->pivot->quantity;
+                $totalProfit += $itemProfit;
+
+                // Calculate subtotal
+                $subTotal += $item->sell_price * $item->pivot->quantity;
+
+                // Update branch stock
+                $stock = BranchProductStock::where('product_id', $item->id)
+                    ->where('branch_id', $branch_id)
+                    ->first();
+                if ($stock) {
+                    // Validate stock before deducting
+                    if ($stock->quantity < $item->pivot->quantity) {
+                        throw new \Exception("Insufficient stock for product {$item->name}. Available: {$stock->quantity}, Requested: {$item->pivot->quantity}");
+                    }
+                    $stock->quantity -= $item->pivot->quantity;
+                    $stock->save();
+                } else {
+                    throw new \Exception("No stock found for product {$item->name} in the selected branch");
+                }
             }
-        }
 
-        // Update the order with calculated values
-        $discount = $request->discount_amount ?? 0;
-        $sale->sub_total = $subTotal;
-        $sale->discount_amount = $discount;
-        $sale->gr_total = $subTotal - $discount;
-        $sale->paid_amount = $request->amount;
-        $sale->profit_amount = $totalProfit;
-        $sale->save();
+            // Update the order with calculated values
+            $discount = $request->discount_amount ?? 0;
+            $sale->sub_total = $subTotal;
+            $sale->discount_amount = $discount;
+            $sale->gr_total = $subTotal - $discount;
+            $sale->paid_amount = $request->amount;
+            $sale->profit_amount = $totalProfit;
+            $sale->save();
 
-        Auth::user()->cart()->detach();
-        $sale->payments()->create([
-            'amount' => $request->amount,
-            'user_id' => $user->id,
-            'branch_id' => $branch_id,
-            'company_id' => $company_id,
-        ]);
+            Auth::user()->cart()->detach();
+            $sale->payments()->create([
+                'amount' => $request->amount,
+                'user_id' => $user->id,
+                'branch_id' => $branch_id,
+                'company_id' => $company_id,
+            ]);
 
-        if ($request->customer_id) {
-            $customer = Customer::where('id', $request->customer_id)->first();
-            $customer->balance = $customer->balance + (($subTotal - $discount) - $request->amount);
-            $customer->save();
-        }
-        return $sale;
+            if ($request->customer_id) {
+                $customer = Customer::where('id', $request->customer_id)->first();
+                $customer->balance = $customer->balance + (($subTotal - $discount) - $request->amount);
+                $customer->save();
+            }
+            return $sale;
+        });
     }
     public function partialPayment(Request $request)
     {
