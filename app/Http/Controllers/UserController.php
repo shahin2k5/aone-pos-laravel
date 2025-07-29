@@ -63,47 +63,41 @@ class UserController extends Controller
         $orders = Sale::with(['items', 'payments'])->get();
         $customers_count = Customer::count();
 
+        // Fix: Get low stock products with proper product data
         $low_stock_products = BranchProductStock::where('branch_id', $branch_id)
             ->where('quantity', '<', 20)
-            ->with('product')
-            ->get();
+            ->with(['product' => function ($query) use ($company_id) {
+                $query->withoutGlobalScopes()->where('company_id', $company_id);
+            }])
+            ->get()
+            ->map(function ($stock) {
+                return $stock->product;
+            })
+            ->filter() // Remove null products
+            ->take(10);
 
-        $bestSellingProducts = DB::table('branch_product_stock')
-            ->join('products', 'branch_product_stock.product_id', '=', 'products.id')
-            ->join('branches', 'branch_product_stock.branch_id', '=', 'branches.id')
-            ->where('branch_product_stock.branch_id', $branch_id)
-            ->where('branches.company_id', $company_id)
-            ->orderByDesc('branch_product_stock.quantity')
-            ->limit(10)
-            ->select('products.*', 'branch_product_stock.quantity as branch_quantity')
-            ->get();
-
-
-
-
-
-        $currentMonthBestSelling = DB::table('products')
-            ->where('products.company_id', $company_id)
-            ->where('products.branch_id', $branch_id)
-            ->joinSub(
-                DB::table('sale_items')
-                    ->join('sales', 'sales.id', '=', 'sale_items.sale_id')
-                    ->select('sale_items.product_id', DB::raw('SUM(sale_items.quantity) as total_sold'))
-                    ->whereYear('sales.created_at', date('Y'))
-                    ->whereMonth('sales.created_at', date('m'))
-                    ->groupBy('sale_items.product_id')
-                    ->having('total_sold', '>', 500),
-                'totals',
+        // Fix: Get best selling products based on actual sales data
+        $best_selling_products = DB::table('sale_items')
+            ->join('sales', 'sale_items.sale_id', '=', 'sales.id')
+            ->join('products', 'sale_items.product_id', '=', 'products.id')
+            ->where('sales.company_id', $company_id)
+            ->where('sales.branch_id', $branch_id)
+            ->whereBetween('sales.created_at', [now()->subDays(30), now()]) // Last 30 days
+            ->select(
                 'products.id',
-                '=',
-                'totals.product_id'
+                'products.name',
+                'products.image',
+                'products.barcode',
+                'products.sell_price',
+                'products.status',
+                'products.updated_at',
+                DB::raw('SUM(sale_items.quantity) as total_sold'),
+                DB::raw('SUM(sale_items.quantity * sale_items.sell_price) as total_revenue')
             )
-            ->select('products.*', 'totals.total_sold')
+            ->groupBy('products.id', 'products.name', 'products.image', 'products.barcode', 'products.sell_price', 'products.status', 'products.updated_at')
+            ->orderByDesc('total_sold')
+            ->limit(10)
             ->get();
-
-
-
-
 
         return view('user.dashboard', [
             'orders_count' => $orders->count(),
@@ -115,9 +109,7 @@ class UserController extends Controller
             })->sum(),
             'customers_count' => $customers_count,
             'low_stock_products' => $low_stock_products,
-            'best_selling_products' => $bestSellingProducts,
-            'current_month_products' => $currentMonthBestSelling,
-
+            'best_selling_products' => $best_selling_products,
             'payment_customer_today' => $customer_payment,
             'payment_supplier_today' => $supplier_payment,
             'today_sales' => $today_sales,
