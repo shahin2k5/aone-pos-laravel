@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\Auth;
 
 class ProductStoreRequest extends FormRequest
 {
@@ -33,7 +34,7 @@ class ProductStoreRequest extends FormRequest
             'status' => 'required|boolean',
         ];
 
-        if (auth()->user() && auth()->user()->role === 'admin') {
+        if (Auth::user() && Auth::user()->role === 'admin') {
             $rules['branch_stock'] = 'required|array|min:1';
             $rules['branch_stock.*'] = 'required|integer|min:0';
         } else {

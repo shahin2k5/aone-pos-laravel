@@ -110,7 +110,31 @@ Route::prefix('user', 'user_guard')->middleware(['auth'])->group(function () {
     Route::post('/salesreturn/changeqnty', [SalesreturnController::class, 'changeQnty']);
     Route::post('/salesreturn/delete', [SalesreturnController::class, 'handleDelete']);
     Route::get('/salesreturn/details/{salesreturn_id}', [SalesreturnController::class, 'salesreturnDetails'])->name('user.salesreturn.details');
+    Route::get('/salesreturn/print/{id}', [SalesreturnController::class, 'print'])->name('user.salesreturn.print');
     Route::post('/salesreturn/finalsave', [SalesreturnController::class, 'finalSave']);
+
+    // User Purchase Return
+    Route::resource('purchasereturn', PurchasereturnController::class)->names([
+        'index' => 'user.purchasereturn.index',
+        'create' => 'user.purchasereturn.create',
+        'store' => 'user.purchasereturn.store',
+        'show' => 'user.purchasereturn.show',
+        'edit' => 'user.purchasereturn.edit',
+        'update' => 'user.purchasereturn.update',
+        'destroy' => 'user.purchasereturn.destroy',
+    ]);
+    Route::get('/purchasereturn-cart', [PurchasereturnCartController::class, 'index'])->name('user.purchasereturn.cart');
+    Route::post('/purchasereturn-cart', [PurchasereturnCartController::class, 'store'])->name('user.purchasereturn.cart.store');
+    Route::post('/purchasereturn-cart/change-qty', [PurchasereturnCartController::class, 'changeQty']);
+    Route::delete('/purchasereturn-cart/delete', [PurchasereturnCartController::class, 'delete']);
+    Route::delete('/purchasereturn-cart/empty', [PurchasereturnCartController::class, 'empty']);
+    Route::get('/purchasereturn/findpurchaseid/{purchase_id}', [PurchasereturnController::class, 'findPurchaseID']);
+    Route::post('/purchasereturn/cart', [PurchasereturnController::class, 'addProductToCart']);
+    Route::post('/purchasereturn/changeqnty', [PurchasereturnController::class, 'changeQnty']);
+    Route::post('/purchasereturn/delete', [PurchasereturnController::class, 'handleDelete']);
+    Route::get('/purchasereturn/details/{id}', [PurchasereturnController::class, 'details']);
+    Route::get('/purchasereturn/print/{id}', [PurchasereturnController::class, 'print'])->name('user.purchasereturn.print');
+    Route::post('/purchasereturn/finalsave', [PurchasereturnController::class, 'finalSave']);
 
     // User Damage
     Route::resource('damage', DamageController::class)->names([
@@ -161,6 +185,7 @@ Route::prefix('user', 'user_guard')->middleware(['auth'])->group(function () {
 
     // User Branches
     Route::get('/load-branches', [App\Http\Controllers\UserCartController::class, 'loadBranches'])->name('user.load.branches');
+    Route::get('/branch-stock/{product_id}', [App\Http\Controllers\UserCartController::class, 'getBranchStock'])->name('user.branch-stock');
 
     // User Translations
     Route::get('/locale/{type}', function ($type) {
@@ -283,6 +308,7 @@ Route::middleware(['auth', 'admin_guard'])->prefix('admin')->group(function () {
     Route::post('/salesreturn/changeqnty', [SalesreturnController::class, 'changeQnty']);
     Route::post('/salesreturn/delete', [SalesreturnController::class, 'handleDelete']);
     Route::get('/salesreturn/details/{salesreturn_id}', [SalesreturnController::class, 'salesreturnDetails']);
+    Route::get('/salesreturn/print/{id}', [SalesreturnController::class, 'print'])->name('admin.salesreturn.print');
     Route::post('/salesreturn/finalsave', [SalesreturnController::class, 'finalSave']);
 
     // Admin Purchase Return
@@ -305,6 +331,7 @@ Route::middleware(['auth', 'admin_guard'])->prefix('admin')->group(function () {
     Route::post('/purchasereturn/changeqnty', [PurchasereturnController::class, 'changeQnty']);
     Route::post('/purchasereturn/delete', [PurchasereturnController::class, 'handleDelete']);
     Route::get('/purchasereturn/details/{id}', [PurchasereturnController::class, 'details']);
+    Route::get('/purchasereturn/print/{id}', [PurchasereturnController::class, 'print'])->name('admin.purchasereturn.print');
     Route::post('/purchasereturn/finalsave', [PurchasereturnController::class, 'finalSave']);
 
     // Admin Damage
@@ -361,6 +388,7 @@ Route::middleware(['auth', 'admin_guard'])->prefix('admin')->group(function () {
 
     // Admin Cart - Branch Stocks API
     Route::get('/branch-stocks', [\App\Http\Controllers\Admin\CartController::class, 'getBranchStocks'])->name('admin.branch-stocks');
+    Route::get('/branch-stock/{product_id}/{branch_id}', [\App\Http\Controllers\Admin\CartController::class, 'getBranchStock'])->name('admin.branch-stock');
 
     // Admin Cart - Load Branches API
     Route::get('/load-branches', [\App\Http\Controllers\Admin\CartController::class, 'loadBranches'])->name('admin.load-branches');

@@ -173,6 +173,11 @@ class SaleController extends Controller
     public function print($id)
     {
         $order = Sale::with(['customer', 'items'])->findOrFail($id);
-        return view('orders.print', compact('order'));
+        $user = Auth::user();
+
+        // Determine the correct view path based on user role
+        $viewPath = $user->role === 'admin' ? 'admin.sales.print' : 'user.sales.print';
+
+        return view($viewPath, compact('order'));
     }
 }

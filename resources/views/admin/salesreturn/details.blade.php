@@ -4,6 +4,7 @@
 @section('content-header', __('Salesreturn#'.$salesreturns[0]->id))
 @section('content-actions')
 <a href="/admin/salesreturn" class="btn btn-primary">{{ __('<< Salesreturn') }}</a>
+<a href="/admin/salesreturn/print/{{ $salesreturns[0]->id }}" target="_blank" class="btn btn-success">{{ __('Print Sales Return') }}</a>
 @endsection
 @section('content')
 
@@ -35,8 +36,13 @@
                 <div class="col-md-4"><b>Order id: </b> {{$salesreturns[0]->order_id }}</div>
                 <div class="col-md-4"><b>Customer: </b> {{$salesreturns[0]->customer->first_name }}</div>
                 <div class="col-md-4"><b>Total items:</b> {{number_format($salesreturns[0]->total_qnty,0) }}</div>
-                <div class="col-md-4"><b>Total Amount:</b> {{$salesreturns[0]->total_amount }}</div>
-                <div class="col-md-4"><b>Return Amount:</b> {{$salesreturns[0]->return_amount }}</div>
+                <div class="col-md-4"><b>Original Sale Total:</b> {{ config('settings.currency_symbol') }} {{number_format($salesreturns[0]->total_amount)}}</div>
+                <div class="col-md-4"><b>Return Amount:</b> {{ config('settings.currency_symbol') }} {{number_format($salesreturns[0]->return_amount)}}</div>
+                                <div class="col-md-4"><b>Loss:</b>
+                    <span class="{{ $salesreturns[0]->getLossClass() }}">
+                        {{ config('settings.currency_symbol') }} {{ $salesreturns[0]->getFormattedLoss() }}
+                    </span>
+                </div>
                 <div class="col-md-4"></div>
             </div>
         @endif
@@ -48,9 +54,10 @@
                 <tr>
                     <th>{{ 'ID' }}</th>
                     <th>{{ 'Product' }}</th>
-                    <th>{{ 'Rate' }}</th>
+                    <th>{{ 'Product Name' }}</th>
+                    <th>{{ 'Unit Price' }}</th>
                     <th>{{ 'Return Qnty.' }}</th>
-                    <th>{{ 'Total' }}</th>
+                    <th>{{ 'Item Total' }}</th>
                     <th>{{ 'Created' }}</th>
 
                 </tr>
@@ -62,9 +69,9 @@
                     <td>{{$salesreturn->id}}</td>
                     <td><img class="product-img" src="{{ Storage::url($salesreturn->product->image) }}" alt="" style="width:75px;height:75px"></td>
                     <td>{{$salesreturn->product->name}}</td>
-                    <td>{{$salesreturn->sell_price}}</td>
+                    <td>{{ config('settings.currency_symbol') }} {{number_format($salesreturn->sell_price, 2)}}</td>
                     <td>{{number_format($salesreturn->qnty)}}</td>
-                    <td>{{$salesreturn->total_price}}</td>
+                    <td>{{ config('settings.currency_symbol') }} {{number_format($salesreturn->sell_price * $salesreturn->qnty, 2)}}</td>
                     <td>{{$salesreturn->created_at}}</td>
 
                 </tr>

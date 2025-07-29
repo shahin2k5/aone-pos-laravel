@@ -35,10 +35,11 @@
                     <th>{{ 'Customer' }}</th>
                     <th>{{ 'Invoice' }}</th>
                     <th>{{ 'Return Qnty.' }}</th>
-                    <th>{{ 'Total' }}</th>
-                    <th>{{ 'Return' }}</th>
-                    <th>{{ 'Profit' }}</th>
+                    <th>{{ 'Original Sale Total' }}</th>
+                    <th>{{ 'Return Amount' }}</th>
+                    <th>{{ 'Loss' }}</th>
                     <th>{{ 'Created' }}</th>
+                    <th>{{ 'Actions' }}</th>
 
                 </tr>
             </thead>
@@ -51,9 +52,14 @@
                     <td>{{number_format($salesreturn->total_qnty)}}</td>
                     <td>{{ config('settings.currency_symbol') }} {{number_format($salesreturn->total_amount)}}</td>
                     <td>{{ config('settings.currency_symbol') }} {{number_format($salesreturn->return_amount)}}</td>
-                    <td>{{ config('settings.currency_symbol') }} {{number_format($salesreturn->profit_amount)}}</td>
+                    <td class="{{ $salesreturn->getLossClass() }}">
+                        {{ config('settings.currency_symbol') }} {{ $salesreturn->getFormattedLoss() }}
+                    </td>
                     <td>{{$salesreturn->created_at}}</td>
-                    <td><a href="/admin/salesreturn/details/{{ $salesreturn->id }}" class="btn btn-success"><i class="fa fa-eye"></i></a></td>
+                    <td>
+                        <a href="/admin/salesreturn/details/{{ $salesreturn->id }}" class="btn btn-success"><i class="fa fa-eye"></i></a>
+                        <a href="/admin/salesreturn/print/{{ $salesreturn->id }}" target="_blank" class="btn btn-info"><i class="fa fa-print"></i></a>
+                    </td>
 
                 </tr>
                 @endforeach

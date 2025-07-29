@@ -39,6 +39,7 @@
                     <th>{{ 'Return' }}</th>
                     <th>{{ 'Profit' }}</th>
                     <th>{{ 'Created' }}</th>
+                    <th>{{ 'Actions' }}</th>
 
                 </tr>
             </thead>
@@ -53,7 +54,10 @@
                     <td>{{ config('settings.currency_symbol') }} {{number_format($purchase->return_amount)}}</td>
                     <td>{{ config('settings.currency_symbol') }} {{number_format($purchase->profit_amount)}}</td>
                     <td>{{$purchase->created_at}}</td>
-                    <td><a href="/admin/purchasereturn/details/{{ $purchase->id }}" class="btn btn-success"><i class="fa fa-eye"></i></a></td>
+                    <td>
+                        <a href="/admin/purchasereturn/details/{{ $purchase->id }}" class="btn btn-success"><i class="fa fa-eye"></i></a>
+                        <a href="/admin/purchasereturn/print/{{ $purchase->id }}" target="_blank" class="btn btn-info"><i class="fa fa-print"></i></a>
+                    </td>
 
                 </tr>
                 @endforeach

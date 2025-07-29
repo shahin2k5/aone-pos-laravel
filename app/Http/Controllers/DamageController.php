@@ -13,6 +13,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Models\Sale;
 use App\Models\SalesreturnItems;
+use App\Models\BranchProductStock;
 
 class DamageController extends Controller
 {
@@ -39,6 +40,7 @@ class DamageController extends Controller
     {
         $products = new Product();
         $products = $products->get();
+
         $viewPath = auth()->user()->role === 'admin' ? 'admin.damage.create' : 'user.damage.create';
         return view($viewPath, compact('products'));
     }
@@ -176,26 +178,93 @@ class DamageController extends Controller
 
     public function store(Request $request)
     {
+        $request->validate([
+            'product_id' => 'required|exists:products,id',
+            'damage_qty' => 'required|array',
+            'damage_qty.*' => 'integer|min:0',
+            'damage_notes' => 'nullable|string'
+        ]);
+
         $product = Product::find($request->product_id);
-        if ($product) {
-            $product->quantity = $product->quantity - $request->damage_qnty;
-            $product->save();
+        if (!$product) {
+            return back()->withErrors(['product_id' => 'Product not found.']);
         }
 
         $user = auth()->user();
-        $damage = DamageItem::create([
-            'product_id' => $request->product_id,
-            'purchase_price' => $product ? $product->purchase_price : 0,
-            'sell_price' => $product ? $product->sell_price : 0,
-            'qnty' => $request->damage_qnty,
-            'total_price' => ($product ? $product->purchase_price : 0) * ($request->damage_qnty),
-            'notes' => $request->damage_notes,
-            'user_id' => $user->id,
-            'company_id' => $user->company_id,
-            'branch_id' => $user->branch_id,
-        ]);
+        $damageEntries = [];
+        $totalDamageQty = 0;
 
-        return back()->with('success', 'Data saved successfully!');
+        // Process damage quantities for each branch
+        foreach ($request->damage_qty as $branch_id => $damage_qty) {
+            if ($damage_qty <= 0) continue; // Skip zero quantities
+
+            $branch_id = (int) $branch_id;
+
+            // For admin users, validate branch access
+            if ($user->role === 'admin') {
+                $branch = \App\Models\Branch::where('id', $branch_id)
+                    ->where('company_id', $user->company_id)
+                    ->first();
+                if (!$branch) {
+                    return back()->withErrors(['damage_qty' => "Invalid branch ID: {$branch_id}"]);
+                }
+            } else {
+                // For regular users, ensure they can only damage their own branch
+                if ($branch_id != $user->branch_id) {
+                    return back()->withErrors(['damage_qty' => 'You can only create damage entries for your assigned branch.']);
+                }
+            }
+
+            // Check stock availability
+            $stock = BranchProductStock::where('product_id', $request->product_id)
+                ->where('branch_id', $branch_id)
+                ->first();
+
+            if (!$stock) {
+                return back()->withErrors(['damage_qty' => "No stock found for this product in branch ID: {$branch_id}"]);
+            }
+
+            if ($stock->quantity < $damage_qty) {
+                return back()->withErrors(['damage_qty' => "Insufficient stock in branch ID {$branch_id}. Available: {$stock->quantity}, Requested: {$damage_qty}"]);
+            }
+
+            $damageEntries[] = [
+                'product_id' => $request->product_id,
+                'purchase_price' => $product->purchase_price,
+                'sell_price' => $product->sell_price,
+                'qnty' => $damage_qty,
+                'total_price' => $product->purchase_price * $damage_qty,
+                'notes' => $request->damage_notes,
+                'user_id' => $user->id,
+                'company_id' => $user->company_id,
+                'branch_id' => $branch_id,
+            ];
+
+            $totalDamageQty += $damage_qty;
+        }
+
+        if (empty($damageEntries)) {
+            return back()->withErrors(['damage_qty' => 'Please enter at least one damage quantity.']);
+        }
+
+        // Create damage entries and update stock
+        foreach ($damageEntries as $entry) {
+            // Create damage record
+            DamageItem::create($entry);
+
+            // Update branch stock
+            $stock = BranchProductStock::where('product_id', $entry['product_id'])
+                ->where('branch_id', $entry['branch_id'])
+                ->first();
+
+            $stock->quantity -= $entry['qnty'];
+            $stock->save();
+        }
+
+        $branchCount = count($damageEntries);
+        $message = "Damage recorded successfully! {$totalDamageQty} items damaged across {$branchCount} branch(es).";
+
+        return back()->with('success', $message);
     }
 
 

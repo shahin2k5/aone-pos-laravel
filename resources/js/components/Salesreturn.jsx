@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { createRoot } from "react-dom";
+import { createRoot } from "react-dom/client";
 import axios from "axios";
 import Swal from "sweetalert2";
 import { isArray, sum } from "lodash";
@@ -11,17 +11,19 @@ class Salesreturn extends Component {
             cart: [],
             products: [],
             customers: [],
+            branches: [],
+            branchStocks: {}, // New state for branch stocks
             barcode: "",
             search: "",
             customer_id: "",
             customer_info: "",
             translations: {},
             sub_total:0,
-            discount_amount:0,
+            discount_amount:'0',
             gr_total:0,
             prev_balance:0,
             new_balance:0,
-            return_amount:'',
+            return_amount:'0',
             last_balance:0,
             selCustomerId:'',
             selCustomerFName:'',
@@ -29,7 +31,8 @@ class Salesreturn extends Component {
             selCustomerAddress:'',
             selCustomerPhone:'',
             selCustomerBalance:'',
-            printUrl:''
+            printUrl:'',
+            isAdmin: window.APP && window.APP.user_role === 'admin' // Check if user is admin
         };
 
         this.loadCart = this.loadCart.bind(this);
@@ -39,6 +42,8 @@ class Salesreturn extends Component {
         this.handleEmptyCart = this.handleEmptyCart.bind(this);
 
         this.loadProducts = this.loadProducts.bind(this);
+        this.loadBranchStocks = this.loadBranchStocks.bind(this); // New method
+        this.loadBranches = this.loadBranches.bind(this); // Load branches for admin
         this.handleChangeSearch = this.handleChangeSearch.bind(this);
         this.handleSeach = this.handleSeach.bind(this);
         this.findOrderID = this.findOrderID.bind(this);
@@ -52,7 +57,10 @@ class Salesreturn extends Component {
         this.loadCart();
         this.loadProducts();
         this.loadCustomers();
-
+        if (this.state.isAdmin) {
+            this.loadBranchStocks(); // Load branch stocks for admin
+            this.loadBranches(); // Load branches for admin
+        }
     }
 
     // load the transaltions for the react component
@@ -83,9 +91,28 @@ class Salesreturn extends Component {
         });
     }
 
+    loadBranches() {
+        axios.get(`/admin/load-branches`).then((res) => {
+            const branches = res.data;
+            this.setState({ branches });
+        }).catch((error) => {
+            console.error('Error loading branches:', error);
+        });
+    }
+
+    // New method to load branch stocks for admin
+    loadBranchStocks() {
+        axios.get(`/admin/branch-stocks`).then((res) => {
+            const branchStocks = res.data;
+            this.setState({ branchStocks });
+        }).catch((error) => {
+            console.error('Error loading branch stocks:', error);
+        });
+    }
+
     handleOnChangeBarcode(event) {
         const barcode = event.target.value;
-        console.log(barcode);
+
         this.setState({ barcode });
     }
 
@@ -94,23 +121,23 @@ class Salesreturn extends Component {
             const cart = res.data.salesreturn_item;
             const order = res.data.order;
             if(cart.length){
-                const sub_total = this.getTotal(cart)
-                const gr_total = sub_total - this.state.discount_amount
-                const customer_id = order.customer_id
-                const prev_balance = order.customer.balance
-                const new_balance = order.customer.balance+gr_total
-                const last_balance = order.customer.balance+gr_total
-                this.setState({ cart, sub_total, gr_total,customer_id, prev_balance, new_balance,last_balance });
+                // Use backend-calculated totals instead of recalculating
+                const sub_total = parseFloat(order.gr_total || 0).toFixed(2);
+                const gr_total = parseFloat(sub_total) - this.state.discount_amount;
+                const customer_id = order.customer_id;
+                const prev_balance = order.customer.balance;
+                const new_balance = order.customer.balance + gr_total;
+                const last_balance = order.customer.balance + gr_total;
+                this.setState({ cart, sub_total, gr_total, customer_id, prev_balance, new_balance, last_balance });
             }else{
-                const sub_total = 0
-                const gr_total = 0
-                const customer_id = ""
-                const prev_balance = 0
-                const new_balance = 0
-                const last_balance = 0
-                this.setState({ cart, sub_total, gr_total,customer_id, prev_balance, new_balance,last_balance });
+                const sub_total = 0;
+                const gr_total = 0;
+                const customer_id = "";
+                const prev_balance = 0;
+                const new_balance = 0;
+                const last_balance = 0;
+                this.setState({ cart, sub_total, gr_total, customer_id, prev_balance, new_balance, last_balance });
             }
-
         });
     }
 
@@ -134,7 +161,8 @@ class Salesreturn extends Component {
         var c_product = ""
         const cart = this.state.cart.map((c) => {
             if (c.product_id === product_id) {
-                c.qnty = qty;
+                c.qnty = parseInt(qty) || 0;
+                c.total_price = (parseInt(qty) || 0) * c.sell_price; // Update total_price locally
                 c_product = c
             }
             return c;
@@ -143,12 +171,13 @@ class Salesreturn extends Component {
         if (!qty) return;
 
         axios
-            .post("/admin/salesreturn/changeqnty", { product_id, qnty: qty, sell_price: c_product.sell_price })
+            .post("/admin/salesreturn/changeqnty", { product_id, qnty: parseInt(qty) || 0, sell_price: c_product.sell_price })
             .then((res) => {
-                const sub_total = this.getTotal(cart)
-                const gr_total = sub_total - this.state.discount_amount
-                const new_balance = this.state.prev_balance + gr_total
-                const last_balance = new_balance - this.state.return_amount
+                // Calculate total from updated cart items
+                const sub_total = cart.reduce((total, item) => total + parseFloat(item.total_price || 0), 0).toFixed(2);
+                const gr_total = parseFloat(sub_total) - this.state.discount_amount;
+                const new_balance = this.state.prev_balance + gr_total;
+                const last_balance = new_balance - this.state.return_amount;
                 this.setState({ cart, sub_total, gr_total, new_balance, last_balance });
             })
             .catch((err) => {
@@ -158,21 +187,23 @@ class Salesreturn extends Component {
 
     getTotal(cart) {
         if(isArray(cart)){
-            const total = cart.map((c) => c.qnty * c.sell_price);
+            // Use total_price if available, otherwise calculate from qnty * sell_price
+            const total = cart.map((c) => c.total_price || (c.qnty * c.sell_price));
             return sum(total).toFixed(2);
         }
     }
 
     handleClickDelete(product_id) {
-        console.log(product_id)
+
         axios
             .post("/admin/salesreturn/delete", { product_id, _method: "POST" })
             .then((res) => {
                 const cart = this.state.cart.filter((c) => c.product_id !== product_id);
-                const sub_total = this.getTotal(cart)
-                const gr_total = sub_total - this.state.discount_amount
-                const new_balance = this.state.prev_balance + gr_total
-                const last_balance = new_balance - this.state.discount_amount
+                // Calculate total from remaining cart items
+                const sub_total = cart.reduce((total, item) => total + parseFloat(item.total_price || 0), 0).toFixed(2);
+                const gr_total = parseFloat(sub_total) - this.state.discount_amount;
+                const new_balance = this.state.prev_balance + gr_total;
+                const last_balance = new_balance - this.state.discount_amount;
 
                 this.setState({
                     cart,
@@ -188,9 +219,9 @@ class Salesreturn extends Component {
         axios.post("/admin/cart/empty", { _method: "DELETE" }).then((res) => {
             if(this.state.customer_id){
                 const last_balance = this.state.prev_balance
-                this.setState({ cart: [],sub_total:0, gr_total:0, new_balance:last_balance, last_balance, discount_amount:'', return_amount:'' });
+                this.setState({ cart: [],sub_total:0, gr_total:0, new_balance:last_balance, last_balance, discount_amount:'0', return_amount:'0' });
             }else{
-                this.setState({ cart: [],sub_total:0, gr_total:0, new_balance:0, last_balance:0, discount_amount:'', return_amount:'' });
+                this.setState({ cart: [],sub_total:0, gr_total:0, new_balance:0, last_balance:0, discount_amount:'0', return_amount:'0' });
             }
         });
     }
@@ -254,9 +285,8 @@ class Salesreturn extends Component {
                     last_balance
                 });
 
-                console.log('cart if')
+
             } else {
-                console.log('else product::', product)
                 if (product.quantity > 0) {
                     product = {
                         ...product,
@@ -287,8 +317,7 @@ class Salesreturn extends Component {
                 .post("/admin/salesreturn/cart", { product_id:product.id, barcode, customer_id })
                 .then((res) => {
                     // this.loadCart();
-                    console.log(this.state.cart);
-                    console.log(res);
+
                 })
                 .catch((err) => {
                     Swal.fire("Error!", err.response.data.message, "error");
@@ -307,29 +336,53 @@ class Salesreturn extends Component {
             axios.get(`/admin/salesreturn/findorderid/${order_id}`).then((res) => {
                 const order = res.data.order;
                 const salesreturn_items = res.data.salesreturn_item;
-                console.log('order',order);
-                console.log('salesreturn_items',salesreturn_items);
 
-
+                console.log('=== SALE DETAILS FETCHED ===');
+                console.log('Order:', order);
+                console.log('Order ID:', order?.id);
+                console.log('Order Total:', order?.gr_total);
+                console.log('Order Sub Total:', order?.sub_total);
+                console.log('Order Items:', order?.items);
+                console.log('Sales Return Items:', salesreturn_items);
+                console.log('Cart Items Details:');
+                salesreturn_items.forEach((item, index) => {
+                    console.log(`Item ${index + 1}:`, {
+                        product_id: item.product_id,
+                        product_name: item.product?.name,
+                        quantity: item.qnty,
+                        sell_price: item.sell_price,
+                        total_price: item.total_price,
+                        purchase_price: item.purchase_price
+                    });
+                });
+                console.log('=== END SALE DETAILS ===');
 
                 if(order){
 
-                    const sub_total = this.getTotal(salesreturn_items)
-                    const gr_total = sub_total - this.state.discount_amount
-                    const customer_id = order.customer_id
-                    const user_balance = order.customer.balance
-                    const prev_balance = user_balance
-                    const new_balance = user_balance - gr_total
-                    const last_balance = new_balance
-                    this.setState({ order_id, sub_total, gr_total,customer_id, prev_balance, new_balance,last_balance,
+                    // Use backend-calculated totals instead of recalculating
+                    const sub_total = parseFloat(order.gr_total || 0).toFixed(2);
+                    const gr_total = parseFloat(sub_total) - this.state.discount_amount;
+                    const customer_id = order.customer_id;
+                    const user_balance = order.customer.balance;
+                    const prev_balance = user_balance;
+                    const new_balance = user_balance - gr_total;
+                    const last_balance = new_balance;
+                    this.setState({
+                        order_id,
+                        sub_total,
+                        gr_total,
+                        customer_id,
+                        prev_balance,
+                        new_balance,
+                        last_balance,
                         customer_info: order.customer,
                         cart: salesreturn_items,
-                        selCustomerFName:order.customer.first_name,
-                        selCustomerLName:order.customer.last_name,
-                        selCustomerAddress:order.customer.address,
-                        selCustomerPhone:order.customer.phone,
-                        selCustomerBalance:order.customer.balance,
-                     });
+                        selCustomerFName: order.customer.first_name,
+                        selCustomerLName: order.customer.last_name,
+                        selCustomerAddress: order.customer.address,
+                        selCustomerPhone: order.customer.phone,
+                        selCustomerBalance: order.customer.balance,
+                    });
                 }else{
                     const order_id = ""
                     const sub_total = 0
@@ -351,7 +404,7 @@ class Salesreturn extends Component {
     }
 
     printInvoice = () => {
-        const invoiceUrl = `/admin/orders/print/${this.state.saleId}`;
+        const invoiceUrl = `/admin/salesreturn/print/${this.state.saleId}`;
         window.open(invoiceUrl, "_blank");
     };
 
@@ -375,12 +428,15 @@ class Salesreturn extends Component {
                         order_id: this.state.order_id,
                         amount,
                     })
-                    .then((res) => {
+                                        .then((res) => {
                         this.loadCart();
-                        // Assuming the response includes an order ID or invoice URL
-                        const printUrl = `/admin/orders/print/${res.data.id}`;
-                        this.setState({ printUrl, return_amount:0 });
-                        Swal.fire("Success", "Order has been saved!", "success");
+                        // Set the print URL for printing
+                        const printUrl = this.state.isAdmin ? `/admin/salesreturn/print/${res.data.id}` : `/user/salesreturn/print/${res.data.id}`;
+                        this.setState({
+                            printUrl,
+                            return_amount:'0'
+                        });
+                        Swal.fire("Success", "Sales return has been saved!", "success");
                         return res.data;
                     })
                     .catch((err) => {
@@ -421,7 +477,7 @@ class Salesreturn extends Component {
             new_balance,
             last_balance
         })
-        console.log('current bal::', this.state.prev_balance)
+
     }
 
     numberFormat = (amount) =>{
@@ -434,7 +490,7 @@ class Salesreturn extends Component {
 
     render() {
         const { cart, products, customers, barcode, translations } = this.state;
-        console.log('cart:::', cart)
+
         return (
             <div className="row">
 
@@ -456,9 +512,9 @@ class Salesreturn extends Component {
                                 placeholder="Enter order ID and press Enter..."
                             />
                         </div>
-                        <div className="col-md-4"><span className="text-danger"><b>{this.state.selCustomerFName } {this.state.selCustomerLName}</b></span></div>
-                        <div className="col-md-2"><span className="text-danger"><b>{this.state.selCustomerAddress}</b></span></div>
-                        <div className="col-md-2"><span className="text-danger"><b>{this.state.selCustomerPhone}</b></span></div>
+                        <div className="col-md-3"><span className="text-danger"><b>{this.state.selCustomerFName } {this.state.selCustomerLName}</b></span></div>
+                        <div className="col-md-4"><span className="text-danger"><b style={{wordBreak: 'break-word', overflowWrap: 'break-word'}}>{this.state.selCustomerAddress}</b></span></div>
+                        <div className="col-md-3"><span className="text-danger"><b style={{whiteSpace: 'nowrap'}}>{this.state.selCustomerPhone}</b></span></div>
                         <div className="col-md-2"><span className="text-danger"><b>{this.state.selCustomerBalance} BDT</b></span></div>
                     </div>
 
@@ -469,7 +525,7 @@ class Salesreturn extends Component {
                                     <tr>
                                         <th>{translations["product_name"]}</th>
                                         <th>{translations["quantity"]}</th>
-                                        <th className="text-right">{translations["price"]}
+                                        <th className="text-right">Total Price
                                         </th>
                                     </tr>
                                 </thead>
@@ -481,7 +537,7 @@ class Salesreturn extends Component {
                                                 <input
                                                     type="text"
                                                     className="form-control form-control-sm qty product-input"
-                                                    value={c.qnty}
+                                                    value={parseInt(c.qnty) || 0}
                                                     onChange={(event) =>
                                                         this.handleChangeQty(
                                                             c.id,
@@ -504,9 +560,7 @@ class Salesreturn extends Component {
                                             </td>
                                             <td className="text-right">
                                                 {window.APP.currency_symbol}{" "}
-                                                {(
-                                                    c.sell_price * c.qnty
-                                                ).toFixed(2)}
+                                                {(parseFloat(c.sell_price) * (parseInt(c.qnty) || 0)).toFixed(2)}
                                             </td>
                                         </tr>
                                     ))}
@@ -548,7 +602,25 @@ class Salesreturn extends Component {
                     </div>
                     <div className="row mt-3">
                         <div className="col">
-
+                            {this.state.printUrl ? (
+                                <a
+                                    href={this.state.printUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="btn btn-success btn-block"
+                                >
+                                    🖨️ Print Sales Return
+                                </a>
+                            ) : (
+                                <a
+                                    href="#"
+                                    rel="noopener noreferrer"
+                                    className="btn btn-success btn-block"
+                                    style={{ opacity: 0.5, pointerEvents: 'none' }}
+                                >
+                                    🖨️ Print Sales Return
+                                </a>
+                            )}
                         </div>
                         <div className="col">
                             <button
@@ -570,7 +642,6 @@ class Salesreturn extends Component {
                                 {"Confirm Salesreturn"}
                             </button>
                         </div>
-
                     </div>
                 </div>
 
@@ -602,27 +673,121 @@ class Salesreturn extends Component {
                     </div>
 
                     <div className="order-product">
-                        {products.map((p) => (
-                            <div
-                                onClick={() => this.addProductToCart(p.id)}
-                                key={p.id}
-                                className="item product-div"
-                                id={'product-'+p.barcode}
-                                style={{ width:'100px', overflow:'hidden',height:'140px' }}
-                                title={p.name}
-                            >
-                                <img src={ p.image_url} alt="" />
-                                <h5
-                                    style={
-                                        window.APP.warning_quantity > p.quantity
-                                            ? { color: "red" }
-                                            : {}
-                                    }
+                        {products.map((p) => {
+                            // Get branch stocks for this product if admin
+                            const productBranchStocks = this.state.isAdmin && this.state.branchStocks[p.id] ? this.state.branchStocks[p.id] : [];
+                            const isInCart = this.state.cart.some(item => item.product_id === p.id);
+
+                            return (
+                                <div
+                                    onClick={() => this.addProductToCart(p.id)}
+                                    key={p.id}
+                                    className="item product-div"
+                                    id={'product-'+p.barcode}
+                                    style={{
+                                        width: '150px',
+                                        overflow:'hidden',
+                                        height: '180px',
+                                        border: isInCart ? '3px solid #28a745' : '1px solid #ddd',
+                                        borderRadius: '8px',
+                                        padding: '8px',
+                                        margin: '5px',
+                                        cursor: 'pointer',
+                                        backgroundColor: isInCart ? '#f8fff9' : '#fff',
+                                        position: 'relative'
+                                    }}
+                                    title={p.name}
                                 >
-                                    {p.name}({p.quantity})
-                                </h5>
-                            </div>
-                        ))}
+                                    {/* Selected indicator */}
+                                    {isInCart && (
+                                        <div style={{
+                                            position: 'absolute',
+                                            top: '5px',
+                                            right: '5px',
+                                            backgroundColor: '#28a745',
+                                            color: 'white',
+                                            borderRadius: '50%',
+                                            width: '20px',
+                                            height: '20px',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            fontSize: '12px',
+                                            fontWeight: 'bold',
+                                            zIndex: 1
+                                        }}>
+                                            ✓
+                                        </div>
+                                    )}
+                                    <img src={p.image_url} alt="" style={{ width: '100%', height: '60px', objectFit: 'cover' }} />
+                                    <h6
+                                        style={{
+                                            fontSize: '14px',
+                                            margin: '5px 0',
+                                            color: 'black',
+                                            fontWeight: 'bold',
+                                            lineHeight: '1.2'
+                                        }}
+                                    >
+                                        {p.name}
+                                    </h6>
+
+                                    {this.state.isAdmin && productBranchStocks.length > 0 ? (
+                                        <div style={{ fontSize: '12px', color: '#666' }}>
+                                            <div style={{ fontWeight: 'bold', marginBottom: '4px', fontSize: '13px' }}>Branch Stock:</div>
+                                            {productBranchStocks.map((stock, index) => {
+                                                // Determine color: red for low stock, green for good stock
+                                                let textColor = 'green'; // Default: green for sufficient stock
+                                                let fontWeight = 'normal';
+
+                                                const warningQty = 20; // Warning threshold set to 20
+                                                const stockQty = parseInt(stock.quantity);
+                                                const isNegativeStock = stockQty < 0;
+                                                const isOutOfStock = stockQty === 0;
+                                                const isLowStock = stockQty > 0 && stockQty < warningQty;
+
+                                                if (isNegativeStock) {
+                                                    textColor = 'red'; // Red for negative stock
+                                                    fontWeight = 'bold';
+                                                } else if (isOutOfStock) {
+                                                    textColor = 'red'; // Red for out of stock (0)
+                                                } else if (isLowStock) {
+                                                    textColor = '#ff8c00'; // Orange/warning for low stock (1-19)
+                                                }
+
+                                                return (
+                                                    <div key={index} style={{
+                                                        display: 'flex',
+                                                        justifyContent: 'space-between',
+                                                        marginBottom: '3px',
+                                                        color: textColor,
+                                                        fontSize: '12px',
+                                                        fontWeight: fontWeight
+                                                    }}>
+                                                        <span>{stock.branch_name}:</span>
+                                                        <span style={{ fontWeight: 'bold' }}>{parseInt(stock.quantity) || 0}</span>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    ) : (
+                                        <div style={{
+                                            fontSize: '14px',
+                                            color: (() => {
+                                                const stockQty = parseInt(p.quantity);
+                                                if (stockQty < 0) return 'red'; // Red for negative stock
+                                                if (stockQty === 0) return 'red'; // Red for out of stock
+                                                if (stockQty < 20) return '#ff8c00'; // Orange for low stock (under 20)
+                                                return 'green'; // Green for sufficient stock (20+)
+                                            })(),
+                                            fontWeight: 'bold'
+                                        }}>
+                                            Stock: {parseInt(p.quantity) || 0}
+                                        </div>
+                                    )}
+                                </div>
+                            );
+                        })}
                     </div>
                 </div>
 

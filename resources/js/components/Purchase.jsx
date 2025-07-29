@@ -423,7 +423,7 @@ class PurchaseCart extends Component {
     }
 
     printInvoice = () => {
-        const invoiceUrl = `/admin/orders/print/${this.state.saleId}`;
+        const invoiceUrl = `/admin/purchase/print/${this.state.saleId}`;
         window.open(invoiceUrl, "_blank");
     };
 
@@ -458,7 +458,7 @@ class PurchaseCart extends Component {
                     .then((res) => {
                         this.loadCart();
                         // Assuming the response includes an order ID or invoice URL
-                        const printUrl = `/admin/orders/print/${res.data.id}`;
+                        const printUrl = `/admin/purchase/print/${res.data.id}`;
                         this.setState({ printUrl, paid_amount:0, discount_amount:0,supplier_id:'',supplier_invoice_no:'' });
                         Swal.fire("Success", "Purchase has been saved!", "success");
                         window.reload();
@@ -559,10 +559,10 @@ class PurchaseCart extends Component {
                         </div>
                     </div>
                     <div className="row">
-                        <div className="col-md-4"><span className="text-primary"><b>{this.state.selCustomerFName } {this.state.selCustomerLName}</b></span></div>
-                        <div className="col-md-3"><span className="text-primary"><b>{this.state.selCustomerAddress}</b></span></div>
-                        <div className="col-md-2"><span className="text-primary"><b>{this.state.selCustomerPhone}</b></span></div>
-                        <div className="col-md-3"><span className="text-primary"><b>Balance: {this.state.selCustomerBalance} BDT</b></span></div>
+                        <div className="col-md-3"><span className="text-primary"><b>{this.state.selCustomerFName } {this.state.selCustomerLName}</b></span></div>
+                        <div className="col-md-4"><span className="text-primary"><b style={{wordBreak: 'break-word', overflowWrap: 'break-word'}}>{this.state.selCustomerAddress}</b></span></div>
+                        <div className="col-md-3"><span className="text-primary"><b style={{whiteSpace: 'nowrap'}}>{this.state.selCustomerPhone}</b></span></div>
+                        <div className="col-md-2"><span className="text-primary"><b>Balance: {this.state.selCustomerBalance} BDT</b></span></div>
                     </div>
                     <div className="user-cart mt-1">
                         <div className="card">
@@ -749,27 +749,132 @@ class PurchaseCart extends Component {
                     </div>
 
                     <div className="order-product">
-                        {products.map((p) => (
-                            <div key={p.id} className="item product-div" id={'product-'+p.barcode}>
-                                <img src={p.image_url} alt="" onError={e => { e.target.onerror = null; e.target.src = '/images/img-placeholder.jpg'; }} />
-                                <h5>{p.name}({p.quantity})</h5>
-                                <div>
-                                    {this.state.branches.map((branch) => (
-                                        <div key={branch.id} style={{marginBottom: '4px'}}>
-                                            <label>{branch.branch_name}</label>
-                                            <input
-                                                type="number"
-                                                min="0"
-                                                value={this.state.branch_quantities[p.id]?.[branch.id] || ''}
-                                                onChange={e => this.setBranchQuantity(p.id, branch.id, e.target.value)}
-                                                style={{width: '60px', marginLeft: '8px'}}
-                                            />
-                                        </div>
-                                    ))}
+                        {products.map((p) => {
+                            // Prepare stock details for tooltip
+                            const stockDetails = this.state.branches.map(branch => {
+                                const stock = p.branch_stocks && p.branch_stocks[branch.id] !== undefined ? p.branch_stocks[branch.id] : 'N/A';
+                                return `${branch.branch_name}: ${stock}`;
+                            }).join('\n'); // Use newlines for better readability
+
+                            return (
+                                <div key={p.id} className="item product-div" id={'product-'+p.barcode} style={{
+                                    width: '240px',
+                                    minHeight: '340px',
+                                    border: '1px solid #eee',
+                                    borderRadius: '10px',
+                                    padding: '16px',
+                                    margin: '10px',
+                                    boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+                                    display: 'inline-block',
+                                    verticalAlign: 'top',
+                                    background: '#fff',
+                                    position: 'relative'
+                                }}>
+                                    <img
+                                        src={p.image_url}
+                                        alt={p.name}
+                                        onError={e => { e.target.onerror = null; e.target.src = '/images/img-placeholder.jpg'; }}
+                                        style={{
+                                            width: '160px',
+                                            height: '120px',
+                                            objectFit: 'cover',
+                                            borderRadius: '8px',
+                                            border: '1px solid #eee',
+                                            margin: '0 auto',
+                                            display: 'block',
+                                        }}
+                                    />
+                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginTop: '8px', marginBottom: '4px' }}>
+                                        <span
+                                            style={{
+                                                fontWeight: 'bold',
+                                                color: 'black',
+                                                textAlign: 'center',
+                                                whiteSpace: 'nowrap',
+                                                overflow: 'hidden',
+                                                textOverflow: 'ellipsis',
+                                                maxWidth: '120px',
+                                                display: 'inline-block',
+                                            }}
+                                            title={p.name}
+                                        >
+                                            {p.name}
+                                        </span>
+                                        {/* Info icon with tooltip */}
+                                        <span
+                                            tabIndex={0}
+                                            style={{
+                                                marginLeft: '6px',
+                                                cursor: 'pointer',
+                                                color: '#007bff',
+                                                fontSize: '16px',
+                                                outline: 'none',
+                                                position: 'relative',
+                                                display: 'inline-block',
+                                            }}
+                                            aria-label="Show available stock details"
+                                            onFocus={e => {
+                                                const tooltip = e.target.querySelector('.stock-tooltip');
+                                                if (tooltip) tooltip.style.display = 'block';
+                                            }}
+                                            onBlur={e => {
+                                                const tooltip = e.target.querySelector('.stock-tooltip');
+                                                if (tooltip) tooltip.style.display = 'none';
+                                            }}
+                                            onMouseEnter={e => {
+                                                const tooltip = e.currentTarget.querySelector('.stock-tooltip');
+                                                if (tooltip) tooltip.style.display = 'block';
+                                            }}
+                                            onMouseLeave={e => {
+                                                const tooltip = e.currentTarget.querySelector('.stock-tooltip');
+                                                if (tooltip) tooltip.style.display = 'none';
+                                            }}
+                                        >
+                                            <span style={{fontWeight: 'bold'}}>ℹ️</span>
+                                            <span
+                                                className="stock-tooltip"
+                                                style={{
+                                                    display: 'none',
+                                                    position: 'absolute',
+                                                    left: '50%',
+                                                    top: '120%',
+                                                    transform: 'translateX(-50%)',
+                                                    background: '#222',
+                                                    color: '#fff',
+                                                    padding: '8px 12px',
+                                                    borderRadius: '6px',
+                                                    fontSize: '13px',
+                                                    whiteSpace: 'pre-line',
+                                                    zIndex: 10,
+                                                    minWidth: '180px',
+                                                    maxWidth: '260px',
+                                                    boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+                                                    pointerEvents: 'none',
+                                                }}
+                                                role="tooltip"
+                                            >
+                                                <b>Available Stock:</b>\n{stockDetails}
+                                            </span>
+                                        </span>
+                                    </div>
+                                    <div>
+                                        {this.state.branches.map((branch) => (
+                                            <div key={branch.id} style={{marginBottom: '4px', display: 'flex', alignItems: 'center'}}>
+                                                <label style={{minWidth: '80px'}}>{branch.branch_name}</label>
+                                                <input
+                                                    type="number"
+                                                    min="0"
+                                                    value={this.state.branch_quantities[p.id]?.[branch.id] || ''}
+                                                    onChange={e => this.setBranchQuantity(p.id, branch.id, e.target.value)}
+                                                    style={{width: '60px', marginLeft: '8px'}}
+                                                />
+                                            </div>
+                                        ))}
+                                    </div>
+                                    <button onClick={() => this.addProductToCart(p.barcode)} className="btn btn-primary btn-sm mt-2" style={{width: '100%'}}>Add to Cart</button>
                                 </div>
-                                <button onClick={() => this.addProductToCart(p.barcode)} className="btn btn-primary btn-sm mt-2">Add to Cart</button>
-                            </div>
-                        ))}
+                            );
+                        })}
                     </div>
                     {this.state.error && (
                         <div className="alert alert-danger">{this.state.error}</div>

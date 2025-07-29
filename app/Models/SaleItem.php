@@ -4,13 +4,14 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Auth;
 
 class SaleItem extends Model
 {
-    protected $fillable =[
+    protected $fillable = [
         'purchase_price',
         'sell_price',
-        'qnty',
+        'quantity',
         'product_id',
         'sale_id',
         'user_id',
@@ -19,15 +20,16 @@ class SaleItem extends Model
     ];
 
 
-    protected static function booted() {
+    protected static function booted()
+    {
         static::addGlobalScope('branch', function (Builder $builder) {
-              $user = auth()->user();
+            $user = Auth::user();
             $company_id = $user->company_id;
             $branch_id = $user->branch_id;
             $role = $user->role;
-            if($role=="admin"){
+            if ($role == "admin") {
                 $builder->where('company_id', $company_id);
-            }else{
+            } else {
                 $builder->where('company_id', $company_id)->where('branch_id', $branch_id);
             }
         });

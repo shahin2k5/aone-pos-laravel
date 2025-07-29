@@ -207,4 +207,15 @@ class CartController extends Controller
 
         return response()->json($branches);
     }
+
+    public function getBranchStock($product_id, $branch_id)
+    {
+        $stock = BranchProductStock::where('product_id', $product_id)
+            ->where('branch_id', $branch_id)
+            ->first();
+
+        return response()->json([
+            'quantity' => $stock ? $stock->quantity : 0
+        ]);
+    }
 }

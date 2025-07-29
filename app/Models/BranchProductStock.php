@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Validation\ValidationException;
 
 class BranchProductStock extends Model
 {
@@ -21,5 +22,16 @@ class BranchProductStock extends Model
     public function branch()
     {
         return $this->belongsTo(Branch::class);
+    }
+
+    protected static function booted()
+    {
+        static::saving(function ($model) {
+            if ($model->quantity < 0) {
+                throw ValidationException::withMessages([
+                    'quantity' => 'Stock quantity cannot be negative.'
+                ]);
+            }
+        });
     }
 }

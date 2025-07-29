@@ -443,9 +443,9 @@ class Damage extends Component {
                         <div className="col-md-2">
                             <input type="text" onKeyUp={this.findOrderID} value={this.state.order_id} name="order-input" id="order-input" className="form-control border"></input>
                         </div>
-                        <div className="col-md-4"><span className="text-danger"><b>{this.state.selCustomerFName } {this.state.selCustomerLName}</b></span></div>
-                        <div className="col-md-2"><span className="text-danger"><b>{this.state.selCustomerAddress}</b></span></div>
-                        <div className="col-md-2"><span className="text-danger"><b>{this.state.selCustomerPhone}</b></span></div>
+                        <div className="col-md-3"><span className="text-danger"><b>{this.state.selCustomerFName } {this.state.selCustomerLName}</b></span></div>
+                        <div className="col-md-4"><span className="text-danger"><b style={{wordBreak: 'break-word', overflowWrap: 'break-word'}}>{this.state.selCustomerAddress}</b></span></div>
+                        <div className="col-md-3"><span className="text-danger"><b style={{whiteSpace: 'nowrap'}}>{this.state.selCustomerPhone}</b></span></div>
                         <div className="col-md-2"><span className="text-danger"><b>{this.state.selCustomerBalance} BDT</b></span></div>
                     </div>
 

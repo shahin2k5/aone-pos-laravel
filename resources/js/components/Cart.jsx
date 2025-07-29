@@ -52,15 +52,30 @@ class Cart extends Component {
         this.setSelectedBranchId = this.setSelectedBranchId.bind(this); // New method for POS branch selection
         this.canAddToCart = this.canAddToCart.bind(this); // Helper method to check if can add to cart
         this.validateCartForNewBranch = this.validateCartForNewBranch.bind(this); // Validate cart for new branch
+        this.isProductInCart = this.isProductInCart.bind(this); // Helper method to check if product is in cart
         this.handleClickSubmit = this.handleClickSubmit.bind(this);
         this.loadTranslations = this.loadTranslations.bind(this);
+    }
+
+    // Helper to get unique cache key per user and role
+    getCacheKey() {
+        const userRole = window.APP && window.APP.user_role ? window.APP.user_role : 'user';
+        const userId = window.APP && window.APP.user_id ? window.APP.user_id : 'unknown';
+        return `pos_cart_data_${userRole}_${userId}`;
     }
 
     componentDidMount() {
         // load user cart
         this.loadTranslations();
+
+        // Load saved data from localStorage
+        const savedData = this.loadSavedData();
+
         // Set branch_id from window.APP
-        this.setState({ branch_id: window.APP.branch_id }, () => {
+        this.setState({
+            branch_id: window.APP.branch_id,
+            ...savedData
+        }, () => {
             this.loadCustomers();
             this.loadProducts();
             this.loadCart();
@@ -69,8 +84,32 @@ class Cart extends Component {
                 this.loadBranches(); // Load branches for admin
             }
         });
-        // No need to load branches for user
+    }
 
+    loadSavedData() {
+        try {
+            const cacheKey = this.getCacheKey();
+            const savedData = localStorage.getItem(cacheKey);
+            return savedData ? JSON.parse(savedData) : {};
+        } catch (error) {
+            console.error('Error loading saved data:', error);
+            return {};
+        }
+    }
+
+    saveData() {
+        try {
+            const cacheKey = this.getCacheKey();
+            const dataToSave = {
+                customer_id: this.state.customer_id,
+                selectedBranchId: this.state.selectedBranchId,
+                discount_amount: this.state.discount_amount,
+                paid_amount: this.state.paid_amount
+            };
+            localStorage.setItem(cacheKey, JSON.stringify(dataToSave));
+        } catch (error) {
+            console.error('Error saving data:', error);
+        }
     }
 
     // load the transaltions for the react component
@@ -187,21 +226,6 @@ class Cart extends Component {
     }
 
         handleChangeQty(product_id, qty) {
-        // Update local state immediately for responsive UI
-        const cart = this.state.cart.map((c) => {
-            if (c.id === product_id) {
-                c.pivot.quantity = qty;
-            }
-            return c;
-        });
-
-        // Update totals immediately
-        const sub_total = this.getTotal(cart)
-        const gr_total = sub_total - this.state.discount_amount
-        const new_balance = this.state.prev_balance + gr_total
-        const last_balance = new_balance - this.state.paid_amount
-        this.setState({ cart, sub_total, gr_total, new_balance, last_balance });
-
         // Only send to server if quantity is valid
         if (!qty || qty <= 0) {
             return;
@@ -211,13 +235,27 @@ class Cart extends Component {
         const branchToUse = this.state.isAdmin && this.state.selectedBranchId ? this.state.selectedBranchId : this.state.branch_id;
         const {customer_id} = this.state
         const endpoint = this.state.isAdmin ? "/admin/cart/change-qty" : "/user/user-cart/change-qty";
+
         axios
             .post(endpoint, { product_id, quantity: qty, customer_id, branch_id: branchToUse })
             .then((res) => {
-                // Success - state already updated
+                // Only update local state after successful server response
+                const cart = this.state.cart.map((c) => {
+                    if (c.id === product_id) {
+                        c.pivot.quantity = qty;
+                    }
+                    return c;
+                });
+
+                // Update totals
+                const sub_total = this.getTotal(cart)
+                const gr_total = sub_total - this.state.discount_amount
+                const new_balance = this.state.prev_balance + gr_total
+                const last_balance = new_balance - this.state.paid_amount
+                this.setState({ cart, sub_total, gr_total, new_balance, last_balance });
             })
             .catch((err) => {
-                // Revert on error
+                // Show error and reload cart to revert any changes
                 this.loadCart();
                 Swal.fire("Error!", err.response.data.message, "error");
             });
@@ -412,6 +450,8 @@ class Cart extends Component {
                 prev_balance: customerInfo[0].balance,
                 new_balance,
                 last_balance
+            }, () => {
+                this.saveData(); // Save the customer selection
             });
 
 
@@ -427,6 +467,8 @@ class Cart extends Component {
                 prev_balance: '',
                 new_balance:'',
                 last_balance:''
+            }, () => {
+                this.saveData(); // Save the customer selection
             });
         }
 
@@ -450,7 +492,9 @@ class Cart extends Component {
 
             setSelectedBranchId(event) {
         const selectedBranchId = event.target.value;
-        this.setState({ selectedBranchId });
+        this.setState({ selectedBranchId }, () => {
+            this.saveData(); // Save the selected branch
+        });
 
         // If admin changes branch and has items in cart, validate stock
         if (this.state.isAdmin && selectedBranchId && this.state.cart.length > 0) {
@@ -501,6 +545,10 @@ class Cart extends Component {
         return true;
     }
 
+    isProductInCart(productId) {
+        return this.state.cart.some(item => item.id === productId);
+    }
+
 
 
     printInvoice = () => {
@@ -541,7 +589,11 @@ class Cart extends Component {
                         this.loadCart();
                         // Assuming the response includes an order ID or invoice URL
                         const printUrl = this.state.isAdmin ? `/admin/sales/print/${res.data.id}` : `/user/sales/print/${res.data.id}`;
-                        this.setState({ printUrl, paid_amount:0 });
+                        this.setState({ printUrl, paid_amount:0 }, () => {
+                            // Clear saved data after successful sale
+                            const cacheKey = this.getCacheKey();
+                            localStorage.removeItem(cacheKey);
+                        });
                         Swal.fire("Success", "Order has been saved!", "success");
                         return res.data;
                     })
@@ -573,6 +625,8 @@ class Cart extends Component {
         this.setState({
             discount_amount,
             gr_total
+        }, () => {
+            this.saveData(); // Save the discount amount
         })
     }
 
@@ -586,6 +640,8 @@ class Cart extends Component {
             paid_amount,
             new_balance,
             last_balance
+        }, () => {
+            this.saveData(); // Save the paid amount
         })
     }
 
@@ -623,10 +679,10 @@ class Cart extends Component {
                         </div>
                     </div>
                     <div className="row">
-                        <div className="col-md-4"><span className="text-primary"><b>{this.state.selCustomerFName } {this.state.selCustomerLName}</b></span></div>
-                        <div className="col-md-3"><span className="text-primary"><b>{this.state.selCustomerAddress}</b></span></div>
-                        <div className="col-md-2"><span className="text-primary"><b>{this.state.selCustomerPhone}</b></span></div>
-                        <div className="col-md-3"><span className="text-primary"><b>{this.state.selCustomerBalance} BDT</b></span></div>
+                        <div className="col-md-3"><span className="text-primary"><b>{this.state.selCustomerFName } {this.state.selCustomerLName}</b></span></div>
+                        <div className="col-md-4"><span className="text-primary"><b style={{wordBreak: 'break-word', overflowWrap: 'break-word'}}>{this.state.selCustomerAddress}</b></span></div>
+                        <div className="col-md-3"><span className="text-primary"><b style={{whiteSpace: 'nowrap'}}>{this.state.selCustomerPhone}</b></span></div>
+                        <div className="col-md-2"><span className="text-primary"><b>{this.state.selCustomerBalance} BDT</b></span></div>
                     </div>
                     <div className="user-cart mt-1">
                         <div className="card" style={{ overflowY:'scroll' }}>
@@ -827,6 +883,7 @@ class Cart extends Component {
                         {productList.map((p) => {
                             // Get branch stocks for this product if admin
                             const productBranchStocks = this.state.isAdmin && this.state.branchStocks[p.id] ? this.state.branchStocks[p.id] : [];
+                            const isInCart = this.isProductInCart(p.id);
 
                             return (
                                 <div
@@ -838,21 +895,43 @@ class Cart extends Component {
                                         width: this.state.isAdmin ? '150px' : '100px',
                                         overflow:'hidden',
                                         height: this.state.isAdmin ? '180px' : '140px',
-                                        border: '1px solid #ddd',
+                                        border: isInCart ? '3px solid #28a745' : '1px solid #ddd',
                                         borderRadius: '8px',
                                         padding: '8px',
                                         margin: '5px',
                                         cursor: 'pointer',
-                                        backgroundColor: '#fff'
+                                        backgroundColor: isInCart ? '#f8fff9' : '#fff',
+                                        position: 'relative'
                                     }}
                                     title={p.name}
                                 >
+                                    {/* Selected indicator */}
+                                    {isInCart && (
+                                        <div style={{
+                                            position: 'absolute',
+                                            top: '5px',
+                                            right: '5px',
+                                            backgroundColor: '#28a745',
+                                            color: 'white',
+                                            borderRadius: '50%',
+                                            width: '20px',
+                                            height: '20px',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            fontSize: '12px',
+                                            fontWeight: 'bold',
+                                            zIndex: 1
+                                        }}>
+                                            ✓
+                                        </div>
+                                    )}
                                     <img src={p.image_url} alt="" style={{ width: '100%', height: '60px', objectFit: 'cover' }} />
                                                                         <h6
                                         style={{
                                             fontSize: '14px',
                                             margin: '5px 0',
-                                            color: window.APP.warning_quantity > p.quantity ? "red" : "black",
+                                            color: 'black',
                                             fontWeight: 'bold',
                                             lineHeight: '1.2'
                                         }}
@@ -868,7 +947,7 @@ class Cart extends Component {
                                                 let textColor = 'green'; // Default: green for sufficient stock
                                                 let fontWeight = 'normal';
 
-                                                const warningQty = 15; // Fixed warning threshold to 15
+                                                const warningQty = 20; // Warning threshold set to 20
                                                 const stockQty = parseInt(stock.quantity);
                                                 const isOutOfStock = stockQty === 0;
                                                 const isLowStock = stockQty > 0 && stockQty < warningQty;
@@ -900,7 +979,12 @@ class Cart extends Component {
                                     ) : (
                                         <div style={{
                                             fontSize: '14px',
-                                            color: window.APP.warning_quantity > p.quantity ? "red" : "green",
+                                            color: (() => {
+                                                const stockQty = parseInt(p.quantity);
+                                                if (stockQty === 0) return 'red'; // Red for out of stock
+                                                if (stockQty < 20) return '#ff8c00'; // Orange for low stock (under 20)
+                                                return 'green'; // Green for sufficient stock (20+)
+                                            })(),
                                             fontWeight: 'bold'
                                         }}>
                                             Stock: {p.quantity}

@@ -223,4 +223,20 @@ class UserCartController extends Controller
 
         return response()->json($branches);
     }
+
+    public function getBranchStock($product_id)
+    {
+        $user = Auth::user();
+        $branch_id = $user->branch_id;
+
+        $stock = BranchProductStock::with('branch')
+            ->where('product_id', $product_id)
+            ->where('branch_id', $branch_id)
+            ->first();
+
+        return response()->json([
+            'quantity' => $stock ? $stock->quantity : 0,
+            'branch_name' => $stock && $stock->branch ? $stock->branch->branch_name : 'Your Branch'
+        ]);
+    }
 }

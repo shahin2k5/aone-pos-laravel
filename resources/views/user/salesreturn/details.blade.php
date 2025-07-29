@@ -4,6 +4,7 @@
 @section('content-header', __('Salesreturn#'.$salesreturns[0]->id))
 @section('content-actions')
 <a href="{{ route('user.salesreturn.index') }}" class="btn btn-primary">{{ __('<< Salesreturn') }}</a>
+<a href="/user/salesreturn/print/{{ $salesreturns[0]->id }}" target="_blank" class="btn btn-success">{{ __('Print Sales Return') }}</a>
 @endsection
 @section('content')
 
