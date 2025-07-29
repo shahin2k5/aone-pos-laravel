@@ -47,13 +47,14 @@ class SalesreturnController extends Controller
             $items = $order->items;
             SalesreturnItemCart::truncate();
             foreach ($items as $item) {
+                $unit_price = $item->product->sell_price;
                 $data = [
                     'purchase_price' => $item->purchase_price,
-                    'total_price' => $item->sell_price * $item->quantity,
-                    'sell_price' => $item->sell_price,
-                    'qnty' => $item->quantity,
+                    'total_price' => $unit_price * (int)$item->quantity,
+                    'sell_price' => $unit_price,
+                    'qnty' => (int)$item->quantity,
                     'product_id' => $item->product_id,
-                    'order_id' => $order_id, // Use the sale ID as order_id
+                    'order_id' => $order_id,
                     'customer_id' => $order->customer_id,
                     'user_id' => Auth::user()->id,
                     'branch_id' => Auth::user()->branch_id,
@@ -72,9 +73,9 @@ class SalesreturnController extends Controller
     {
         $salesreturn_item = SalesreturnItemCart::where('product_id', $request->product_id)->first();
         if ($salesreturn_item) {
-            $salesreturn_item->qnty = $request->qnty;
+            $salesreturn_item->qnty = (int)$request->qnty;
             $salesreturn_item->sell_price = $request->sell_price;
-            $salesreturn_item->total_price = $request->sell_price * $request->qnty;
+            $salesreturn_item->total_price = $request->sell_price * (int)$request->qnty;
             $salesreturn_item->save();
         }
 
@@ -94,9 +95,7 @@ class SalesreturnController extends Controller
 
         $salesreturn_cart = SalesreturnItemCart::where('product_id', $product_id)->first();
         if ($salesreturn_cart) {
-
-            // update only quantity
-            $salesreturn_cart->qnty = $salesreturn_cart->qnty + 1;
+            $salesreturn_cart->qnty = (int)($salesreturn_cart->qnty + 1);
             $salesreturn_cart->total_price = $salesreturn_cart->qnty * $salesreturn_cart->sell_price;
             $salesreturn_cart->save();
         }
@@ -113,7 +112,12 @@ class SalesreturnController extends Controller
             if (!!$order) {
                 $total_price = $return_items->sum('total_price');
                 $return_amount = $request->amount;
-                $profit_amount = $total_price - $return_amount;
+                $total_loss = 0;
+                foreach ($return_items as $item) {
+                    $original_profit_per_item = $item->sell_price - $item->purchase_price;
+                    $total_loss += $original_profit_per_item * $item->qnty;
+                }
+                $profit_amount = -$total_loss;
                 $salesreturn = Salesreturn::create([
                     'customer_id' => $request->customer_id,
                     'user_id' => Auth::user()->id,
@@ -141,7 +145,6 @@ class SalesreturnController extends Controller
                         'company_id' => Auth::user()->company_id,
                     ];
                     SalesreturnItems::create($data);
-                    // Update branch stock
                     $stock = BranchProductStock::firstOrCreate([
                         'product_id' => $item->product_id,
                         'branch_id' => Auth::user()->branch_id,
@@ -170,6 +173,13 @@ class SalesreturnController extends Controller
         $product_id = $request->product_id;
         SalesreturnItemCart::where('product_id', $product_id)->delete();
         return response()->json('success');
+    }
+
+    public function print($id)
+    {
+        $salesreturn = Salesreturn::with(['items.product', 'customer'])->findOrFail($id);
+        $viewPath = auth()->user()->role === 'admin' ? 'admin.salesreturn.print' : 'user.salesreturn.print';
+        return view($viewPath, compact('salesreturn'));
     }
 
     public function store(Request $request)

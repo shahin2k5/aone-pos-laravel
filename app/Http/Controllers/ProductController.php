@@ -36,6 +36,22 @@ class ProductController extends Controller
 
             $products = $query->get();
 
+            // For users, add branch-specific stock information
+            if ($user->role !== 'admin') {
+                $products->each(function ($product) use ($user) {
+                    $stock = BranchProductStock::where('product_id', $product->id)
+                        ->where('branch_id', $user->branch_id)
+                        ->first();
+                    $product->quantity = $stock ? $stock->quantity : 0;
+                });
+            } else {
+                // For admin, add all branch stocks as an associative array
+                $products->each(function ($product) {
+                    $branchStocks = BranchProductStock::where('product_id', $product->id)->get();
+                    $product->branch_stocks = $branchStocks->pluck('quantity', 'branch_id');
+                });
+            }
+
             // Add debugging
             Log::info('Products loaded for user: ' . $user->id . ', company_id: ' . $user->company_id . ', count: ' . $products->count());
 

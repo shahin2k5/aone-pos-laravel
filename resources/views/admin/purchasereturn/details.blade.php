@@ -4,6 +4,7 @@
 @section('content-header', __('Purchase Return #'.$purchase_return->id))
 @section('content-actions')
 <a href="/admin/purchasereturn" class="btn btn-primary">{{ __('<< Purchase Return') }}</a>
+<a href="/admin/purchasereturn/print/{{ $purchase_return->id }}" target="_blank" class="btn btn-success">{{ __('Print Invoice') }}</a>
 @endsection
 @section('content')
 

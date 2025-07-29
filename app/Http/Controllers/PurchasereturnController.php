@@ -54,9 +54,9 @@ class PurchasereturnController extends Controller
             foreach ($items as $item) {
                 $data = [
                     'purchase_price' => $item->purchase_price,
-                    'total_price' => $item->purchase_price * $item->qnty,
+                    'total_price' => $item->purchase_price * $item->quantity,
                     'sell_price' => $item->sell_price,
-                    'qnty' => $item->qnty,
+                    'qnty' => $item->quantity,
                     'product_id' => $item->product_id,
                     'purchase_id' => $purchase_id, // ensure purchase_id is set
                     'supplier_id' => $purchase->supplier_id,
@@ -172,7 +172,15 @@ class PurchasereturnController extends Controller
                     $stock = BranchProductStock::firstOrCreate([
                         'product_id' => $item->product_id,
                         'branch_id' => $item->branch_id,
+                    ], [
+                        'quantity' => 0
                     ]);
+
+                    // Validate stock before deducting
+                    if ($stock->quantity < $item->qnty) {
+                        throw new \Exception("Insufficient stock for product return. Available: {$stock->quantity}, Requested to return: {$item->qnty}");
+                    }
+
                     $stock->quantity -= $item->qnty;
                     $stock->save();
                 }
@@ -239,5 +247,13 @@ class PurchasereturnController extends Controller
         $total = $purchase_return->total_amount;
         $viewPath = auth()->user()->role === 'admin' ? 'admin.purchasereturn.details' : 'user.purchasereturn.details';
         return view($viewPath, compact('purchase_return', 'total'));
+    }
+
+    public function print($id)
+    {
+        $purchase_return = PurchaseReturn::with(['items.product', 'supplier'])->findOrFail($id);
+        $user = auth()->user();
+        $viewPath = $user->role === 'admin' ? 'admin.purchasereturn.print' : 'user.purchasereturn.print';
+        return view($viewPath, compact('purchase_return'));
     }
 }

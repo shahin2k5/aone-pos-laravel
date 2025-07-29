@@ -30,7 +30,14 @@ class Purchasereturn extends Component {
             selCustomerPhone:'',
             selCustomerBalance:'',
             printUrl:'',
-            purchase_field:'purchase_id'
+            purchase_field:'purchase_id',
+            isAdmin: window.APP && window.APP.user_role === 'admin', // Check if user is admin
+            branches: [],
+            branchStocks: {},
+            supplier_id: '',
+            purchase_id: '',
+            supplierInfo: null,
+            supplier: ''
         };
 
         this.loadCart = this.loadCart.bind(this);
@@ -45,6 +52,8 @@ class Purchasereturn extends Component {
         this.findPurchaseID = this.findPurchaseID.bind(this);
         this.handleClickSubmit = this.handleClickSubmit.bind(this);
         this.loadTranslations = this.loadTranslations.bind(this);
+        this.loadBranches = this.loadBranches.bind(this);
+        this.loadBranchStocks = this.loadBranchStocks.bind(this);
     }
 
     componentDidMount() {
@@ -53,7 +62,8 @@ class Purchasereturn extends Component {
         this.loadCart();
         this.loadProducts();
         this.loadCustomers();
-
+        this.loadBranches();
+        this.loadBranchStocks();
     }
 
     // load the transaltions for the react component
@@ -84,6 +94,20 @@ class Purchasereturn extends Component {
         });
     }
 
+    loadBranches() {
+        axios.get(`/admin/branches`).then((res) => {
+            const branches = res.data;
+            this.setState({ branches });
+        });
+    }
+
+    loadBranchStocks() {
+        axios.get(`/admin/branch-stocks`).then((res) => {
+            const branchStocks = res.data;
+            this.setState({ branchStocks });
+        });
+    }
+
     handleOnChangeBarcode(event) {
         const barcode = event.target.value;
         console.log(barcode);
@@ -92,7 +116,7 @@ class Purchasereturn extends Component {
 
     loadCart() {
         axios.get("/admin/purchasereturn/findpurchaseid/0").then((res) => {
-            const cart = res.data.purchasereturn_items;
+            const cart = res.data.purchasereturn_items || [];
             const purchase = res.data.purchase;
             if(cart && cart.length){
                 const sub_total = this.getTotal(cart)
@@ -109,18 +133,21 @@ class Purchasereturn extends Component {
                 const prev_balance = 0
                 const new_balance = 0
                 const last_balance = 0
-                this.setState({ cart, sub_total, gr_total,customer_id, prev_balance, new_balance,last_balance });
+                this.setState({ cart: [], sub_total, gr_total,customer_id, prev_balance, new_balance,last_balance });
             }
 
+        }).catch((error) => {
+            console.error("Error loading cart:", error);
+            this.setState({ cart: [] });
         });
     }
 
     handleScanBarcode(event) {
         event.preventDefault();
-        const { barcode, customer_id } = this.state;
-        if (!!barcode && !!customer_id) {
+        const { barcode, supplier_id } = this.state;
+        if (!!barcode && !!supplier_id) {
             axios
-                .post("/admin/cart", { barcode, customer_id })
+                .post("/admin/purchasereturn/cart", { barcode, supplier_id })
                 .then((res) => {
                     this.loadCart();
                     this.setState({ barcode: "" });
@@ -144,7 +171,7 @@ class Purchasereturn extends Component {
         if (!qty) return;
 
         axios
-            .post("/admin/salesreturn/changeqnty", { product_id, qnty: qty, sell_price: c_product.sell_price })
+            .post("/admin/purchasereturn/changeqnty", { product_id, qnty: qty, purchase_price: c_product.purchase_price })
             .then((res) => {
                 const sub_total = this.getTotal(cart)
                 const gr_total = sub_total - this.state.discount_amount
@@ -167,7 +194,7 @@ class Purchasereturn extends Component {
     handleClickDelete(product_id) {
         console.log(product_id)
         axios
-            .post("/admin/salesreturn/delete", { product_id, _method: "POST" })
+            .post("/admin/purchasereturn/delete", { product_id, _method: "POST" })
             .then((res) => {
                 const cart = this.state.cart.filter((c) => c.product_id !== product_id);
                 const sub_total = this.getTotal(cart)
@@ -186,7 +213,7 @@ class Purchasereturn extends Component {
     }
 
     handleEmptyCart() {
-        axios.post("/admin/cart/empty", { _method: "DELETE" }).then((res) => {
+        axios.post("/admin/purchasereturn/empty", { _method: "DELETE" }).then((res) => {
             if(this.state.customer_id){
                 const last_balance = this.state.prev_balance
                 this.setState({ cart: [],sub_total:0, gr_total:0, new_balance:last_balance, last_balance, discount_amount:'', return_amount:'' });
@@ -368,8 +395,9 @@ class Purchasereturn extends Component {
     }
 
     printInvoice = () => {
-        const invoiceUrl = `/admin/orders/print/${this.state.saleId}`;
-        window.open(invoiceUrl, "_blank");
+        if (this.state.printUrl) {
+            window.open(this.state.printUrl, "_blank");
+        }
     };
 
     handleClickSubmit() {
@@ -394,10 +422,11 @@ class Purchasereturn extends Component {
                     })
                     .then((res) => {
                         this.loadCart();
-                        // Assuming the response includes an order ID or invoice URL
-                        const printUrl = `/admin/orders/print/${res.data.id}`;
+                        // Set the print URL for printing
+                        const isAdmin = window.APP && window.APP.user_role === 'admin';
+                        const printUrl = isAdmin ? `/admin/purchasereturn/print/${res.data.id}` : `/user/purchasereturn/print/${res.data.id}`;
                         this.setState({ printUrl, return_amount:0 });
-                        Swal.fire("Success", "Order has been saved!", "success");
+                        Swal.fire("Success", "Purchase return has been saved!", "success");
                         return res.data;
                     })
                     .catch((err) => {
@@ -467,7 +496,7 @@ class Purchasereturn extends Component {
                         <div className="col-md-2">
                             <input type="text" onKeyUp={this.findPurchaseID} value={this.state.order_id} placeholder="Search Purchases" name="purchase-id-input" id="purchase-id-input" className="form-control border"></input>
                         </div>
-                        <div className="col-md-5"><span className="text-danger"><b>{this.state.selCustomerFName } {this.state.selCustomerLName}</b></span>, <span className="text-danger"><b>{this.state.selCustomerAddress}</b></span></div>
+                        <div className="col-md-5"><span className="text-danger"><b>{this.state.selCustomerFName } {this.state.selCustomerLName}</b></span>, <span className="text-danger"><b style={{wordBreak: 'break-word', overflowWrap: 'break-word'}}>{this.state.selCustomerAddress}</b></span></div>
                         <div className="col-md-2"> <span className="text-danger"><b>{this.state.selCustomerBalance?this.state.selCustomerBalance+' BDT':''}</b></span> </div>
                     </div>
 
@@ -557,7 +586,25 @@ class Purchasereturn extends Component {
                     </div>
                     <div className="row mt-3">
                         <div className="col">
-
+                            {this.state.printUrl ? (
+                                <a
+                                    href={this.state.printUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="btn btn-success btn-block"
+                                >
+                                    🖨️ Print Invoice
+                                </a>
+                            ) : (
+                                <a
+                                    href="#"
+                                    rel="noopener noreferrer"
+                                    className="btn btn-success btn-block"
+                                    style={{ opacity: 0.5, pointerEvents: 'none' }}
+                                >
+                                    🖨️ Print Invoice
+                                </a>
+                            )}
                         </div>
                         <div className="col">
                             <button
@@ -611,27 +658,121 @@ class Purchasereturn extends Component {
                     </div>
 
                     <div className="order-product">
-                        {products.map((p) => (
-                            <div
-                                onClick={() => this.addProductToCart(p.id)}
-                                key={p.id}
-                                className="item product-div"
-                                id={'product-'+p.barcode}
-                                style={{ width:'100px', overflow:'hidden',height:'140px' }}
-                                title={p.name}
-                            >
-                                <img src={ p.image_url} alt="" />
-                                <h5
-                                    style={
-                                        window.APP.warning_quantity > p.quantity
-                                            ? { color: "red" }
-                                            : {}
-                                    }
+                        {products.map((p) => {
+                            // Get branch stocks for this product if admin
+                            const productBranchStocks = this.state.isAdmin && this.state.branchStocks[p.id] ? this.state.branchStocks[p.id] : [];
+                            const isInCart = this.state.cart.some(item => item.product_id === p.id);
+
+                            return (
+                                <div
+                                    onClick={() => this.addProductToCart(p.id)}
+                                    key={p.id}
+                                    className="item product-div"
+                                    id={'product-'+p.barcode}
+                                    style={{
+                                        width: '150px',
+                                        overflow:'hidden',
+                                        height: '180px',
+                                        border: isInCart ? '3px solid #28a745' : '1px solid #ddd',
+                                        borderRadius: '8px',
+                                        padding: '8px',
+                                        margin: '5px',
+                                        cursor: 'pointer',
+                                        backgroundColor: isInCart ? '#f8fff9' : '#fff',
+                                        position: 'relative'
+                                    }}
+                                    title={p.name}
                                 >
-                                    {p.name}({p.quantity})
-                                </h5>
-                            </div>
-                        ))}
+                                    {/* Selected indicator */}
+                                    {isInCart && (
+                                        <div style={{
+                                            position: 'absolute',
+                                            top: '5px',
+                                            right: '5px',
+                                            backgroundColor: '#28a745',
+                                            color: 'white',
+                                            borderRadius: '50%',
+                                            width: '20px',
+                                            height: '20px',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            fontSize: '12px',
+                                            fontWeight: 'bold',
+                                            zIndex: 1
+                                        }}>
+                                            ✓
+                                        </div>
+                                    )}
+                                    <img src={p.image_url} alt="" style={{ width: '100%', height: '60px', objectFit: 'cover' }} />
+                                    <h6
+                                        style={{
+                                            fontSize: '14px',
+                                            margin: '5px 0',
+                                            color: 'black',
+                                            fontWeight: 'bold',
+                                            lineHeight: '1.2'
+                                        }}
+                                    >
+                                        {p.name}
+                                    </h6>
+
+                                    {this.state.isAdmin && productBranchStocks.length > 0 ? (
+                                        <div style={{ fontSize: '12px', color: '#666' }}>
+                                            <div style={{ fontWeight: 'bold', marginBottom: '4px', fontSize: '13px' }}>Branch Stock:</div>
+                                            {productBranchStocks.map((stock, index) => {
+                                                // Determine color: red for low stock, green for good stock
+                                                let textColor = 'green'; // Default: green for sufficient stock
+                                                let fontWeight = 'normal';
+
+                                                const warningQty = 20; // Warning threshold set to 20
+                                                const stockQty = parseInt(stock.quantity);
+                                                const isNegativeStock = stockQty < 0;
+                                                const isOutOfStock = stockQty === 0;
+                                                const isLowStock = stockQty > 0 && stockQty < warningQty;
+
+                                                if (isNegativeStock) {
+                                                    textColor = 'red'; // Red for negative stock
+                                                    fontWeight = 'bold';
+                                                } else if (isOutOfStock) {
+                                                    textColor = 'red'; // Red for out of stock (0)
+                                                } else if (isLowStock) {
+                                                    textColor = '#ff8c00'; // Orange/warning for low stock (1-19)
+                                                }
+
+                                                return (
+                                                    <div key={index} style={{
+                                                        display: 'flex',
+                                                        justifyContent: 'space-between',
+                                                        marginBottom: '3px',
+                                                        color: textColor,
+                                                        fontSize: '12px',
+                                                        fontWeight: fontWeight
+                                                    }}>
+                                                        <span>{stock.branch_name}:</span>
+                                                        <span style={{ fontWeight: 'bold' }}>{parseInt(stock.quantity) || 0}</span>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    ) : (
+                                        <div style={{
+                                            fontSize: '14px',
+                                            color: (() => {
+                                                const stockQty = parseInt(p.quantity);
+                                                if (stockQty < 0) return 'red'; // Red for negative stock
+                                                if (stockQty === 0) return 'red'; // Red for out of stock
+                                                if (stockQty < 20) return '#ff8c00'; // Orange for low stock (under 20)
+                                                return 'green'; // Green for sufficient stock (20+)
+                                            })(),
+                                            fontWeight: 'bold'
+                                        }}>
+                                            Stock: {parseInt(p.quantity) || 0}
+                                        </div>
+                                    )}
+                                </div>
+                            );
+                        })}
                     </div>
                 </div>
 
