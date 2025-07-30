@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 
 class Supplier extends Model
 {
@@ -25,6 +26,8 @@ class Supplier extends Model
         'company_id',
     ];
 
+    protected $appends = ['avatar_url'];
+
     protected static function booted()
     {
         static::addGlobalScope('branch', function (Builder $builder) {
@@ -41,6 +44,19 @@ class Supplier extends Model
                 $builder->where('company_id', $company_id)->where('branch_id', $branch_id);
             }
         });
+    }
+
+    public function getAvatarUrl()
+    {
+        if ($this->avatar) {
+            return Storage::url($this->avatar);
+        }
+        return asset('images/img-placeholder.jpg');
+    }
+
+    public function getAvatarUrlAttribute()
+    {
+        return $this->getAvatarUrl();
     }
 
     // Define relationships here (e.g., with the Product model)

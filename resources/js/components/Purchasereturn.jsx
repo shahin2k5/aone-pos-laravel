@@ -657,6 +657,12 @@ class Purchasereturn extends Component {
 
                     </div>
 
+                    <div className="mb-3">
+                        <h5 style={{ marginBottom: '10px', color: '#333', fontWeight: 'bold' }}>
+                            Available Products ({products.length})
+                        </h5>
+                    </div>
+
                     <div className="order-product">
                         {products.map((p) => {
                             // Get branch stocks for this product if admin

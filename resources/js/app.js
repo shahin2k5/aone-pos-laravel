@@ -13,7 +13,6 @@ import "./bootstrap";
  */
 
 import "./components/Cart";
-import "./components/Purchase"
-import "./components/Salesreturn"
-import "./components/Purchasereturn"
-import "./components/Damage"
+import "./components/Purchase";
+import "./components/Salesreturn";
+import "./components/Purchasereturn";

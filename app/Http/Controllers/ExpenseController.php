@@ -11,6 +11,7 @@ use App\Models\Purchase;
 use App\Models\Payment;
 use App\Models\SupplierPayment;
 use App\Models\PurchaseReturn;
+use App\Http\Requests\ExpenseStoreRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
@@ -214,14 +215,15 @@ class ExpenseController extends Controller
         return redirect()->route($routeName)->with('success', 'Expense head deleted successfully!');
     }
 
-    public function store(Request $request)
+    public function store(ExpenseStoreRequest $request)
     {
         $user = $request->user();
+        $data = $request->validated();
 
         $expense = Expense::create([
-            'expense_head' => $request->expense_head,
-            'expense_description' => $request->expense_description,
-            'expense_amount' => $request->expense_amount,
+            'expense_head' => $data['expense_head'],
+            'expense_description' => $data['expense_description'],
+            'expense_amount' => $data['expense_amount'],
             'user_id' => $user->id,
             'company_id' => $user->company_id,
             'branch_id' => $user->branch_id,

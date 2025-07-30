@@ -20,15 +20,16 @@ class Sale extends Model
     ];
 
 
-    protected static function booted() {
+    protected static function booted()
+    {
         static::addGlobalScope('branch', function (Builder $builder) {
-             $user = auth()->user();
+            $user = auth()->user();
             $company_id = $user->company_id;
             $branch_id = $user->branch_id;
             $role = $user->role;
-            if($role=="admin"){
+            if ($role == "admin") {
                 $builder->where('company_id', $company_id);
-            }else{
+            } else {
                 $builder->where('company_id', $company_id)->where('branch_id', $branch_id);
             }
         });
@@ -65,9 +66,8 @@ class Sale extends Model
 
     public function total()
     {
-        return $this->items->map(function ($i) {
-            return $i->sell_price;
-        })->sum();
+        // Use gr_total (grand total after discount) instead of summing item totals
+        return $this->gr_total;
     }
 
     public function formattedTotal()

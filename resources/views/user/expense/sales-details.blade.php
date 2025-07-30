@@ -1,4 +1,3 @@
-<h1>SALES DETAILS TEST</h1>
 @extends('user.layouts.user')
 @section('content-header', 'Sales Details Report')
 @section('content')

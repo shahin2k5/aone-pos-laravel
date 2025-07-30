@@ -72,6 +72,11 @@
 
                 <div class="form-group">
                     <label for="avatar">{{ __('customer.Avatar') }}</label>
+                    @if($customer->avatar)
+                        <div class="mb-2">
+                            <img src="{{ $customer->avatar_url }}" alt="Current Avatar" style="max-width: 100px; max-height: 100px;">
+                        </div>
+                    @endif
                     <div class="custom-file">
                         <input type="file" class="custom-file-input" name="avatar" id="avatar">
                         <label class="custom-file-label" for="avatar">{{ __('customer.Choose_file') }}</label>
@@ -93,8 +98,23 @@
 @section('js')
     <script src="{{ asset('plugins/bs-custom-file-input/bs-custom-file-input.min.js') }}"></script>
     <script>
-        $(document).ready(function () {
-            bsCustomFileInput.init();
+        document.addEventListener('DOMContentLoaded', function () {
+            // Initialize Bootstrap custom file input
+            if (typeof bsCustomFileInput !== 'undefined') {
+                bsCustomFileInput.init();
+            } else {
+                // Fallback: manual file input handling
+                const fileInputs = document.querySelectorAll('.custom-file-input');
+                fileInputs.forEach(function(input) {
+                    input.addEventListener('change', function() {
+                        const fileName = this.files[0] ? this.files[0].name : 'Choose file';
+                        const label = this.nextElementSibling;
+                        if (label && label.classList.contains('custom-file-label')) {
+                            label.textContent = fileName;
+                        }
+                    });
+                });
+            }
         });
     </script>
 @endsection

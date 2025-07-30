@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Supplier;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 class SupplierController extends Controller
 {
@@ -54,6 +56,20 @@ class SupplierController extends Controller
         $data['company_id'] = Auth::user()->company_id;
         $data['branch_id'] = Auth::user()->branch_id;
         $data['user_id'] = Auth::id();
+
+        // Handle avatar upload
+        if ($request->hasFile('avatar')) {
+            Log::info('Avatar upload detected', [
+                'original_name' => $request->file('avatar')->getClientOriginalName(),
+                'size' => $request->file('avatar')->getSize(),
+                'mime_type' => $request->file('avatar')->getMimeType()
+            ]);
+            $data['avatar'] = $request->file('avatar')->store('suppliers', 'public');
+            Log::info('Avatar stored at: ' . $data['avatar']);
+        } else {
+            Log::info('No avatar file in request');
+        }
+
         $supplier = Supplier::create($data);
         $routeName = Auth::user()->role === 'admin' ? 'admin.suppliers.index' : 'user.suppliers.index';
         return redirect()->route($routeName)->with('success', 'Supplier saved successfully!');
@@ -92,16 +108,60 @@ class SupplierController extends Controller
      */
     public function update(Request $request, Supplier $supplier)
     {
-        $supplier->update($request->all());
+        $data = $request->all();
+
+        // Handle avatar upload
+        if ($request->hasFile('avatar')) {
+            Log::info('Avatar upload detected for update', [
+                'original_name' => $request->file('avatar')->getClientOriginalName(),
+                'size' => $request->file('avatar')->getSize(),
+                'mime_type' => $request->file('avatar')->getMimeType()
+            ]);
+            $data['avatar'] = $request->file('avatar')->store('suppliers', 'public');
+            Log::info('Avatar stored at: ' . $data['avatar']);
+        } else {
+            Log::info('No avatar file in update request');
+        }
+
+        $supplier->update($data);
         $routeName = Auth::user()->role === 'admin' ? 'admin.suppliers.index' : 'user.suppliers.index';
         return redirect()->route($routeName)->with('success', 'Supplier updated successfully!');
     }
 
     public function destroy(Supplier $supplier)
     {
-        $supplier->delete();
-        $routeName = Auth::user()->role === 'admin' ? 'admin.suppliers.index' : 'user.suppliers.index';
-        return redirect()->route($routeName)->with('success', 'Supplier deleted successfully!');
+        try {
+            // Delete the avatar file if it exists
+            if ($supplier->avatar) {
+                Storage::delete($supplier->avatar);
+            }
+
+            $supplier->delete();
+
+            // Return JSON response for AJAX requests
+            if (request()->expectsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Supplier deleted successfully!'
+                ]);
+            }
+
+            // Return redirect for regular requests
+            $routeName = Auth::user()->role === 'admin' ? 'admin.suppliers.index' : 'user.suppliers.index';
+            return redirect()->route($routeName)->with('success', 'Supplier deleted successfully!');
+        } catch (\Exception $e) {
+            Log::error('Error deleting supplier: ' . $e->getMessage());
+
+            if (request()->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to delete supplier. Please try again.'
+                ], 500);
+            }
+
+            $routeName = Auth::user()->role === 'admin' ? 'admin.suppliers.index' : 'user.suppliers.index';
+            return redirect()->route($routeName)->with('error', 'Failed to delete supplier. Please try again.');
+        }
     }
 
     public function showPayForm(Supplier $supplier)

@@ -12,13 +12,9 @@ class SalesreturnCartController extends Controller
     public function index(Request $request)
     {
         if ($request->wantsJson()) {
-
-            return response(
-                $request->user()->cart->each(function ($product) {
-                    $customer = Customer::find($product->pivot->customer_id);
-                    $product->pivot->user_balance = $customer?->balance ?? 0;
-                })
-            );
+            // Use SalesreturnItemCart instead of regular cart
+            $cart = \App\Models\SalesreturnItemCart::with(['product', 'customer'])->get();
+            return response($cart);
         }
 
         $viewPath = Auth::user()->role === 'admin' ? 'admin.salesreturn.salesreturn-cart' : 'user.salesreturn.salesreturn-cart';
@@ -35,24 +31,38 @@ class SalesreturnCartController extends Controller
         $customer_id = $request->customer_id;
 
         $product = Product::where('barcode', $barcode)->first();
-        $cart = $request->user()->cart()->where('barcode', $barcode)->first();
+        $cart = \App\Models\SalesreturnItemCart::where('product_id', $product->id)->first();
         if ($cart) {
             // check product quantity
-            if ($product->quantity <= $cart->pivot->quantity) {
+            if ($product->quantity <= $cart->qnty) {
                 return response([
                     'message' => __('cart.available', ['quantity' => $product->quantity]),
                 ], 400);
             }
             // update only quantity
-            $cart->pivot->quantity = $cart->pivot->quantity + 1;
-            $cart->pivot->save();
+            $cart->qnty = $cart->qnty + 1;
+            $cart->total_price = $cart->qnty * $cart->sell_price;
+            $cart->save();
         } else {
             if ($product->quantity < 1) {
                 return response([
                     'message' => __('cart.outstock'),
                 ], 400);
             }
-            $request->user()->cart()->attach($product->id, ['quantity' => 1, 'customer_id' => $customer_id]);
+            // Create new cart item
+            $data = [
+                'purchase_price' => $product->purchase_price ?? 0,
+                'total_price' => $product->sell_price,
+                'sell_price' => $product->sell_price,
+                'qnty' => 1,
+                'product_id' => $product->id,
+                'order_id' => 0,
+                'customer_id' => $customer_id,
+                'user_id' => Auth::user()->id,
+                'branch_id' => Auth::user()->branch_id,
+                'company_id' => Auth::user()->company_id,
+            ];
+            \App\Models\SalesreturnItemCart::create($data);
         }
 
         return response('', 204);
@@ -66,7 +76,7 @@ class SalesreturnCartController extends Controller
         ]);
 
         $product = Product::find($request->product_id);
-        $cart = $request->user()->cart()->where('id', $request->product_id)->first();
+        $cart = \App\Models\SalesreturnItemCart::where('product_id', $request->product_id)->first();
 
         if ($cart) {
             // check product quantity
@@ -75,8 +85,9 @@ class SalesreturnCartController extends Controller
                     'message' => __('cart.available', ['quantity' => $product->quantity]),
                 ], 400);
             }
-            $cart->pivot->quantity = $request->quantity;
-            $cart->pivot->save();
+            $cart->qnty = $request->quantity;
+            $cart->total_price = $cart->qnty * $cart->sell_price;
+            $cart->save();
         }
 
         return response([
@@ -89,14 +100,14 @@ class SalesreturnCartController extends Controller
         $request->validate([
             'product_id' => 'required|integer|exists:products,id'
         ]);
-        $request->user()->cart()->detach($request->product_id);
+        \App\Models\SalesreturnItemCart::where('product_id', $request->product_id)->delete();
 
         return response('', 204);
     }
 
     public function empty(Request $request)
     {
-        $request->user()->cart()->detach();
+        \App\Models\SalesreturnItemCart::truncate();
 
         return response('', 204);
     }

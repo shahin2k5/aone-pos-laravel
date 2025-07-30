@@ -7,58 +7,81 @@
 @endsection
 @section('content')
 
-<div class="card">
+<div class="card shadow-sm">
 
     <div class="card-body">
-        <div class="row">
-            <div class="col-md-6"></div>
+        <div class="row mb-3">
             <div class="col-md-6">
-                <form action="{{route('user.salesreturns.index')}}">
-                    <div class="row">
-                        <div class="col-md-4">
-                            <input type="date" name="start_date" class="form-control" value="{{request('start_date')}}" />
-                        </div>
-                        <div class="col-md-4">
-                            <input type="date" name="end_date" class="form-control" value="{{request('end_date')}}" />
-                        </div>
-                        <div class="col-md-4">
-                            <button class="btn btn-outline-primary" type="submit">{{ __('Salesreturn submit') }}</button>
-                        </div>
+                <h5 class="card-title text-primary mb-0">
+                    <i class="fas fa-undo-alt mr-2"></i>{{ __('Sales Return History') }}
+                </h5>
+            </div>
+            <div class="col-md-6">
+                <form action="{{route('user.salesreturns.index')}}" class="form-inline justify-content-end">
+                    <div class="form-group mr-2">
+                        <input type="date" name="start_date" class="form-control form-control-sm" value="{{request('start_date')}}" placeholder="Start Date" />
+                    </div>
+                    <div class="form-group mr-2">
+                        <input type="date" name="end_date" class="form-control form-control-sm" value="{{request('end_date')}}" placeholder="End Date" />
+                    </div>
+                    <div class="form-group">
+                        <button class="btn btn-outline-primary btn-sm" type="submit">
+                            <i class="fas fa-search mr-1"></i>{{ __('Filter') }}
+                        </button>
                     </div>
                 </form>
             </div>
         </div>
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>{{ 'ID' }}</th>
-                    <th>{{ 'Customer' }}</th>
-                    <th>{{ 'Invoice' }}</th>
-                    <th>{{ 'Return Qnty.' }}</th>
-                    <th>{{ 'Total' }}</th>
-                    <th>{{ 'Return' }}</th>
-                    <th>{{ 'Profit' }}</th>
-                    <th>{{ 'Created' }}</th>
-                    <th>{{ 'Actions' }}</th>
-
-                </tr>
-            </thead>
+        <div class="table-responsive">
+            <table class="table table-hover table-striped">
+                <thead class="thead-dark">
+                    <tr>
+                        <th class="text-center" style="width: 5%">{{ 'ID' }}</th>
+                        <th style="width: 15%">{{ 'Customer' }}</th>
+                        <th style="width: 10%">{{ 'Invoice' }}</th>
+                        <th class="text-center" style="width: 10%">{{ 'Return Qnty.' }}</th>
+                        <th class="text-right" style="width: 15%">{{ 'Original Sale Total' }}</th>
+                        <th class="text-right" style="width: 15%">{{ 'Return Amount' }}</th>
+                        <th class="text-right" style="width: 15%">{{ 'Loss' }}</th>
+                        <th style="width: 10%">{{ 'Created' }}</th>
+                        <th class="text-center" style="width: 10%">{{ 'Actions' }}</th>
+                    </tr>
+                </thead>
             <tbody>
                 @foreach ($salesreturns as $salesreturn)
                 <tr>
-                    <td> {{$salesreturn->id}}</td>
-                    <td>{{$salesreturn->getCustomerName()}}</td>
-                    <td>{{$salesreturn->order_id}}</td>
-                    <td>{{number_format($salesreturn->total_qnty)}}</td>
-                    <td>{{ config('settings.currency_symbol') }} {{number_format($salesreturn->total_amount)}}</td>
-                    <td>{{ config('settings.currency_symbol') }} {{number_format($salesreturn->return_amount)}}</td>
-                    <td>{{ config('settings.currency_symbol') }} {{number_format($salesreturn->profit_amount)}}</td>
-                    <td>{{$salesreturn->created_at}}</td>
+                    <td class="text-center font-weight-bold"> {{$salesreturn->id}}</td>
                     <td>
-                        <a href="{{ route('user.salesreturn.details', $salesreturn->id) }}" class="btn btn-success"><i class="fa fa-eye"></i></a>
-                        <a href="/user/salesreturn/print/{{ $salesreturn->id }}" target="_blank" class="btn btn-info"><i class="fa fa-print"></i></a>
+                        <div class="font-weight-bold text-primary">{{$salesreturn->getCustomerName()}}</div>
                     </td>
-
+                    <td>
+                        <span class="badge badge-secondary">{{$salesreturn->order_id}}</span>
+                    </td>
+                    <td class="text-center">
+                        <span class="badge badge-info">{{number_format($salesreturn->total_qnty)}}</span>
+                    </td>
+                    <td class="text-right font-weight-bold">
+                        {{ config('settings.currency_symbol') }} {{number_format($salesreturn->total_amount)}}
+                    </td>
+                    <td class="text-right font-weight-bold text-success">
+                        {{ config('settings.currency_symbol') }} {{number_format($salesreturn->return_amount)}}
+                    </td>
+                    <td class="text-right font-weight-bold {{ $salesreturn->getLossClass() }}">
+                        {{ config('settings.currency_symbol') }} {{ $salesreturn->getFormattedLoss() }}
+                    </td>
+                    <td>
+                        <small class="text-muted">{{$salesreturn->created_at->format('M d, Y')}}</small>
+                    </td>
+                    <td class="text-center">
+                        <div class="btn-group" role="group">
+                            <a href="{{ route('user.salesreturn.details', $salesreturn->id) }}" class="btn btn-sm btn-outline-success" title="View Details">
+                                <i class="fa fa-eye"></i>
+                            </a>
+                            <a href="/user/salesreturn/print/{{ $salesreturn->id }}" target="_blank" class="btn btn-sm btn-outline-info" title="Print Invoice">
+                                <i class="fa fa-print"></i>
+                            </a>
+                        </div>
+                    </td>
                 </tr>
                 @endforeach
             </tbody>
@@ -66,16 +89,29 @@
                 <tr>
                     <th></th>
                     <th></th>
-                    <th>{{ config('settings.currency_symbol') }} {{ number_format($total, 2) }}</th>
-                    <th>{{ config('settings.currency_symbol') }} {{ number_format($total, 2) }}</th>
+                    <th></th>
+                    <th></th>
+                    <th></th>
+                    <th></th>
                     <th></th>
                     <th></th>
                     <th></th>
                 </tr>
             </tfoot>
         </table>
+        </div>
 
-        <div class="text-center">{{ $salesreturns->render() }}</div>
+        @if($salesreturns->count() > 0)
+            <div class="d-flex justify-content-center mt-3">
+                {{ $salesreturns->render() }}
+            </div>
+        @else
+            <div class="text-center py-4">
+                <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                <h5 class="text-muted">No Sales Returns Found</h5>
+                <p class="text-muted">No sales returns have been created yet.</p>
+            </div>
+        @endif
     </div>
 </div>
 @endsection
@@ -100,6 +136,56 @@
     </div>
 </div>
 
+@endsection
+
+@section('css')
+<style>
+    .table-hover tbody tr:hover {
+        background-color: rgba(0,123,255,.075);
+        transform: translateY(-1px);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        transition: all 0.2s ease;
+    }
+
+    .badge {
+        font-size: 0.8em;
+        padding: 0.4em 0.6em;
+    }
+
+    .btn-group .btn {
+        margin: 0 1px;
+    }
+
+    .card {
+        border: none;
+        border-radius: 10px;
+    }
+
+    .thead-dark th {
+        background-color: #343a40;
+        border-color: #454d55;
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.85em;
+        letter-spacing: 0.5px;
+    }
+
+    .table-striped tbody tr:nth-of-type(odd) {
+        background-color: rgba(0,0,0,.02);
+    }
+
+    .text-success {
+        color: #28a745 !important;
+    }
+
+    .text-danger {
+        color: #dc3545 !important;
+    }
+
+    .text-warning {
+        color: #ffc107 !important;
+    }
+</style>
 @endsection
 
 @section('js')
