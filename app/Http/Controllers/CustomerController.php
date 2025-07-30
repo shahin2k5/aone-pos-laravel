@@ -97,7 +97,18 @@ class CustomerController extends Controller
      */
     public function update(CustomerStoreRequest $request, Customer $customer)
     {
-        $customer->update($request->validated());
+        $data = $request->validated();
+
+        // Handle avatar upload
+        if ($request->hasFile('avatar')) {
+            // Delete old avatar if it exists
+            if ($customer->avatar) {
+                Storage::delete($customer->avatar);
+            }
+            $data['avatar'] = $request->file('avatar')->store('avatars', 'public');
+        }
+
+        $customer->update($data);
         $routeName = Auth::user()->role === 'admin' ? 'admin.customers.index' : 'user.customers.index';
         return redirect()->route($routeName)->with('success', 'Customer updated successfully!');
     }

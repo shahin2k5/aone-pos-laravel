@@ -24,32 +24,42 @@ class ProductController extends Controller
     {
         $user = Auth::user();
 
-        // If it's a JSON request (from React component), return products using global scope
+        // If it's a JSON request (from React component), return products
         if ($request->wantsJson()) {
-            $query = new Product();
+            if ($user->role === 'admin') {
+                // For admin, use global scope (company_id only)
+                $query = new Product();
 
-            // Handle search parameter - only search by product name since barcode has its own input
-            if ($request->has('search') && !empty($request->search)) {
-                $search = $request->search;
-                $query = $query->where('name', 'like', "%{$search}%");
-            }
+                // Handle search parameter
+                if ($request->has('search') && !empty($request->search)) {
+                    $search = $request->search;
+                    $query = $query->where('name', 'like', "%{$search}%");
+                }
 
-            $products = $query->get();
+                $products = $query->get();
 
-            // For users, add branch-specific stock information
-            if ($user->role !== 'admin') {
-                $products->each(function ($product) use ($user) {
-                    $stock = BranchProductStock::where('product_id', $product->id)
-                        ->where('branch_id', $user->branch_id)
-                        ->first();
-                    $product->quantity = $stock ? $stock->quantity : 0;
-                });
-            } else {
-                // For admin, add all branch stocks as an associative array
+                // Add all branch stocks as an associative array
                 $products->each(function ($product) {
                     $branchStocks = BranchProductStock::where('product_id', $product->id)->get();
                     $product->branch_stocks = $branchStocks->pluck('quantity', 'branch_id');
                 });
+            } else {
+                // For users, show all products that have stock in their branch
+                $query = Product::withoutGlobalScopes()
+                    ->where('products.company_id', $user->company_id);
+
+                // Handle search parameter
+                if ($request->has('search') && !empty($request->search)) {
+                    $search = $request->search;
+                    $query = $query->where('products.name', 'like', "%{$search}%");
+                }
+
+                // Join with branch_product_stock to get products with stock in user's branch
+                $products = $query->join('branch_product_stock', 'products.id', '=', 'branch_product_stock.product_id')
+                    ->where('branch_product_stock.branch_id', $user->branch_id)
+                    ->where('branch_product_stock.quantity', '>', 0) // Only products with stock > 0
+                    ->select('products.*', 'branch_product_stock.quantity')
+                    ->get();
             }
 
             // Add debugging

@@ -23,6 +23,8 @@ class Customer extends Model
         'company_id',
     ];
 
+    protected $appends = ['avatar_url'];
+
     protected static function booted()
     {
         static::addGlobalScope('branch', function (Builder $builder) {
@@ -43,7 +45,15 @@ class Customer extends Model
 
     public function getAvatarUrl()
     {
-        return Storage::url($this->avatar);
+        if ($this->avatar) {
+            return Storage::url($this->avatar);
+        }
+        return asset('images/img-placeholder.jpg');
+    }
+
+    public function getAvatarUrlAttribute()
+    {
+        return $this->getAvatarUrl();
     }
 
     public function orders()

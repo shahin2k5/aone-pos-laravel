@@ -31,6 +31,7 @@ class Salesreturn extends Component {
             selCustomerAddress:'',
             selCustomerPhone:'',
             selCustomerBalance:'',
+            order_id: '',
             printUrl:'',
             isAdmin: window.APP && window.APP.user_role === 'admin' // Check if user is admin
         };
@@ -54,19 +55,23 @@ class Salesreturn extends Component {
     componentDidMount() {
         // load user cart
         this.loadTranslations();
-        this.loadCart();
         this.loadProducts();
         this.loadCustomers();
         if (this.state.isAdmin) {
             this.loadBranchStocks(); // Load branch stocks for admin
             this.loadBranches(); // Load branches for admin
         }
+        // Load cart after a short delay to ensure other components are loaded
+        setTimeout(() => {
+            this.loadCart();
+        }, 100);
     }
 
     // load the transaltions for the react component
     loadTranslations() {
+        const endpoint = this.state.isAdmin ? "/admin/locale/cart" : "/user/locale/cart";
         axios
-            .get("/admin/locale/cart")
+            .get(endpoint)
             .then((res) => {
                 const translations = res.data;
                 this.setState({ translations });
@@ -77,17 +82,25 @@ class Salesreturn extends Component {
     }
 
     loadCustomers() {
-        axios.get(`/admin/customers`).then((res) => {
+        const endpoint = this.state.isAdmin ? `/admin/customers` : `/user/customers`;
+        axios.get(endpoint).then((res) => {
             const customers = res.data;
             this.setState({ customers });
+        }).catch((error) => {
+            console.error('Error loading customers:', error);
         });
     }
 
     loadProducts(search = "") {
         const query = !!search ? `?search=${search}` : "";
-        axios.get(`/admin/products${query}`).then((res) => {
+        const endpoint = this.state.isAdmin ? `/admin/products${query}` : `/user/products${query}`;
+        console.log('Loading products from:', endpoint, 'isAdmin:', this.state.isAdmin);
+        axios.get(endpoint).then((res) => {
+            console.log('Products response:', res.data);
             const products = res.data.data;
             this.setState({ products });
+        }).catch((error) => {
+            console.error('Error loading products:', error);
         });
     }
 
@@ -116,19 +129,28 @@ class Salesreturn extends Component {
         this.setState({ barcode });
     }
 
-    loadCart() {
-        axios.get("/admin/salesreturn/findorderid/0").then((res) => {
-            const cart = res.data.salesreturn_item;
-            const order = res.data.order;
-            if(cart.length){
-                // Use backend-calculated totals instead of recalculating
-                const sub_total = parseFloat(order.gr_total || 0).toFixed(2);
+            loadCart() {
+        // Load cart from server
+        const endpoint = this.state.isAdmin ? "/admin/salesreturn-cart" : "/user/salesreturn-cart";
+        console.log('Loading cart from:', endpoint, 'isAdmin:', this.state.isAdmin);
+        axios.get(endpoint).then((res) => {
+            console.log('Cart API response:', res.data);
+            let cart = res.data;
+
+            // Ensure cart is always an array
+            if (!Array.isArray(cart)) {
+                console.warn('Cart is not an array, converting to empty array');
+                cart = [];
+            }
+
+            if(cart && cart.length > 0){
+                const sub_total = cart.reduce((total, item) => total + parseFloat(item.total_price || 0), 0).toFixed(2);
                 const gr_total = parseFloat(sub_total) - this.state.discount_amount;
-                const customer_id = order.customer_id;
-                const prev_balance = order.customer.balance;
-                const new_balance = order.customer.balance + gr_total;
-                const last_balance = order.customer.balance + gr_total;
-                this.setState({ cart, sub_total, gr_total, customer_id, prev_balance, new_balance, last_balance });
+                const customer_id = cart[0].customer_id;
+                const prev_balance = cart[0].customer?.balance || 0;
+                const new_balance = prev_balance - gr_total;
+                const last_balance = new_balance;
+                this.setState({ cart, sub_total, gr_total, customer_id, prev_balance, new_balance, last_balance, return_amount: this.state.return_amount });
             }else{
                 const sub_total = 0;
                 const gr_total = 0;
@@ -136,8 +158,21 @@ class Salesreturn extends Component {
                 const prev_balance = 0;
                 const new_balance = 0;
                 const last_balance = 0;
-                this.setState({ cart, sub_total, gr_total, customer_id, prev_balance, new_balance, last_balance });
+                this.setState({ cart: [], sub_total, gr_total, customer_id, prev_balance, new_balance, last_balance, return_amount: this.state.return_amount });
             }
+        }).catch((error) => {
+            console.error('Error loading cart:', error);
+            // Set empty cart on error
+            this.setState({
+                cart: [],
+                sub_total: 0,
+                gr_total: 0,
+                customer_id: "",
+                prev_balance: 0,
+                new_balance: 0,
+                last_balance: 0,
+                return_amount: this.state.return_amount
+            });
         });
     }
 
@@ -159,26 +194,27 @@ class Salesreturn extends Component {
 
     handleChangeQty(product_id, qty) {
         var c_product = ""
-        const cart = this.state.cart.map((c) => {
+        const cart = this.state.cart && Array.isArray(this.state.cart) ? this.state.cart.map((c) => {
             if (c.product_id === product_id) {
                 c.qnty = parseInt(qty) || 0;
                 c.total_price = (parseInt(qty) || 0) * c.sell_price; // Update total_price locally
                 c_product = c
             }
             return c;
-        });
+        }) : [];
 
         if (!qty) return;
 
+        const endpoint = this.state.isAdmin ? "/admin/salesreturn/changeqnty" : "/user/salesreturn/changeqnty";
         axios
-            .post("/admin/salesreturn/changeqnty", { product_id, qnty: parseInt(qty) || 0, sell_price: c_product.sell_price })
+            .post(endpoint, { product_id, qnty: parseInt(qty) || 0, sell_price: c_product.sell_price })
             .then((res) => {
                 // Calculate total from updated cart items
-                const sub_total = cart.reduce((total, item) => total + parseFloat(item.total_price || 0), 0).toFixed(2);
+                const sub_total = Array.isArray(cart) ? cart.reduce((total, item) => total + parseFloat(item.total_price || 0), 0).toFixed(2) : '0.00';
                 const gr_total = parseFloat(sub_total) - this.state.discount_amount;
                 const new_balance = this.state.prev_balance + gr_total;
                 const last_balance = new_balance - this.state.return_amount;
-                this.setState({ cart, sub_total, gr_total, new_balance, last_balance });
+                this.setState({ cart, sub_total, gr_total, new_balance, last_balance, return_amount: this.state.return_amount });
             })
             .catch((err) => {
                 Swal.fire("Error!", err.response.data.message, "error");
@@ -186,21 +222,23 @@ class Salesreturn extends Component {
     }
 
     getTotal(cart) {
-        if(isArray(cart)){
+        if(isArray(cart) && cart && cart.length > 0){
             // Use total_price if available, otherwise calculate from qnty * sell_price
             const total = cart.map((c) => c.total_price || (c.qnty * c.sell_price));
             return sum(total).toFixed(2);
         }
+        return '0.00';
     }
 
     handleClickDelete(product_id) {
 
+        const endpoint = this.state.isAdmin ? "/admin/salesreturn/delete" : "/user/salesreturn/delete";
         axios
-            .post("/admin/salesreturn/delete", { product_id, _method: "POST" })
+            .post(endpoint, { product_id, _method: "POST" })
             .then((res) => {
-                const cart = this.state.cart.filter((c) => c.product_id !== product_id);
+                const cart = this.state.cart && Array.isArray(this.state.cart) ? this.state.cart.filter((c) => c.product_id !== product_id) : [];
                 // Calculate total from remaining cart items
-                const sub_total = cart.reduce((total, item) => total + parseFloat(item.total_price || 0), 0).toFixed(2);
+                const sub_total = Array.isArray(cart) ? cart.reduce((total, item) => total + parseFloat(item.total_price || 0), 0).toFixed(2) : '0.00';
                 const gr_total = parseFloat(sub_total) - this.state.discount_amount;
                 const new_balance = this.state.prev_balance + gr_total;
                 const last_balance = new_balance - this.state.discount_amount;
@@ -210,13 +248,15 @@ class Salesreturn extends Component {
                     sub_total,
                     gr_total,
                     new_balance,
-                    last_balance
+                    last_balance,
+                    return_amount: this.state.return_amount
                 });
             });
     }
 
     handleEmptyCart() {
-        axios.post("/admin/cart/empty", { _method: "DELETE" }).then((res) => {
+        const endpoint = this.state.isAdmin ? "/admin/salesreturn-cart/empty" : "/user/salesreturn-cart/empty";
+        axios.delete(endpoint).then((res) => {
             if(this.state.customer_id){
                 const last_balance = this.state.prev_balance
                 this.setState({ cart: [],sub_total:0, gr_total:0, new_balance:last_balance, last_balance, discount_amount:'0', return_amount:'0' });
@@ -237,94 +277,52 @@ class Salesreturn extends Component {
         }
     }
 
-    addProductToCart(barcode) {
-        if(!this.state.customer_id){
-            Swal.fire('Please select a customer', 'warning');
-            return false
+    addProductToCart(productId) {
+        // For sales return, we need to check if we have an order loaded first
+        if(!this.state.order_id){
+            Swal.fire('Please enter an order ID first', 'warning');
+            return false;
         }
-        const customer_id = this.state.customer_id
-        let product = this.state.products.find((p) => p.id === barcode);
-        const elements = document.querySelectorAll('[class*="product-"]');
 
+        if(!this.state.customer_id){
+            Swal.fire('Please load an order first', 'warning');
+            return false;
+        }
+
+        const customer_id = this.state.customer_id;
+        let product = this.state.products.find((p) => p.id === productId);
+
+        if (!product) {
+            Swal.fire('Product not found', 'error');
+            return false;
+        }
+
+        // Visual feedback
+        const elements = document.querySelectorAll('[class*="product-"]');
         elements.forEach(el => {
             el.style.border = '0px';
         });
-        const prodBarcode = document.getElementById('product-'+barcode);
-        const prodInput = document.getElementById('prodinput-'+product.id);
+
+        const prodBarcode = document.getElementById('product-'+product.barcode);
         if(prodBarcode){
            prodBarcode.style.border = "2px solid #fcc";
         }
 
-        if(prodInput){
-            prodInput.style.border = "2px solid #fcc";
-        }
-
-        if (!!product) {
-            // if product is already in cart
-            let cart = this.state.cart.find((c) => c.product_id === product.id);
-            if (!!cart) {
-                // update quantity
-                const carts = this.state.cart.map((c) => {
-                        if (
-                            c.product_id === product.id
-                        ) {
-                            c.qnty = parseInt(c.qnty) + 1;
-                        }
-                        return c;
-                    })
-                const sub_total = this.getTotal(carts)
-                const gr_total = sub_total - this.state.discount_amount
-                const new_balance = this.state.prev_balance + this.state.gr_total
-                const last_balance = new_balance - this.state.discount_amount
-
-                this.setState({
-                    cart: carts,
-                    sub_total,
-                    gr_total,
-                    new_balance,
-                    last_balance
-                });
-
-
-            } else {
-                if (product.quantity > 0) {
-                    product = {
-                        ...product,
-                        pivot: {
-                            quantity: 1,
-                            product_id: product.id,
-                            user_id: 1,
-                        },
-                    };
-                    const productList = [...this.state.cart, product]
-                    const sub_totals = this.getTotal(productList)
-                    const gr_total = sub_totals - this.state.discount_amount
-                    const new_balance = this.state.prev_balance + gr_total
-                    const last_balance = new_balance - this.state.discount_amount
-                    this.setState({
-                        cart: productList,
-                        sub_total: sub_totals,
-                        gr_total,
-                        new_balance,
-                        last_balance
-                    });
-                }
-            }
-
-
-
-            axios
-                .post("/admin/salesreturn/cart", { product_id:product.id, barcode, customer_id })
-                .then((res) => {
-                    // this.loadCart();
-
-                })
-                .catch((err) => {
-                    Swal.fire("Error!", err.response.data.message, "error");
-                });
-        }
-
-
+                // Add product to sales return cart via API
+        const endpoint = this.state.isAdmin ? "/admin/salesreturn-cart" : "/user/salesreturn-cart";
+        axios
+            .post(endpoint, {
+                product_id: product.id,
+                barcode: product.barcode,
+                customer_id: customer_id
+            })
+            .then((res) => {
+                // Reload cart to get updated data from server
+                this.loadCart();
+            })
+            .catch((err) => {
+                Swal.fire("Error!", err.response?.data?.message || "Failed to add product to cart", "error");
+            });
     }
 
     findOrderID(event) {
@@ -333,7 +331,8 @@ class Salesreturn extends Component {
 
         if(order_id && key_code == 13){
 
-            axios.get(`/admin/salesreturn/findorderid/${order_id}`).then((res) => {
+            const endpoint = this.state.isAdmin ? `/admin/salesreturn/findorderid/${order_id}` : `/user/salesreturn/findorderid/${order_id}`;
+            axios.get(endpoint).then((res) => {
                 const order = res.data.order;
                 const salesreturn_items = res.data.salesreturn_item;
 
@@ -382,6 +381,7 @@ class Salesreturn extends Component {
                         selCustomerAddress: order.customer.address,
                         selCustomerPhone: order.customer.phone,
                         selCustomerBalance: order.customer.balance,
+                        return_amount: this.state.return_amount,
                     });
                 }else{
                     const order_id = ""
@@ -391,7 +391,7 @@ class Salesreturn extends Component {
                     const prev_balance = 0
                     const new_balance = 0
                     const last_balance = 0
-                    this.setState({ order_id,  cart:[], sub_total, gr_total,customer_id, prev_balance, new_balance,last_balance });
+                    this.setState({ order_id,  cart:[], sub_total, gr_total,customer_id, prev_balance, new_balance,last_balance, return_amount: this.state.return_amount });
                 }
 
 
@@ -419,11 +419,12 @@ class Salesreturn extends Component {
             inputValue: this.state.return_amount,
             showCancelButton: true,
             confirmButtonText: "Save Sale Return",
-            cancelButtonText: this.state.translations["cancel_pay"],
+            cancelButtonText: this.state.translations["cancel_pay"] || "Cancel",
             showLoaderOnConfirm: true,
             preConfirm: (amount) => {
+                const endpoint = this.state.isAdmin ? "/admin/salesreturn/finalsave" : "/user/salesreturn/finalsave";
                 return axios
-                    .post("/admin/salesreturn/finalsave", {
+                    .post(endpoint, {
                         customer_id: this.state.customer_id,
                         order_id: this.state.order_id,
                         amount,
@@ -489,7 +490,12 @@ class Salesreturn extends Component {
     }
 
     render() {
-        const { cart, products, customers, barcode, translations } = this.state;
+        try {
+            const { cart, products, customers, barcode, translations } = this.state;
+            const cartList = Array.isArray(cart) ? cart : [];
+            const productList = Array.isArray(products) ? products : [];
+            const customerList = Array.isArray(customers) ? customers : [];
+            const safeTranslations = translations || {};
 
         return (
             <div className="row">
@@ -501,21 +507,26 @@ class Salesreturn extends Component {
                                 <strong>Tip:</strong> Enter the <b>original order ID</b> in the field below and press <b>Enter</b> to load the order for sales return.
                             </div>
                         </div>
-                        <div className="col-md-2">
+                        <div className="col-md-4">
                             <input
                                 type="text"
+                                onChange={(e) => this.setState({ order_id: e.target.value })}
                                 onKeyUp={this.findOrderID}
-                                value={this.state.order_id}
+                                value={this.state.order_id || ''}
                                 name="order-input"
                                 id="order-input"
                                 className="form-control border"
                                 placeholder="Enter order ID and press Enter..."
                             />
                         </div>
-                        <div className="col-md-3"><span className="text-danger"><b>{this.state.selCustomerFName } {this.state.selCustomerLName}</b></span></div>
-                        <div className="col-md-4"><span className="text-danger"><b style={{wordBreak: 'break-word', overflowWrap: 'break-word'}}>{this.state.selCustomerAddress}</b></span></div>
-                        <div className="col-md-3"><span className="text-danger"><b style={{whiteSpace: 'nowrap'}}>{this.state.selCustomerPhone}</b></span></div>
-                        <div className="col-md-2"><span className="text-danger"><b>{this.state.selCustomerBalance} BDT</b></span></div>
+                        <div className="col-md-8">
+                            <div className="row">
+                                <div className="col-md-3"><span className="text-danger"><b>{this.state.selCustomerFName || ''} {this.state.selCustomerLName || ''}</b></span></div>
+                                <div className="col-md-4"><span className="text-danger"><b style={{wordBreak: 'break-word', overflowWrap: 'break-word'}}>{this.state.selCustomerAddress || ''}</b></span></div>
+                                <div className="col-md-3"><span className="text-danger"><b style={{whiteSpace: 'nowrap'}}>{this.state.selCustomerPhone || ''}</b></span></div>
+                                <div className="col-md-2"><span className="text-danger"><b>{this.state.selCustomerBalance || ''} BDT</b></span></div>
+                            </div>
+                        </div>
                     </div>
 
                     <div className="user-cart mt-1">
@@ -523,14 +534,13 @@ class Salesreturn extends Component {
                             <table className="table table-striped">
                                 <thead>
                                     <tr>
-                                        <th>{translations["product_name"]}</th>
-                                        <th>{translations["quantity"]}</th>
-                                        <th className="text-right">Total Price
-                                        </th>
+                                        <th>{safeTranslations["product_name"] || "Product Name"}</th>
+                                        <th>{safeTranslations["quantity"] || "Quantity"}</th>
+                                        <th className="text-right">Total Price</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {isArray(cart) && cart.map((c) => (
+                                    {cartList.map((c) => (
                                         <tr key={c.id}>
                                             <td>{c.product?c.product.name:''}</td>
                                             <td>
@@ -629,7 +639,7 @@ class Salesreturn extends Component {
                                 onClick={this.handleEmptyCart}
                                 disabled={!cart.length}
                             >
-                                {translations["cancel"]}
+                                {safeTranslations["cancel"] || "Cancel"}
                             </button>
                         </div>
                         <div className="col">
@@ -653,8 +663,8 @@ class Salesreturn extends Component {
                                 <input
                                     type="text"
                                     className="form-control"
-                                    placeholder={translations["scan_barcode"]}
-                                    value={barcode}
+                                    placeholder={safeTranslations["scan_barcode"] || "Scan Barcode..."}
+                                    value={barcode || ''}
                                     onChange={this.handleOnChangeBarcode}
                                 />
                             </form>
@@ -664,7 +674,8 @@ class Salesreturn extends Component {
                             <input
                                 type="text"
                                 className="form-control"
-                                placeholder={translations["search_product"] + "..."}
+                                placeholder={(safeTranslations["search_product"] || "Search by Product Name") + "..."}
+                                value={this.state.search || ''}
                                 onChange={this.handleChangeSearch}
                                 onKeyDown={this.handleSeach}
                             />
@@ -672,11 +683,17 @@ class Salesreturn extends Component {
 
                     </div>
 
+                    <div className="mb-3">
+                        <h5 style={{ marginBottom: '10px', color: '#333', fontWeight: 'bold' }}>
+                            Available Products ({productList.length})
+                        </h5>
+                    </div>
+
                     <div className="order-product">
-                        {products.map((p) => {
+                        {productList.map((p) => {
                             // Get branch stocks for this product if admin
                             const productBranchStocks = this.state.isAdmin && this.state.branchStocks[p.id] ? this.state.branchStocks[p.id] : [];
-                            const isInCart = this.state.cart.some(item => item.product_id === p.id);
+                            const isInCart = this.state.cart && Array.isArray(this.state.cart) ? this.state.cart.some(item => item.product_id === p.id) : false;
 
                             return (
                                 <div
@@ -685,9 +702,9 @@ class Salesreturn extends Component {
                                     className="item product-div"
                                     id={'product-'+p.barcode}
                                     style={{
-                                        width: '150px',
+                                        width: this.state.isAdmin ? '150px' : '100px',
                                         overflow:'hidden',
-                                        height: '180px',
+                                        height: this.state.isAdmin ? '180px' : '140px',
                                         border: isInCart ? '3px solid #28a745' : '1px solid #ddd',
                                         borderRadius: '8px',
                                         padding: '8px',
@@ -719,7 +736,7 @@ class Salesreturn extends Component {
                                             ✓
                                         </div>
                                     )}
-                                    <img src={p.image_url} alt="" style={{ width: '100%', height: '60px', objectFit: 'cover' }} />
+                                                                        <img src={p.image_url} alt="" style={{ width: '100%', height: '60px', objectFit: 'cover' }} />
                                     <h6
                                         style={{
                                             fontSize: '14px',
@@ -795,6 +812,20 @@ class Salesreturn extends Component {
 
             </div>
         );
+        } catch (error) {
+            console.error('Error in render:', error);
+            return (
+                <div className="row">
+                    <div className="col-12">
+                        <div className="alert alert-danger">
+                            <h4>Error Loading Sales Return Page</h4>
+                            <p>There was an error loading the sales return page. Please refresh the page and try again.</p>
+                            <p>Error details: {error.message}</p>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
     }
 }
 

@@ -79,8 +79,8 @@ class Cart extends Component {
             this.loadCustomers();
             this.loadProducts();
             this.loadCart();
+            this.loadBranchStocks(); // Load branch stocks for all users
             if (this.state.isAdmin) {
-                this.loadBranchStocks(); // Load branch stocks for admin
                 this.loadBranches(); // Load branches for admin
             }
         });
@@ -146,7 +146,8 @@ class Cart extends Component {
 
     // New method to load branch stocks for admin
     loadBranchStocks() {
-        axios.get(`/admin/branch-stocks`).then((res) => {
+        const endpoint = this.state.isAdmin ? "/admin/branch-stocks" : "/user/branch-stocks";
+        axios.get(endpoint).then((res) => {
             const branchStocks = res.data;
             this.setState({ branchStocks });
         }).catch((error) => {
@@ -369,6 +370,16 @@ class Cart extends Component {
         }
 
         if (!!product) {
+            // Check branch stock before adding to cart
+            const branchToUse = this.state.isAdmin && this.state.selectedBranchId ? this.state.selectedBranchId : this.state.branch_id;
+            const productBranchStocks = this.state.branchStocks[product.id] || [];
+            const currentBranchStock = productBranchStocks.find(stock => stock.branch_id == branchToUse);
+
+            if (currentBranchStock && currentBranchStock.quantity <= 0) {
+                Swal.fire("Error!", `Product "${product.name}" has no stock in the current branch. Available: ${currentBranchStock.quantity}`, "error");
+                return false;
+            }
+
             const endpoint = this.state.isAdmin ? "/admin/cart" : "/user/user-cart";
             axios
                 .post(endpoint, { barcode, customer_id, branch_id })
@@ -571,7 +582,7 @@ class Cart extends Component {
         Swal.fire({
             title: 'Save POS',
             input: "text",
-            inputValue: this.state.paid_amount,
+            inputValue: this.state.gr_total,
             showCancelButton: true,
             confirmButtonText: "Save Sale",
             cancelButtonText: this.state.translations["cancel_pay"],
@@ -877,7 +888,11 @@ class Cart extends Component {
 
                     </div>
 
-
+                    <div className="mb-3">
+                        <h5 style={{ marginBottom: '10px', color: '#333', fontWeight: 'bold' }}>
+                            Available Products ({productList.length})
+                        </h5>
+                    </div>
 
                     <div className="order-product">
                         {productList.map((p) => {

@@ -3,7 +3,7 @@
 @section('title', __('Damages'))
 @section('content-header', __('Damages'))
 @section('content-actions')
-<a href="{{route('user.damages.create')}}" class="btn btn-primary">{{ __('+ Damage') }}</a>
+<a href="{{route('user.damage.create')}}" class="btn btn-primary">{{ __('+ Damage') }}</a>
 @endsection
 @section('content')
 
@@ -13,7 +13,7 @@
         <div class="row">
             <div class="col-md-6"></div>
             <div class="col-md-6">
-                <form action="{{route('user.salesreturns.index')}}">
+                <form action="{{route('user.damage.index')}}">
                     <div class="row">
                         <div class="col-md-4">
                             <input type="date" name="start_date" class="form-control" value="{{request('start_date')}}" />
@@ -54,7 +54,7 @@
                     <td>{{ config('settings.currency_symbol') }} {{number_format($damage->total_price)}}</td>
                     <td>{{ $damage->notes }}</td>
                     <td>{{$damage->created_at}}</td>
-                    <td><form action="/admin/damage/{{$damage->id}}" method="POST" onsubmit="return confirm('Are you sure you want to delete this?');"> @method('DELETE') @csrf <button type="submit"><i class="fa fa-trash"></i></button></form></td>
+                    <td><form action="/user/damage/{{$damage->id}}" method="POST" onsubmit="return confirm('Are you sure you want to delete this?');"> @method('DELETE') @csrf <button type="submit"><i class="fa fa-trash"></i></button></form></td>
 
                 </tr>
                 @endforeach
@@ -98,6 +98,8 @@
 </div>
 
 @endsection
+
+
 
 @section('js')
 <script src="https://unpkg.com/ionicons@4.5.10-0/dist/ionicons.js"></script>

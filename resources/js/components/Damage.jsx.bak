@@ -588,6 +588,12 @@ class Damage extends Component {
 
                     </div>
 
+                    <div className="mb-3">
+                        <h5 style={{ marginBottom: '10px', color: '#333', fontWeight: 'bold' }}>
+                            Available Products ({products.length})
+                        </h5>
+                    </div>
+
                     <div className="order-product">
                         {products.map((p) => (
                             <div
@@ -622,8 +628,13 @@ class Damage extends Component {
 
 export default Damage;
 
-const root = document.getElementById("damage-cart");
-if (root) {
-    const rootInstance = createRoot(root);
-    rootInstance.render(<Damage />);
-}
+// Temporarily disabled - only mount when explicitly needed
+// const root = document.getElementById("damage-cart");
+// if (root && root !== null && window.location.pathname.includes('/damage-cart')) {
+//     try {
+//         const rootInstance = createRoot(root);
+//         rootInstance.render(<Damage />);
+//     } catch (error) {
+//         console.log('Damage component not mounted - damage-cart element not found');
+//     }
+// }

@@ -92,12 +92,33 @@ class SalesreturnController extends Controller
         $product_id = $request->product_id;
         $customer_id = $request->customer_id;
 
+        // Find the product
+        $product = Product::where('barcode', $barcode)->first();
+        if (!$product) {
+            return response()->json(['message' => 'Product not found'], 404);
+        }
 
         $salesreturn_cart = SalesreturnItemCart::where('product_id', $product_id)->first();
         if ($salesreturn_cart) {
+            // Update existing cart item
             $salesreturn_cart->qnty = (int)($salesreturn_cart->qnty + 1);
             $salesreturn_cart->total_price = $salesreturn_cart->qnty * $salesreturn_cart->sell_price;
             $salesreturn_cart->save();
+        } else {
+            // Create new cart item
+            $data = [
+                'purchase_price' => $product->purchase_price ?? 0,
+                'total_price' => $product->sell_price,
+                'sell_price' => $product->sell_price,
+                'qnty' => 1,
+                'product_id' => $product_id,
+                'order_id' => 0, // Will be set when order is found
+                'customer_id' => $customer_id,
+                'user_id' => Auth::user()->id,
+                'branch_id' => Auth::user()->branch_id,
+                'company_id' => Auth::user()->company_id,
+            ];
+            SalesreturnItemCart::create($data);
         }
 
         return response('', 204);

@@ -48,4 +48,17 @@ class Purchase extends Model
     {
         return $this->belongsTo(Supplier::class, 'supplier_id');
     }
+
+    public function total()
+    {
+        // Use gr_total (grand total after discount) for consistency with Sale model
+        return $this->gr_total;
+    }
+
+    public function receivedAmount()
+    {
+        return $this->supplierPayments->map(function ($i) {
+            return $i->amount;
+        })->sum();
+    }
 }

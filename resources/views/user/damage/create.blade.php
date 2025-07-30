@@ -53,9 +53,9 @@
                         @enderror
                     </div>
 
-                    <!-- Branch Stock and Damage Quantity -->
+                    <!-- Branch Stock and Damage Quantities -->
                     <div id="branch-damage-section" style="display: none;">
-                        <h5 class="mt-4 mb-3">Branch Stock & Damage Quantity</h5>
+                        <h5 class="mt-4 mb-3">Branch Stock & Damage Quantities</h5>
                         <div class="table-responsive">
                             <table class="table table-bordered">
                                 <thead class="thead-light">
@@ -67,7 +67,7 @@
                                     </tr>
                                 </thead>
                                 <tbody id="branch-stock-tbody">
-                                    <!-- Branch row will be populated here -->
+                                    <!-- Branch rows will be populated here -->
                                 </tbody>
                             </table>
                         </div>
@@ -232,7 +232,7 @@
 
             if (hasInvalidDamage) {
                 e.preventDefault();
-                alert('Please correct the damage quantity. Value exceeds available stock.');
+                alert('Please correct the damage quantities. Some values exceed available stock.');
                 return false;
             }
         });
