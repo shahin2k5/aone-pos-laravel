@@ -49,6 +49,16 @@ class Purchase extends Model
         return $this->belongsTo(Supplier::class, 'supplier_id');
     }
 
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
+    }
+
+    public function branch()
+    {
+        return $this->belongsTo(Branch::class);
+    }
+
     public function total()
     {
         // Use gr_total (grand total after discount) for consistency with Sale model

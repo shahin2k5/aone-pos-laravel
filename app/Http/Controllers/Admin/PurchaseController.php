@@ -51,6 +51,12 @@ class PurchaseController extends Controller
         return view('admin.purchase.details', compact('purchase', 'total'));
     }
 
+    public function show(Purchase $purchase)
+    {
+        $purchase->load(['items.product', 'supplier']);
+        return view('admin.purchase.show', compact('purchase'));
+    }
+
 
 
 
@@ -166,7 +172,13 @@ class PurchaseController extends Controller
 
     public function print($id)
     {
-        $order = Purchase::with(['supplier', 'items'])->findOrFail($id);
+        $order = Purchase::with(['supplier', 'items.product', 'items.branch'])->findOrFail($id);
+
+        // Load company separately to bypass global scope
+        if ($order->company_id) {
+            $order->company = \App\Models\Company::withoutGlobalScopes()->find($order->company_id);
+        }
+
         return view('admin.purchase.print', compact('order'));
     }
 }

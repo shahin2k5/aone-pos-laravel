@@ -25,6 +25,9 @@ class SaleController extends Controller
         if ($request->end_date) {
             $sales = $sales->where('created_at', '<=', $request->end_date . ' 23:59:59');
         }
+        if ($request->customer_id) {
+            $sales = $sales->where('customer_id', $request->customer_id);
+        }
         $sales = $sales->with(['items.product', 'payments', 'customer'])->latest()->paginate(10);
 
         $total = $sales->map(function ($i) {
@@ -34,8 +37,13 @@ class SaleController extends Controller
             return $i->receivedAmount();
         })->sum();
 
+        // Get customers for filter dropdown
+        $customers = Customer::when($user->role !== 'admin', function ($query) use ($user) {
+            $query->where('company_id', $user->company_id)->where('branch_id', $user->branch_id);
+        })->orderBy('first_name')->get();
+
         $viewPath = $user->role === 'admin' ? 'admin.sales.index' : 'user.sales.index';
-        return view($viewPath, compact('sales', 'total', 'receivedAmount'));
+        return view($viewPath, compact('sales', 'total', 'receivedAmount', 'customers'));
     }
 
     public function show(Sale $sale)
@@ -172,7 +180,13 @@ class SaleController extends Controller
 
     public function print($id)
     {
-        $order = Sale::with(['customer', 'items'])->findOrFail($id);
+        $order = Sale::with(['customer', 'items.product'])->findOrFail($id);
+
+        // Load company separately to bypass global scope
+        if ($order->company_id) {
+            $order->company = \App\Models\Company::withoutGlobalScopes()->find($order->company_id);
+        }
+
         $user = Auth::user();
 
         // Determine the correct view path based on user role

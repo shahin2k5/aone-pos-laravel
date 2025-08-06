@@ -24,7 +24,7 @@ class Company extends Model
             if (!$user) {
                 return; // Don't apply scope if no user is authenticated
             }
-            $builder->where('user_id', $user->id);
+            $builder->where('admin_id', $user->id);
         });
     }
 }
