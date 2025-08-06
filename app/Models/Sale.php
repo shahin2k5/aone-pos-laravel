@@ -56,6 +56,11 @@ class Sale extends Model
         return $this->belongsTo(Customer::class);
     }
 
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
+    }
+
     public function getCustomerName()
     {
         if ($this->customer) {

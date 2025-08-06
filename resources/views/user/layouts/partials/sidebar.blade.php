@@ -64,6 +64,15 @@
                     </a>
                 </li>
 
+
+
+                <li class="nav-item has-treeview">
+                    <a href="{{ route('user.supplier-payments.index') }}" class="nav-link {{ activeSegment('supplier-payments') }}">
+                        <i class="nav-icon fas fa-handshake"></i>
+                        <p>Supplier Payments</p>
+                    </a>
+                </li>
+
                 <li class="nav-item item-separator">
                      <hr style="border-top:1px solid #666">
                 </li>

@@ -10,20 +10,37 @@
 <div class="card">
 
     <div class="card-body">
-        <div class="row">
-            <div class="col-md-7"></div>
-            <div class="col-md-5">
-                <form action="{{route('admin.sales.index')}}">
-                    <div class="row">
-                        <div class="col-md-5">
-                            <input type="date" name="start_date" class="form-control" value="{{request('start_date')}}" />
-                        </div>
-                        <div class="col-md-5">
-                            <input type="date" name="end_date" class="form-control" value="{{request('end_date')}}" />
-                        </div>
-                        <div class="col-md-2">
-                            <button class="btn btn-outline-primary" type="submit">{{ __('order.submit') }}</button>
-                        </div>
+        <div class="row mb-3">
+            <div class="col-md-12">
+                <form action="{{route('admin.sales.index')}}" method="GET" class="form-inline">
+                    <div class="form-group mr-3">
+                        <label for="start_date" class="mr-2">From:</label>
+                        <input type="date" name="start_date" class="form-control" value="{{request('start_date')}}" />
+                    </div>
+                    <div class="form-group mr-3">
+                        <label for="end_date" class="mr-2">To:</label>
+                        <input type="date" name="end_date" class="form-control" value="{{request('end_date')}}" />
+                    </div>
+                    <div class="form-group mr-3">
+                        <label for="customer_id" class="mr-2">Customer:</label>
+                        <select name="customer_id" class="form-control">
+                            <option value="">All Customers</option>
+                            @foreach($customers as $customer)
+                                <option value="{{ $customer->id }}" {{ request('customer_id') == $customer->id ? 'selected' : '' }}>
+                                    {{ $customer->first_name }} {{ $customer->last_name }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="form-group mr-2">
+                        <button class="btn btn-primary" type="submit">
+                            <i class="fa fa-filter"></i> Filter
+                        </button>
+                    </div>
+                    <div class="form-group">
+                        <a href="{{ route('admin.sales.index') }}" class="btn btn-secondary">
+                            <i class="fa fa-times"></i> Clear
+                        </a>
                     </div>
                 </form>
             </div>
@@ -75,6 +92,13 @@
                             data-payment="{{ isset($order->payments) && count($order->payments) > 0 ? $order->payments[0]->amount : 0 }}">
                             <ion-icon size="samll" name="eye"></ion-icon>
                         </button>
+
+                        <a href="{{ route('admin.sales.print', $order->id) }}"
+                           class="btn btn-sm btn-info"
+                           target="_blank"
+                           title="Print Invoice">
+                            <i class="fa fa-print"></i>
+                        </a>
 
                         @if($order->total() > $order->receivedAmount())
                             <!-- Button for Partial Payment -->

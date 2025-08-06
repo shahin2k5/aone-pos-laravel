@@ -40,7 +40,7 @@
                     <th>{{ 'Paid' }}</th>
                     <th>{{ 'Due' }}</th>
                     <th>{{ 'Created' }}</th>
-
+                    <th>{{ 'Actions' }}</th>
                 </tr>
             </thead>
             <tbody>
@@ -54,8 +54,14 @@
                     <td>{{ config('settings.currency_symbol') }} {{number_format($purchase->gr_total)}}</td>
                     <td>{{ config('settings.currency_symbol') }} {{number_format($purchase->paid_amount)}}</td>
                     <td>{{$purchase->created_at}}</td>
-                    <td><a href="/admin/purchase/details/{{ $purchase->id }}" class="btn btn-success"><i class="fa fa-eye"></i></a></td>
-
+                    <td>
+                        <a href="/admin/purchase/details/{{ $purchase->id }}" class="btn btn-success btn-sm" title="View Details">
+                            <i class="fa fa-eye"></i>
+                        </a>
+                        <a href="{{ route('admin.purchase.print', $purchase->id) }}" class="btn btn-info btn-sm" target="_blank" title="Print Invoice">
+                            <i class="fa fa-print"></i>
+                        </a>
+                    </td>
                 </tr>
                 @endforeach
             </tbody>

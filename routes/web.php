@@ -90,6 +90,18 @@ Route::prefix('user', 'user_guard')->middleware(['auth'])->group(function () {
     Route::post('/sales/partial-payment', [SaleController::class, 'partialPayment'])->name('user.sales.partial-payment');
     Route::get('/sales/print/{id}', [SaleController::class, 'print'])->name('user.sales.print');
 
+    // User Purchase
+    Route::resource('purchase', PurchaseController::class)->names([
+        'index' => 'user.purchase.index',
+        'create' => 'user.purchase.create',
+        'store' => 'user.purchase.store',
+        'show' => 'user.purchase.show',
+        'edit' => 'user.purchase.edit',
+        'update' => 'user.purchase.update',
+        'destroy' => 'user.purchase.destroy',
+    ]);
+    Route::get('/purchase/print/{id}', [PurchaseController::class, 'print'])->name('user.purchase.print');
+
     // User Sales Return
     Route::resource('salesreturn', SalesreturnController::class)->names([
         'index' => 'user.salesreturn.index',
@@ -192,6 +204,11 @@ Route::prefix('user', 'user_guard')->middleware(['auth'])->group(function () {
         $translations = trans($type);
         return response()->json($translations);
     });
+
+
+
+    // User Supplier Payments
+    Route::get('/supplier-payments', [App\Http\Controllers\User\SupplierPaymentController::class, 'index'])->name('user.supplier-payments.index');
 });
 
 // Admin Routes
@@ -392,6 +409,11 @@ Route::middleware(['auth', 'admin_guard'])->prefix('admin')->group(function () {
 
     // Admin Cart - Load Branches API
     Route::get('/load-branches', [\App\Http\Controllers\Admin\CartController::class, 'loadBranches'])->name('admin.load-branches');
+
+
+
+    // Admin Supplier Payments
+    Route::get('/supplier-payments', [App\Http\Controllers\Admin\SupplierPaymentController::class, 'index'])->name('admin.supplier-payments.index');
 });
 
 // Temporary test route for sales return
